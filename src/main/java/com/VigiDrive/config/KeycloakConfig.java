@@ -29,6 +29,7 @@ import java.util.Map;
 @ConfigurationProperties("keycloak")
 @Slf4j
 public class KeycloakConfig {
+
     private static final String ADMIN_USERNAME = "sofiia.kazantseva@faceit.com.ua";
     private static final String ADMIN_PASSWORD = "admin";
     private static final String CRED_TYPE = "Password";
@@ -43,7 +44,7 @@ public class KeycloakConfig {
 
     private String password;
 
-    private String roleBuyer;
+    private String roleUser;
 
     private String roleAdmin;
 
@@ -96,14 +97,12 @@ public class KeycloakConfig {
 
         IdentityProvidersResource identityProvidersResource = realmResource.identityProviders();
 
-        // Create a representation of Google Identity Provider
         IdentityProviderRepresentation googleProvider = new IdentityProviderRepresentation();
         googleProvider.setAlias("google");
         googleProvider.setProviderId("google");
         googleProvider.setEnabled(true);
         googleProvider.setUpdateProfileFirstLoginMode("on");
 
-        // Set the configuration details specific to Google
         googleProvider.setConfig(
                 Map.of(
                         "clientId", "108088983721-94ri8tnmtprcj88c1cpd7gng1okh4mfk.apps.googleusercontent.com",
@@ -131,7 +130,6 @@ public class KeycloakConfig {
 
         localProvider.setConfig(config);
 
-        // Add the local Identity Provider
         identityProvidersResource.create(localProvider);
 
         ClientRepresentation clientRepresentation = new ClientRepresentation();
@@ -148,37 +146,22 @@ public class KeycloakConfig {
             log.error("Something went wrong when creating the keycloak client : {}", e.getMessage());
         }
 
+        RoleRepresentation managerRole = new RoleRepresentation();
+        managerRole.setId(roleUser);
+        managerRole.setName(roleUser);
+        managerRole.setClientRole(true);
 
-//
-//        RoleRepresentation managerRole = new RoleRepresentation();
-//        managerRole.setId(roleBuyer);
-//        managerRole.setName(roleBuyer);
-//        managerRole.setClientRole(true);
-//
-//        RoleRepresentation adminRole = new RoleRepresentation();
-//        adminRole.setId(roleAdmin);
-//        adminRole.setName(roleAdmin);
-//        adminRole.setClientRole(true);
-//
-//        try {
-//            realmResource.roles().create(managerRole);
-//            realmResource.roles().create(adminRole);
-//        } catch (Exception e) {
-//            log.error("Something went wrong when creating the realm role : {}", e.getMessage());
-//        }
-//
-//        UserRepresentation admin = getUserRepresentation();
-//
-//
-//        try (Response response1 = usersResource.create(admin)) {
-//            String userId = usersResource.searchByUsername(ADMIN_USERNAME, Boolean.FALSE).get(0).getId();
-//            RoleRepresentation adminRoleRepresentation = realmResource.roles().get(roleAdmin).toRepresentation();
-//            RoleRepresentation managerRoleRepresentation = realmResource.roles().get(roleBuyer).toRepresentation();
-//
-//            usersResource.get(userId).roles().realmLevel().add(List.of(adminRoleRepresentation, managerRoleRepresentation));
-//        } catch (Exception e) {
-//            log.error("Something went wrong when creating the keycloak user : {}", e.getMessage());
-//        }
+        RoleRepresentation adminRole = new RoleRepresentation();
+        adminRole.setId(roleAdmin);
+        adminRole.setName(roleAdmin);
+        adminRole.setClientRole(true);
+
+        try {
+            realmResource.roles().create(managerRole);
+            realmResource.roles().create(adminRole);
+        } catch (Exception e) {
+            log.error("Something went wrong when creating the realm role : {}", e.getMessage());
+        }
 
         return keycloak;
     }
