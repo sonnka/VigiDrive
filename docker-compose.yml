@@ -1,22 +1,5 @@
 version: '3.7'
 services:
-
-  VigiDrive:
-    image: vigi-drive
-    container_name: vigi-drive-app
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    restart: always
-    depends_on:
-      - mysql-db
-      - keycloak-service
-    user: "1000:1000"
-    networks:
-      - "my-net"
-
   mysql-db:
     image: mysql:latest
     container_name: mysql-db

@@ -23,7 +23,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                 .requestMatchers("/").permitAll()
                 .requestMatchers("/login").permitAll()
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                .anyRequest().authenticated());
+                .anyRequest().permitAll());
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)

@@ -136,6 +136,7 @@ public class KeycloakConfig {
         clientRepresentation.setClientId(clientId);
         clientRepresentation.setName(clientId);
         clientRepresentation.setRootUrl("http://localhost:8080");
+        clientRepresentation.setRedirectUris(List.of("http://localhost:8085/realms/myapp/broker/google/endpoint"));
         clientRepresentation.setWebOrigins(List.of("*"));
         clientRepresentation.setStandardFlowEnabled(Boolean.TRUE);
         clientRepresentation.setPublicClient(Boolean.TRUE);
