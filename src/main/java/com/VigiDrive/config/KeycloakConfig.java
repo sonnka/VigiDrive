@@ -1,5 +1,7 @@
 package com.VigiDrive.config;
 
+import com.VigiDrive.model.entity.Admin;
+import com.VigiDrive.model.entity.Manager;
 import jakarta.ws.rs.core.Response;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -44,33 +46,46 @@ public class KeycloakConfig {
 
     private String password;
 
-    private String roleUser;
+    private String roleDriver;
+
+    private String roleManager;
 
     private String roleAdmin;
 
     private String secret;
 
-    private static UserRepresentation getUserRepresentation() {
-        CredentialRepresentation adminCredentials = new CredentialRepresentation();
-        adminCredentials.setType(CRED_TYPE);
-        adminCredentials.setValue(ADMIN_PASSWORD);
+    ResteasyClientBuilder resteasyClientBuilder = new ResteasyClientBuilderImpl();
 
-        UserRepresentation admin = new UserRepresentation();
-        admin.setUsername(ADMIN_USERNAME);
-        admin.setEmail(ADMIN_USERNAME);
-        admin.setFirstName("Sofiia");
-        admin.setLastName("Kazantseva");
-        admin.setEmailVerified(Boolean.TRUE);
-        admin.setCredentials(List.of(adminCredentials));
-        admin.setEnabled(Boolean.TRUE);
-        return admin;
-    }
 
     @Bean
     public Keycloak keycloak() {
-        ResteasyClientBuilder resteasyClientBuilder = new ResteasyClientBuilderImpl();
+        Keycloak keycloak = createKeycloakConnection(resteasyClientBuilder);
 
-        Keycloak keycloak = KeycloakBuilder.builder()
+        RealmResource realmResource = keycloak.realm(realm);
+
+        IdentityProvidersResource identityProvidersResource = realmResource.identityProviders();
+
+        createKeycloakRealm(keycloak);
+
+        createKeycloakClient(realmResource);
+
+        createGoogleIdentityProvider(identityProvidersResource);
+
+        createLocalIdentityProvider(identityProvidersResource);
+
+        createRole(roleDriver, realmResource);
+
+        createRole(roleManager, realmResource);
+
+        createRole(roleAdmin, realmResource);
+
+        return keycloak;
+    }
+
+
+
+    private Keycloak createKeycloakConnection(ResteasyClientBuilder resteasyClientBuilder) {
+        return KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
                 .grantType(OAuth2Constants.PASSWORD)
                 .realm("master")
@@ -79,10 +94,9 @@ public class KeycloakConfig {
                 .password(password)
                 .resteasyClient(resteasyClientBuilder.connectionPoolSize(10).build())
                 .build();
+    }
 
-        RealmResource realmResource = keycloak.realm(realm);
-        UsersResource usersResource = realmResource.users();
-
+    private void createKeycloakRealm(Keycloak keycloak){
         RealmRepresentation newRealm = new RealmRepresentation();
         newRealm.setId(realm);
         newRealm.setRealm(realm);
@@ -93,10 +107,29 @@ public class KeycloakConfig {
         } catch (Exception e) {
             log.error("Something went wrong when creating the realm : {}", e.getMessage());
         }
+    }
+
+    private void createKeycloakClient(RealmResource realmResource){
+        ClientRepresentation clientRepresentation = new ClientRepresentation();
+        clientRepresentation.setClientId(clientId);
+        clientRepresentation.setName(clientId);
+        clientRepresentation.setRootUrl("http://localhost:8080");
+        clientRepresentation.setRedirectUris(List.of("http://localhost:8080/login/oauth2/code/vigi-driver"));
+        clientRepresentation.setWebOrigins(List.of("*"));
+        clientRepresentation.setStandardFlowEnabled(Boolean.TRUE);
+        clientRepresentation.setPublicClient(Boolean.TRUE);
+        clientRepresentation.setDirectAccessGrantsEnabled(Boolean.TRUE);
+
+        try {
+            realmResource.clients().create(clientRepresentation);
+        } catch (Exception e) {
+            log.error("Something went wrong when creating the keycloak client : {}", e.getMessage());
+        }
+
+    }
 
 
-        IdentityProvidersResource identityProvidersResource = realmResource.identityProviders();
-
+    private void createGoogleIdentityProvider(IdentityProvidersResource identityProvidersResource){
         IdentityProviderRepresentation googleProvider = new IdentityProviderRepresentation();
         googleProvider.setAlias("google");
         googleProvider.setProviderId("google");
@@ -116,9 +149,14 @@ public class KeycloakConfig {
                 )
         );
 
+        try {
+            identityProvidersResource.create(googleProvider);
+        } catch (Exception e) {
+            log.error("Something went wrong when creating the keycloak client : {}", e.getMessage());
+        }
+    }
 
-        identityProvidersResource.create(googleProvider);
-
+    private void createLocalIdentityProvider(IdentityProvidersResource identityProvidersResource){
         IdentityProviderRepresentation localProvider = new IdentityProviderRepresentation();
         localProvider.setAlias("local");
         localProvider.setProviderId("local");
@@ -131,43 +169,39 @@ public class KeycloakConfig {
 
         localProvider.setConfig(config);
 
-        identityProvidersResource.create(localProvider);
-
-        ClientRepresentation clientRepresentation = new ClientRepresentation();
-        clientRepresentation.setClientId(clientId);
-        clientRepresentation.setName(clientId);
-        clientRepresentation.setRootUrl("http://localhost:8080");
-        clientRepresentation.setRedirectUris(List.of("http://localhost:8080/login/oauth2/code/vigi-driver"));
-        clientRepresentation.setWebOrigins(List.of("*"));
-        clientRepresentation.setStandardFlowEnabled(Boolean.TRUE);
-        clientRepresentation.setPublicClient(Boolean.TRUE);
-        clientRepresentation.setDirectAccessGrantsEnabled(Boolean.TRUE);
-
-        try (Response response = realmResource.clients().create(clientRepresentation)) {
+        try {
+            identityProvidersResource.create(localProvider);
         } catch (Exception e) {
             log.error("Something went wrong when creating the keycloak client : {}", e.getMessage());
         }
+    }
 
-        RoleRepresentation managerRole = new RoleRepresentation();
-        managerRole.setId(roleUser);
-        managerRole.setName(roleUser);
-        managerRole.setClientRole(true);
-
-        RoleRepresentation adminRole = new RoleRepresentation();
-        adminRole.setId(roleAdmin);
-        adminRole.setName(roleAdmin);
-        adminRole.setClientRole(true);
-
+    private void createRole(String roleName, RealmResource realmResource) {
         try {
-            realmResource.roles().create(managerRole);
-            realmResource.roles().create(adminRole);
+            RoleRepresentation roleRepresentation = new RoleRepresentation();
+            roleRepresentation.setId(roleName);
+            roleRepresentation.setName(roleName);
+            roleRepresentation.setClientRole(Boolean.TRUE);
+            realmResource.roles().create(roleRepresentation);
         } catch (Exception e) {
             log.error("Something went wrong when creating the realm role : {}", e.getMessage());
         }
-
-     //   UserRepresentation admin = getUserRepresentation();
-     //   usersResource.create(admin);
-
-        return keycloak;
     }
+
+    private static UserRepresentation getUserRepresentation() {
+        CredentialRepresentation adminCredentials = new CredentialRepresentation();
+        adminCredentials.setType(CRED_TYPE);
+        adminCredentials.setValue(ADMIN_PASSWORD);
+
+        UserRepresentation admin = new UserRepresentation();
+        admin.setUsername(ADMIN_USERNAME);
+        admin.setEmail(ADMIN_USERNAME);
+        admin.setFirstName("Sofiia");
+        admin.setLastName("Kazantseva");
+        admin.setEmailVerified(Boolean.TRUE);
+        admin.setCredentials(List.of(adminCredentials));
+        admin.setEnabled(Boolean.TRUE);
+        return admin;
+    }
+
 }

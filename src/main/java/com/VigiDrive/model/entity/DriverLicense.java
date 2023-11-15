@@ -27,5 +27,5 @@ public class DriverLicense {
     private Date dateTo;
 
     @OneToOne(mappedBy = "license")
-    private User user;
+    private Driver driver;
 }

@@ -1,17 +1,15 @@
 package com.VigiDrive.model.entity;
 
 import com.VigiDrive.model.enums.Role;
-import com.VigiDrive.model.enums.Sex;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.UUID;
 
 @Entity
-@Builder
+@Inheritance(strategy =  InheritanceType.JOINED)
+@SuperBuilder
 @Getter
 @Setter
 @AllArgsConstructor
@@ -43,22 +41,7 @@ public class User {
     @Column(name = "role")
     private Role role;
 
-    @Column(name = "date_of_birth")
-    private Date dateOfBirth;
+    @Column(name = "keycloak_id")
+    private UUID keycloakId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "sex")
-    private Sex sex;
-
-    @Column(name = "phone_number")
-    private String phoneNumber;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "license_id", referencedColumnName = "license_id")
-    private DriverLicense license;
-
-    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "user")
-    @JsonIgnore
-    @Column(name = "situations")
-    private List<Situation> situations = new ArrayList<>();
 }

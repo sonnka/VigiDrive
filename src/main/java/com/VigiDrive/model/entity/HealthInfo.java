@@ -1,6 +1,5 @@
 package com.VigiDrive.model.entity;
 
-import com.VigiDrive.model.enums.SituationType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,31 +10,28 @@ import java.time.LocalDateTime;
 @Builder
 @Getter
 @Setter
-@ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "situations")
-public class Situation {
+@Table(name = "health")
+public class HealthInfo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "situation_id")
+    @Column(name = "info_id")
     private Long id;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "start")
-    private LocalDateTime start;
+    @Column(name = "time")
+    private LocalDateTime time;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "end")
-    private LocalDateTime end;
+    @Column(name = "stress_level")
+    private Double stressLevel;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type")
-    private SituationType type;
+    @Column(name = "concentration_level")
+    private Double concentrationLevel;
 
-    @Column(name = "video")
-    private String video;
+    @Column(name = "sleepiness_level")
+    private Double sleepinessLevel;
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @JsonIgnore

@@ -20,14 +20,13 @@ public class WebSecurityConfig implements WebMvcConfigurer {
         http.authorizeHttpRequests(request -> request
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/api-docs/**").permitAll()
-                .requestMatchers("/").permitAll()
-                .requestMatchers("/login").permitAll()
+                .requestMatchers("/hello").authenticated()
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                 .anyRequest().permitAll());
+
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(AbstractHttpConfigurer::disable)
-                .oauth2Login(Customizer.withDefaults());
+                .cors(AbstractHttpConfigurer::disable);
 
         return http.build();
     }
