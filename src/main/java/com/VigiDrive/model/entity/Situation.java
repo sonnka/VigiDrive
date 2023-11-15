@@ -39,6 +39,6 @@ public class Situation {
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @JsonIgnore
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "driver_id")
     private Driver driver;
 }

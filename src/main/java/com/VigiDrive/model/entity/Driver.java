@@ -34,7 +34,7 @@ public class Driver extends User{
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @JsonIgnore
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "manager_id")
     private Manager manager;
 
     @OneToOne(cascade = CascadeType.ALL)

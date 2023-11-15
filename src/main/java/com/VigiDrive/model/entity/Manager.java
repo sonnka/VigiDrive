@@ -16,7 +16,7 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-@Table(name = "mamangers")
+@Table(name = "managers")
 public class Manager extends User{
 
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH},
