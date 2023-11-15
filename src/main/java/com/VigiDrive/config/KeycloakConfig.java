@@ -58,8 +58,8 @@ public class KeycloakConfig {
         UserRepresentation admin = new UserRepresentation();
         admin.setUsername(ADMIN_USERNAME);
         admin.setEmail(ADMIN_USERNAME);
-        admin.setFirstName("Harry");
-        admin.setLastName("Potter");
+        admin.setFirstName("Sofiia");
+        admin.setLastName("Kazantseva");
         admin.setEmailVerified(Boolean.TRUE);
         admin.setCredentials(List.of(adminCredentials));
         admin.setEnabled(Boolean.TRUE);
@@ -101,6 +101,7 @@ public class KeycloakConfig {
         googleProvider.setAlias("google");
         googleProvider.setProviderId("google");
         googleProvider.setEnabled(true);
+        googleProvider.setTrustEmail(true);
         googleProvider.setUpdateProfileFirstLoginMode("on");
 
         googleProvider.setConfig(
@@ -136,7 +137,7 @@ public class KeycloakConfig {
         clientRepresentation.setClientId(clientId);
         clientRepresentation.setName(clientId);
         clientRepresentation.setRootUrl("http://localhost:8080");
-        clientRepresentation.setRedirectUris(List.of("http://localhost:8085/realms/myapp/broker/google/endpoint"));
+        clientRepresentation.setRedirectUris(List.of("http://localhost:8080/login/oauth2/code/vigi-driver"));
         clientRepresentation.setWebOrigins(List.of("*"));
         clientRepresentation.setStandardFlowEnabled(Boolean.TRUE);
         clientRepresentation.setPublicClient(Boolean.TRUE);
@@ -163,6 +164,9 @@ public class KeycloakConfig {
         } catch (Exception e) {
             log.error("Something went wrong when creating the realm role : {}", e.getMessage());
         }
+
+     //   UserRepresentation admin = getUserRepresentation();
+     //   usersResource.create(admin);
 
         return keycloak;
     }
