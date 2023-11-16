@@ -1,8 +1,5 @@
 package com.VigiDrive.config;
 
-import com.VigiDrive.model.entity.Admin;
-import com.VigiDrive.model.entity.Manager;
-import jakarta.ws.rs.core.Response;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -14,8 +11,10 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.IdentityProvidersResource;
 import org.keycloak.admin.client.resource.RealmResource;
-import org.keycloak.admin.client.resource.UsersResource;
-import org.keycloak.representations.idm.*;
+import org.keycloak.representations.idm.ClientRepresentation;
+import org.keycloak.representations.idm.IdentityProviderRepresentation;
+import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,8 +53,7 @@ public class KeycloakConfig {
 
     private String secret;
 
-    ResteasyClientBuilder resteasyClientBuilder = new ResteasyClientBuilderImpl();
-
+    private ResteasyClientBuilder resteasyClientBuilder = new ResteasyClientBuilderImpl();
 
     @Bean
     public Keycloak keycloak() {
@@ -82,8 +80,6 @@ public class KeycloakConfig {
         return keycloak;
     }
 
-
-
     private Keycloak createKeycloakConnection(ResteasyClientBuilder resteasyClientBuilder) {
         return KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
@@ -96,7 +92,7 @@ public class KeycloakConfig {
                 .build();
     }
 
-    private void createKeycloakRealm(Keycloak keycloak){
+    private void createKeycloakRealm(Keycloak keycloak) {
         RealmRepresentation newRealm = new RealmRepresentation();
         newRealm.setId(realm);
         newRealm.setRealm(realm);
@@ -109,7 +105,7 @@ public class KeycloakConfig {
         }
     }
 
-    private void createKeycloakClient(RealmResource realmResource){
+    private void createKeycloakClient(RealmResource realmResource) {
         ClientRepresentation clientRepresentation = new ClientRepresentation();
         clientRepresentation.setClientId(clientId);
         clientRepresentation.setName(clientId);
@@ -129,7 +125,7 @@ public class KeycloakConfig {
     }
 
 
-    private void createGoogleIdentityProvider(IdentityProvidersResource identityProvidersResource){
+    private void createGoogleIdentityProvider(IdentityProvidersResource identityProvidersResource) {
         IdentityProviderRepresentation googleProvider = new IdentityProviderRepresentation();
         googleProvider.setAlias("google");
         googleProvider.setProviderId("google");
@@ -156,7 +152,7 @@ public class KeycloakConfig {
         }
     }
 
-    private void createLocalIdentityProvider(IdentityProvidersResource identityProvidersResource){
+    private void createLocalIdentityProvider(IdentityProvidersResource identityProvidersResource) {
         IdentityProviderRepresentation localProvider = new IdentityProviderRepresentation();
         localProvider.setAlias("local");
         localProvider.setProviderId("local");
@@ -186,22 +182,6 @@ public class KeycloakConfig {
         } catch (Exception e) {
             log.error("Something went wrong when creating the realm role : {}", e.getMessage());
         }
-    }
-
-    private static UserRepresentation getUserRepresentation() {
-        CredentialRepresentation adminCredentials = new CredentialRepresentation();
-        adminCredentials.setType(CRED_TYPE);
-        adminCredentials.setValue(ADMIN_PASSWORD);
-
-        UserRepresentation admin = new UserRepresentation();
-        admin.setUsername(ADMIN_USERNAME);
-        admin.setEmail(ADMIN_USERNAME);
-        admin.setFirstName("Sofiia");
-        admin.setLastName("Kazantseva");
-        admin.setEmailVerified(Boolean.TRUE);
-        admin.setCredentials(List.of(adminCredentials));
-        admin.setEnabled(Boolean.TRUE);
-        return admin;
     }
 
 }

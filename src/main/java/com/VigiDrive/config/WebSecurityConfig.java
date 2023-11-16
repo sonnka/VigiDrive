@@ -26,7 +26,8 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(AbstractHttpConfigurer::disable);
+                .cors(AbstractHttpConfigurer::disable)
+                .oauth2Login(Customizer.withDefaults());
 
         return http.build();
     }

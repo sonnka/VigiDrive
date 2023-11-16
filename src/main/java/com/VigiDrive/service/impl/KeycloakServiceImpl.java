@@ -2,15 +2,14 @@ package com.VigiDrive.service.impl;
 
 import com.VigiDrive.model.request.AuthRequestDto;
 import com.VigiDrive.service.KeycloakService;
-import jakarta.ws.rs.core.Response;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.AccessTokenResponse;
-import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -21,18 +20,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequiredArgsConstructor
 public class KeycloakServiceImpl implements KeycloakService {
 
+    private final RestTemplate restTemplate;
+    private final Keycloak keycloak;
     @Value("${keycloak.clientId}")
     private String clientId;
-
     @Value("${keycloak.realm}")
     private String realm;
-
     @Value("${keycloak.serverUrl}")
     private String keycloakUrl;
-
-    private final RestTemplate restTemplate;
-
-    private final Keycloak keycloak;
 
     public AccessTokenResponse authenticate(AuthRequestDto request) {
         HttpHeaders headers = new HttpHeaders();
@@ -72,46 +67,7 @@ public class KeycloakServiceImpl implements KeycloakService {
                     null,
                     AccessTokenResponse.class).getBody();
         } catch (Exception e) {
-            throw new RuntimeException("Can't authenticate user " , e);
-        }
-    }
-
-    public AccessTokenResponse refreshToken(String refreshToken) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
-        parameters.add("grant_type", "refresh_token");
-        parameters.add("client_id", clientId);
-        parameters.add("refresh_token", refreshToken);
-
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(parameters, headers);
-
-        return restTemplate.exchange(getAuthUrl(),
-                HttpMethod.POST,
-                entity,
-                AccessTokenResponse.class).getBody();
-    }
-
-    public Response addUser(UserRepresentation userRepresentation) {
-        UsersResource instance = getInstance();
-        try (Response response = instance.create(userRepresentation)) {
-            if (HttpStatus.CREATED.value() == response.getStatus()) {
-                return response;
-            }
-            throw new RuntimeException("Something went wrong while register user in keycloak. Response Status : "
-                    + response.getStatusInfo().getReasonPhrase());
-        }
-    }
-
-    public void deleteUser(String userId) {
-        UsersResource instance = getInstance();
-        String reasonPhrase = null;
-        try (Response response = instance.delete(userId)) {
-            reasonPhrase = response.getStatusInfo().getReasonPhrase();
-        } catch (Exception e) {
-            throw new RuntimeException("Something went wrong while register user in keycloak. Response Status : "
-                    + reasonPhrase);
+            throw new RuntimeException("Can't authenticate user ", e);
         }
     }
 
@@ -126,7 +82,8 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
     private String getGoogleAuthUrl() {
-        //http://localhost:8085/realms/myapp/broker/google/endpoint
+        //https://accounts.google.com/o/oauth2/auth
+        //GET /realms/{realm_name}/protocol/openid-connect/auth
         return UriComponentsBuilder.fromHttpUrl(keycloakUrl)
                 .pathSegment("realms")
                 .pathSegment(realm)
@@ -134,14 +91,5 @@ public class KeycloakServiceImpl implements KeycloakService {
                 .pathSegment("google")
                 .pathSegment("endpoint")
                 .toUriString();
-    }
-
-    private UsersResource getInstance() {
-        return keycloak.realm(realm).users();
-    }
-
-    public void updateUser(UserRepresentation representation) {
-        UsersResource instance = getInstance();
-        instance.get(representation.getId()).update(representation);
     }
 }
