@@ -1,6 +1,6 @@
 package com.VigiDrive.controller;
 
-import com.VigiDrive.model.request.AuthRequestDto;
+import com.VigiDrive.model.request.AuthRequest;
 import com.VigiDrive.service.KeycloakService;
 import lombok.AllArgsConstructor;
 import org.keycloak.representations.AccessTokenResponse;
@@ -16,18 +16,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private KeycloakService keycloakService;
+
     @PostMapping("/login")
-    public ResponseEntity<AccessTokenResponse> login(@RequestBody AuthRequestDto request){
+    public ResponseEntity<AccessTokenResponse> login(@RequestBody AuthRequest request) {
         return ResponseEntity.ok(keycloakService.authenticate(request));
     }
 
     @GetMapping("/login/google")
-    public ResponseEntity<AccessTokenResponse> loginGoogle(){
+    public ResponseEntity<AccessTokenResponse> loginGoogle() {
         return ResponseEntity.ok(keycloakService.authenticateGoogle());
     }
 
     @GetMapping("/hello")
-    public String hello(Authentication auth){
+    public String hello(Authentication auth) {
         return "Hello ";
     }
 }

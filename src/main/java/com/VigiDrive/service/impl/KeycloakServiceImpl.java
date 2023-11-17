@@ -1,6 +1,6 @@
 package com.VigiDrive.service.impl;
 
-import com.VigiDrive.model.request.AuthRequestDto;
+import com.VigiDrive.model.request.AuthRequest;
 import com.VigiDrive.service.KeycloakService;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
@@ -29,7 +29,7 @@ public class KeycloakServiceImpl implements KeycloakService {
     @Value("${keycloak.serverUrl}")
     private String keycloakUrl;
 
-    public AccessTokenResponse authenticate(AuthRequestDto request) {
+    public AccessTokenResponse authenticate(AuthRequest request) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 

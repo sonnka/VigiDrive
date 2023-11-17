@@ -2,7 +2,6 @@ package com.VigiDrive.model.response;
 
 import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.enums.Sex;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,7 +9,6 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-@Builder
 public class DriverDTO {
 
     private Long id;

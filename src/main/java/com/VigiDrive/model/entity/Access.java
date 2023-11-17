@@ -32,12 +32,13 @@ public class Access {
     private LocalDateTime dateOfAccess;
 
     @Column(name = "access_duration")
+    @Enumerated(EnumType.STRING)
     private TimeDuration accessDuration;
 
     @Column(name = "is_active")
     private Boolean isActive;
 
-    public Access(){
+    public Access() {
         this.isActive = true;
     }
 }
