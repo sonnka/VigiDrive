@@ -6,6 +6,4 @@ import org.keycloak.representations.AccessTokenResponse;
 public interface KeycloakService {
     AccessTokenResponse authenticate(AuthRequest request);
 
-    AccessTokenResponse authenticateGoogle();
-
 }

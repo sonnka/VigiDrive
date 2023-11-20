@@ -50,27 +50,6 @@ public class KeycloakServiceImpl implements KeycloakService {
         }
     }
 
-    public AccessTokenResponse authenticateGoogle() {
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-//
-//        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
-//        parameters.add("username", request.getUsername());
-//        parameters.add("password", request.getPassword());
-//        parameters.add("grant_type", "password");
-//        parameters.add("client_id", clientId);
-//
-//        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(parameters, headers);
-        try {
-            return restTemplate.exchange(getAuthUrl(),
-                    HttpMethod.GET,
-                    null,
-                    AccessTokenResponse.class).getBody();
-        } catch (Exception e) {
-            throw new RuntimeException("Can't authenticate user ", e);
-        }
-    }
-
     private String getAuthUrl() {
         return UriComponentsBuilder.fromHttpUrl(keycloakUrl)
                 .pathSegment("realms")
@@ -81,15 +60,4 @@ public class KeycloakServiceImpl implements KeycloakService {
                 .toUriString();
     }
 
-    private String getGoogleAuthUrl() {
-        //https://accounts.google.com/o/oauth2/auth
-        //GET /realms/{realm_name}/protocol/openid-connect/auth
-        return UriComponentsBuilder.fromHttpUrl(keycloakUrl)
-                .pathSegment("realms")
-                .pathSegment(realm)
-                .pathSegment("broker")
-                .pathSegment("google")
-                .pathSegment("endpoint")
-                .toUriString();
-    }
 }

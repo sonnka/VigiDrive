@@ -22,13 +22,9 @@ public class UserController {
         return ResponseEntity.ok(keycloakService.authenticate(request));
     }
 
-    @GetMapping("/login/google")
-    public ResponseEntity<AccessTokenResponse> loginGoogle() {
-        return ResponseEntity.ok(keycloakService.authenticateGoogle());
-    }
-
     @GetMapping("/hello")
     public String hello(Authentication auth) {
+
         return "Hello ";
     }
 }
