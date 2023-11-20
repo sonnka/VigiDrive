@@ -9,19 +9,15 @@ import org.jboss.resteasy.client.jaxrs.internal.ResteasyClientBuilderImpl;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.admin.client.resource.IdentityProvidersResource;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.representations.idm.ClientRepresentation;
-import org.keycloak.representations.idm.IdentityProviderRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Configuration
 @Getter
@@ -61,15 +57,9 @@ public class KeycloakConfig {
 
         RealmResource realmResource = keycloak.realm(realm);
 
-        IdentityProvidersResource identityProvidersResource = realmResource.identityProviders();
-
         createKeycloakRealm(keycloak);
 
         createKeycloakClient(realmResource);
-
-        createGoogleIdentityProvider(identityProvidersResource);
-
-        createLocalIdentityProvider(identityProvidersResource);
 
         createRole(roleDriver, realmResource);
 
@@ -124,53 +114,6 @@ public class KeycloakConfig {
 
     }
 
-
-    private void createGoogleIdentityProvider(IdentityProvidersResource identityProvidersResource) {
-        IdentityProviderRepresentation googleProvider = new IdentityProviderRepresentation();
-        googleProvider.setAlias("google");
-        googleProvider.setProviderId("google");
-        googleProvider.setEnabled(true);
-        googleProvider.setTrustEmail(true);
-        googleProvider.setUpdateProfileFirstLoginMode("on");
-
-        googleProvider.setConfig(
-                Map.of(
-                        "clientId", "108088983721-94ri8tnmtprcj88c1cpd7gng1okh4mfk.apps.googleusercontent.com",
-                        "clientSecret", "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",
-                        "defaultScope", "openid email profile",
-                        "authorizationUrl", "https://accounts.google.com/o/oauth2/auth",
-                        "tokenUrl", "https://accounts.google.com/o/oauth2/token",
-                        "userInfoUrl", "https://www.googleapis.com/oauth2/v3/userinfo",
-                        "logoutUrl", "https://accounts.google.com/o/oauth2/logout"
-                )
-        );
-
-        try {
-            identityProvidersResource.create(googleProvider);
-        } catch (Exception e) {
-            log.error("Something went wrong when creating the keycloak client : {}", e.getMessage());
-        }
-    }
-
-    private void createLocalIdentityProvider(IdentityProvidersResource identityProvidersResource) {
-        IdentityProviderRepresentation localProvider = new IdentityProviderRepresentation();
-        localProvider.setAlias("local");
-        localProvider.setProviderId("local");
-        localProvider.setEnabled(true);
-        localProvider.setAuthenticateByDefault(true);
-
-        Map<String, String> config = new HashMap<>();
-        config.put("editUsernameAllowed", "true");
-        config.put("hideOnLoginPage", "false");
-
-        localProvider.setConfig(config);
-
-        try {
-            identityProvidersResource.create(localProvider);
-        } catch (Exception e) {
-            log.error("Something went wrong when creating the keycloak client : {}", e.getMessage());
-        }
-    }
 
     private void createRole(String roleName, RealmResource realmResource) {
         try {
