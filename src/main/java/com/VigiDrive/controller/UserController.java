@@ -27,6 +27,6 @@ public class UserController {
     public String hello(Authentication auth) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return "Hello " + auth.getPrincipal().toString() + "    ---------  " + authentication;
+        return "Hello \n" + auth.getName() + "\n---------\n" + authentication.getName();
     }
 }
