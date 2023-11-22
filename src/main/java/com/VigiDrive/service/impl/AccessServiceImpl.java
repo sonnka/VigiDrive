@@ -9,7 +9,6 @@ import com.VigiDrive.repository.AccessRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.service.AccessService;
-import com.VigiDrive.utils.Utils;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +24,6 @@ public class AccessServiceImpl implements AccessService {
     private AccessRepository accessRepository;
     private DriverRepository driverRepository;
     private ManagerRepository managerRepository;
-    private Utils utils;
-
 
     @Override
     public AccessDTO requestAccess(Long managerId, AccessRequest access) {
@@ -40,7 +37,7 @@ public class AccessServiceImpl implements AccessService {
         TimeDuration duration = TimeDuration.valueOf(access.getAccessDuration().toUpperCase());
 
 
-        return utils.toAccessDTO(accessRepository.save(
+        return toAccessDTO(accessRepository.save(
                 Access.builder()
                         .driverId(driver.getId())
                         .managerId(manager.getId())
@@ -70,14 +67,14 @@ public class AccessServiceImpl implements AccessService {
 
         LocalDateTime startDate = LocalDateTime.now(Clock.systemUTC());
 
-        LocalDateTime endDate = Utils.calculateEndDateOfAccess(startDate, duration);
+        LocalDateTime endDate = calculateEndDateOfAccess(startDate, duration);
 
         access.setStartDateOfAccess(startDate);
         access.setEndDateOfAccess(endDate);
         access.setIsActive(true);
-        access.setIsExpiring(Utils.checkExpiring(endDate));
+        access.setIsExpiring(checkExpiring(endDate));
 
-        return utils.toAccessDTO(accessRepository.save(access));
+        return toAccessDTO(accessRepository.save(access));
     }
 
     @Override
@@ -98,7 +95,7 @@ public class AccessServiceImpl implements AccessService {
         access.setIsActive(false);
         access.setIsExpiring(false);
 
-        return utils.toAccessDTO(accessRepository.save(access));
+        return toAccessDTO(accessRepository.save(access));
     }
 
     @Override
@@ -122,14 +119,14 @@ public class AccessServiceImpl implements AccessService {
 
         LocalDateTime startDate = LocalDateTime.now(Clock.systemUTC());
 
-        LocalDateTime endDate = Utils.calculateEndDateOfAccess(startDate, duration);
+        LocalDateTime endDate = calculateEndDateOfAccess(startDate, duration);
 
         access.setStartDateOfAccess(startDate);
         access.setEndDateOfAccess(endDate);
         access.setIsActive(true);
-        access.setIsExpiring(Utils.checkExpiring(endDate));
+        access.setIsExpiring(checkExpiring(endDate));
 
-        return utils.toAccessDTO(accessRepository.save(access));
+        return toAccessDTO(accessRepository.save(access));
     }
 
     @Override
@@ -139,7 +136,7 @@ public class AccessServiceImpl implements AccessService {
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
 
         return accessRepository.findAllByDriverIdAndIsActive(driver.getId(), false)
-                .stream().map(utils::toAccessDTO).toList();
+                .stream().map(this::toAccessDTO).toList();
     }
 
     @Override
@@ -149,7 +146,7 @@ public class AccessServiceImpl implements AccessService {
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
 
         return accessRepository.findAllByDriverIdAndIsActive(driver.getId(), true)
-                .stream().map(utils::toAccessDTO).toList();
+                .stream().map(this::toAccessDTO).toList();
     }
 
     @Override
@@ -159,7 +156,7 @@ public class AccessServiceImpl implements AccessService {
                 .orElseThrow(() -> new RuntimeException("Manager not found"));
 
         return accessRepository.findAllByManagerIdAndIsActive(manager.getId(), false)
-                .stream().map(utils::toAccessDTO).toList();
+                .stream().map(this::toAccessDTO).toList();
     }
 
     @Override
@@ -169,7 +166,7 @@ public class AccessServiceImpl implements AccessService {
                 .orElseThrow(() -> new RuntimeException("Manager not found"));
 
         return accessRepository.findAllByManagerIdAndIsActive(manager.getId(), true)
-                .stream().map(utils::toAccessDTO).toList();
+                .stream().map(this::toAccessDTO).toList();
     }
 
     @Override
@@ -179,6 +176,43 @@ public class AccessServiceImpl implements AccessService {
                 .orElseThrow(() -> new RuntimeException("Manager not found"));
 
         return accessRepository.findAllByManagerIdAndIsExpiring(manager.getId(), true)
-                .stream().map(utils::toAccessDTO).toList();
+                .stream().map(this::toAccessDTO).toList();
+    }
+
+
+    private Boolean checkExpiring(LocalDateTime endAccess) {
+        return endAccess.minusDays(3).isBefore(LocalDateTime.now(Clock.systemUTC()));
+    }
+
+    private LocalDateTime calculateEndDateOfAccess(LocalDateTime startAccess, TimeDuration duration) {
+        long days = 0;
+        switch (duration) {
+            case DAY -> days = 1;
+            case WEEK -> days = 7;
+            case TWO_WEEKS -> days = 14;
+            case MONTH -> days = 30;
+            case SIX_MONTH -> days = 180;
+            case YEAR -> days = 360;
+        }
+        return startAccess.plusDays(days);
+    }
+
+    private AccessDTO toAccessDTO(Access access) {
+        var manager = managerRepository.findById(access.getManagerId())
+                .orElseThrow(() -> new RuntimeException("Manager not found!"));
+
+        var driver = driverRepository.findById(access.getDriverId())
+                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+
+        return AccessDTO.builder()
+                .id(access.getId())
+                .driverEmail(driver.getEmail())
+                .managerEmail(manager.getEmail())
+                .startDateOfAccess(access.getStartDateOfAccess())
+                .endDateOfAccess(access.getEndDateOfAccess())
+                .accessDuration(access.getAccessDuration())
+                .isActive(access.getIsActive())
+                .isExpiring(access.getIsExpiring())
+                .build();
     }
 }

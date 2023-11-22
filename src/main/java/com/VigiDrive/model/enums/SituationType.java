@@ -5,6 +5,5 @@ public enum SituationType {
     DEVIATION_FROM_ROUT,
     HIGH_SPEED,
     LOW_SPEED,
-    HIGH_LEVEL_OF_FATIGUE,
-    OVERTIME
+    HIGH_LEVEL_OF_FATIGUE
 }

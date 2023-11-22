@@ -9,18 +9,16 @@ public interface ToDo {
     //      - get all drivers
     //      - get drivers by manager
     //      - get all managers
-    //      - ask for access (manager)
-    //      - give(create) access (driver)
-    //      - delete access (driver)
-    //      - get access
-    //      - add health info (driver)  : check health info
-    //      - get current health status
+    //      +- ask for access (manager)
+    //      +- give(create) access (driver)
+    //      +- delete access (driver)
+    //      +- get access
+    //      +- add health info (driver)  : check health info
+    //      +- get current health status
     //     +- add situation (driver)    :
     //      - alert driver/manager
     //      - get current situation
     //      - get all situations by period
-    //      - generate/delete recommendations every week
-    //      - get recommendations
     //      - get statistic stress
     //      - get statistic concentration
     //      - get statistic sleeping
