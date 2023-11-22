@@ -1,12 +1,9 @@
 package com.VigiDrive.model.request;
 
 import com.VigiDrive.model.enums.CountryCode;
-import com.VigiDrive.model.enums.Sex;
 import com.VigiDrive.validation.Code;
 import com.VigiDrive.validation.Date;
 import com.VigiDrive.validation.PhoneNumber;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,40 +14,23 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Builder
-public class DriverRequest {
+public class UpdateDriverRequest {
 
-    @NotEmpty
-    @NotNull
     @Size(min = 2, max = 24)
-    private String name;
+    private String firstName;
 
-    @NotEmpty
-    @NotNull
     @Size(min = 2, max = 24)
-    private String surname;
+    private String lastName;
 
-    @NotNull
-    @NotEmpty
     @Date
     private LocalDate dateOfBirth;
 
-    @NotNull
-    @NotEmpty
-    @com.VigiDrive.validation.Sex
-    private Sex sex;
-
-    @NotNull
-    @NotEmpty
     @Code
     private CountryCode countryCode;
 
-    @NotNull
-    @NotEmpty
     @PhoneNumber
     private String phoneNumber;
 
-    @NotNull
-    @NotEmpty
     @PhoneNumber
     private String emergencyContact;
 }

@@ -31,17 +31,17 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         SimpleGrantedAuthority grantedAuthority = new SimpleGrantedAuthority(user.getRole().name());
         Collection<SimpleGrantedAuthority> authorities = Collections.singleton(grantedAuthority);
 
-//        return org.springframework.security.core.userdetails.User.builder()
-//                .username(user.getEmail())
-//                .password(user.getPassword())
-//                .authorities(authorities)
-//                .build();
-        return new UserDetailsImpl(user.getEmail(), user.getName(), user.getPassword(), authorities);
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(user.getEmail())
+                .password(user.getPassword())
+                .authorities(authorities)
+                .build();
+        //  return new UserDetailsImpl(user.getEmail(), user.getName(), user.getPassword(), authorities);
     }
 
     public User findByEmail(String email) {
         return (User) userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Username %s not found".formatted(email)));
+                .orElseThrow(() -> new UsernameNotFoundException("Username %s not found".formatted(email)));
     }
 }
 

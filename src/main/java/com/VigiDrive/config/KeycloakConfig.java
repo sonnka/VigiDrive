@@ -27,9 +27,9 @@ import java.util.List;
 @Slf4j
 public class KeycloakConfig {
 
-    private static final String ADMIN_USERNAME = "sofiia.kazantseva@faceit.com.ua";
-    private static final String ADMIN_PASSWORD = "admin";
-    private static final String CRED_TYPE = "Password";
+    // private static final String ADMIN_USERNAME = "sofiia.kazantseva@faceit.com.ua";
+    //  private static final String ADMIN_PASSWORD = "admin";
+    // private static final String CRED_TYPE = "Password";
 
     private String serverUrl;
 
@@ -87,6 +87,7 @@ public class KeycloakConfig {
         newRealm.setId(realm);
         newRealm.setRealm(realm);
         newRealm.setEnabled(true);
+        newRealm.setRegistrationAllowed(true);
 
         try {
             keycloak.realms().create(newRealm);

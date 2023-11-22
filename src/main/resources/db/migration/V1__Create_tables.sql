@@ -30,8 +30,8 @@ CREATE TABLE licenses
 CREATE TABLE users
 (
     user_id     BIGINT AUTO_INCREMENT NOT NULL,
-    name        VARCHAR(255)          NULL,
-    surname     VARCHAR(255)          NULL,
+    first_name  VARCHAR(255)          NULL,
+    last_name   VARCHAR(255)          NULL,
     email       VARCHAR(255)          NULL,
     password    VARCHAR(255)          NULL,
     avatar      VARCHAR(255)          NULL,
@@ -39,7 +39,6 @@ CREATE TABLE users
     keycloak_id BINARY(16)            NULL,
     CONSTRAINT pk_users PRIMARY KEY (user_id)
 );
-
 
 CREATE TABLE managers
 (
@@ -53,7 +52,8 @@ ALTER TABLE managers
 
 CREATE TABLE admins
 (
-    user_id BIGINT NOT NULL,
+    user_id     BIGINT NOT NULL,
+    is_approved BIT(1) NULL,
     CONSTRAINT pk_admins PRIMARY KEY (user_id)
 );
 
@@ -65,7 +65,6 @@ CREATE TABLE drivers
 (
     user_id           BIGINT       NOT NULL,
     date_of_birth     date         NULL,
-    sex               VARCHAR(255) NULL,
     country_code      VARCHAR(255) NULL,
     phone_number      VARCHAR(255) NULL,
     emergency_contact VARCHAR(255) NULL,

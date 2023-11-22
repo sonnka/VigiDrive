@@ -2,7 +2,6 @@ package com.VigiDrive.model.entity;
 
 import com.VigiDrive.model.enums.CountryCode;
 import com.VigiDrive.model.enums.Role;
-import com.VigiDrive.model.enums.Sex;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,10 +23,6 @@ public class Driver extends User {
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "sex")
-    private Sex sex;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "country_code")

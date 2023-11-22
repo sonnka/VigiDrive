@@ -26,11 +26,11 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
-    @Column(name = "name")
-    private String name;
+    @Column(name = "first_name")
+    private String firstName;
 
-    @Column(name = "surname")
-    private String surname;
+    @Column(name = "last_name")
+    private String lastName;
 
     @Column(name = "email")
     private String email;
@@ -55,15 +55,15 @@ public class User {
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
         return Objects.equals(id, user.id)
-                && Objects.equals(name, user.name)
-                && Objects.equals(surname, user.surname)
+                && Objects.equals(firstName, user.firstName)
+                && Objects.equals(lastName, user.lastName)
                 && Objects.equals(email, user.email)
                 && Objects.equals(password, user.password);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, surname, email, password);
+        return Objects.hash(id, firstName, lastName, email, password);
     }
 
 }
