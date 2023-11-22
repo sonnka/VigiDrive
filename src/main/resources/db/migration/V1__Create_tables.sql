@@ -10,12 +10,14 @@ DROP TABLE IF EXISTS situations;
 
 CREATE TABLE accesses
 (
-    access_id       BIGINT AUTO_INCREMENT NOT NULL,
-    driver_id       BIGINT                NULL,
-    manager_id      BIGINT                NULL,
-    date_of_access  datetime              NULL,
-    access_duration VARCHAR(255)          NULL,
-    is_active       BIT(1)                NULL,
+    access_id            BIGINT AUTO_INCREMENT NOT NULL,
+    driver_id            BIGINT                NULL,
+    manager_id           BIGINT                NULL,
+    start_date_of_access datetime              NULL,
+    end_date_of_access   datetime              NULL,
+    access_duration      VARCHAR(255)          NULL,
+    is_active            BIT(1)                NULL,
+    is_expiring          BIT(1)                NULL,
     CONSTRAINT pk_accesses PRIMARY KEY (access_id)
 );
 

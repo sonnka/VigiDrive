@@ -28,8 +28,11 @@ public class Access {
     @Column(name = "manager_id")
     private Long managerId;
 
-    @Column(name = "date_of_access")
-    private LocalDateTime dateOfAccess;
+    @Column(name = "start_date_of_access")
+    private LocalDateTime startDateOfAccess;
+
+    @Column(name = "end_date_of_access")
+    private LocalDateTime endDateOfAccess;
 
     @Column(name = "access_duration")
     @Enumerated(EnumType.STRING)
@@ -38,7 +41,11 @@ public class Access {
     @Column(name = "is_active")
     private Boolean isActive;
 
+    @Column(name = "is_expiring")
+    private Boolean isExpiring;
+
     public Access() {
-        this.isActive = true;
+        this.isActive = false;
+        this.isExpiring = false;
     }
 }

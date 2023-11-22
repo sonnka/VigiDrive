@@ -1,8 +1,8 @@
 package com.VigiDrive.service;
 
-public interface UserService {
+public interface ToDo {
 
-    //TODO: - create user (driver/manager)  : create driver license
+    //TODO: +- create user (driver/manager)  : create driver license
     //      - edit user (driver/manager/admin) : update driver license
     //      - delete user (driver/manager/admin) : delete driver license : delete access
     //      - get user
@@ -15,7 +15,8 @@ public interface UserService {
     //      - get access
     //      - add health info (driver)  : check health info
     //      - get current health status
-    //      - add situation (driver)    : alert driver/manager
+    //     +- add situation (driver)    :
+    //      - alert driver/manager
     //      - get current situation
     //      - get all situations by period
     //      - generate/delete recommendations every week
@@ -23,7 +24,7 @@ public interface UserService {
     //      - get statistic stress
     //      - get statistic concentration
     //      - get statistic sleeping
-    //      - get videos from cloud
+    //      - get videos
     //      - chat ???
     //      - add emergency number (driver)
     //      - edit emergency number (driver)
