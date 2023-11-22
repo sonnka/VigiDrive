@@ -19,14 +19,6 @@ CREATE TABLE accesses
     CONSTRAINT pk_accesses PRIMARY KEY (access_id)
 );
 
-CREATE TABLE licenses
-(
-    license_id BIGINT AUTO_INCREMENT NOT NULL,
-    number     VARCHAR(255)          NULL,
-    date_to    datetime              NULL,
-    CONSTRAINT pk_licenses PRIMARY KEY (license_id)
-);
-
 CREATE TABLE users
 (
     user_id     BIGINT AUTO_INCREMENT NOT NULL,
@@ -71,18 +63,28 @@ CREATE TABLE drivers
     destination       VARCHAR(255) NULL,
     current_location  VARCHAR(255) NULL,
     manager_id        BIGINT       NULL,
-    license_id        BIGINT       NULL,
     CONSTRAINT pk_drivers PRIMARY KEY (user_id)
 );
-
-ALTER TABLE drivers
-    ADD CONSTRAINT FK_DRIVERS_ON_LICENSE FOREIGN KEY (license_id) REFERENCES licenses (license_id);
 
 ALTER TABLE drivers
     ADD CONSTRAINT FK_DRIVERS_ON_MANAGER FOREIGN KEY (manager_id) REFERENCES managers (user_id);
 
 ALTER TABLE drivers
     ADD CONSTRAINT FK_DRIVERS_ON_USER FOREIGN KEY (user_id) REFERENCES users (user_id);
+
+
+CREATE TABLE licenses
+(
+    license_id BIGINT AUTO_INCREMENT NOT NULL,
+    number     VARCHAR(255)          NULL,
+    date_to    date                  NULL,
+    driver_id  BIGINT                NULL,
+    CONSTRAINT pk_licenses PRIMARY KEY (license_id)
+);
+
+ALTER TABLE licenses
+    ADD CONSTRAINT FK_LICENSES_ON_DRIVER FOREIGN KEY (driver_id) REFERENCES drivers (user_id);
+
 
 
 CREATE TABLE health

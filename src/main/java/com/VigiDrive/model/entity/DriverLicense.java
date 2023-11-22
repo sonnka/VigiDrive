@@ -3,7 +3,7 @@ package com.VigiDrive.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Entity
 @Builder
@@ -24,8 +24,9 @@ public class DriverLicense {
     private String number;
 
     @Column(name = "date_to")
-    private Date dateTo;
+    private LocalDate dateTo;
 
-    @OneToOne(mappedBy = "license")
+    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @JoinColumn(name = "driver_id", referencedColumnName = "user_id")
     private Driver driver;
 }

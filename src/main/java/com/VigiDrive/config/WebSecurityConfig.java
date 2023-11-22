@@ -7,8 +7,6 @@ import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -34,6 +32,9 @@ public class WebSecurityConfig {
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
 
+    @Autowired
+    private CustomOAuth2UserService oAuth2UserService;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
@@ -51,8 +52,8 @@ public class WebSecurityConfig {
         http
                 .userDetailsService(userDetailsService)
 
-
-                .authenticationManager(authenticationManagerBean(http))
+                .oauth2Login(p -> p.userInfoEndpoint(i -> i.userService(oAuth2UserService)))
+//                .authenticationManager(authenticationManagerBean(http))
                 .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(jwtAuthenticationConverter())
                         .decoder(jwtDecoder())));
 
@@ -69,15 +70,15 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public AuthenticationManager authenticationManagerBean(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(
-                AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder());
-        return authenticationManagerBuilder.build();
-    }
-
+    //    @Bean
+//    public AuthenticationManager authenticationManagerBean(HttpSecurity http) throws Exception {
+//        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(
+//                AuthenticationManagerBuilder.class);
+//        authenticationManagerBuilder.userDetailsService(userDetailsService)
+//                .passwordEncoder(passwordEncoder());
+//        return authenticationManagerBuilder.build();
+//    }
+//
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();

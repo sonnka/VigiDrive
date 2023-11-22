@@ -45,8 +45,7 @@ public class Driver extends User {
     @JoinColumn(name = "manager_id")
     private Manager manager;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "license_id", referencedColumnName = "license_id")
+    @OneToOne(mappedBy = "driver")
     private DriverLicense license;
 
     @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "driver")
