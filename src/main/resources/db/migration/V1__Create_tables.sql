@@ -118,12 +118,13 @@ ALTER TABLE recommendations
 
 CREATE TABLE situations
 (
-    situation_id BIGINT AUTO_INCREMENT NOT NULL,
-    start        datetime              NULL,
-    end          datetime              NULL,
-    type         VARCHAR(255)          NULL,
-    video        VARCHAR(255)          NULL,
-    driver_id    BIGINT                NULL,
+    situation_id  BIGINT AUTO_INCREMENT NOT NULL,
+    start         datetime              NULL,
+    end           datetime              NULL,
+    type          VARCHAR(255)          NULL,
+    `description` VARCHAR(255)          NULL,
+    video         VARCHAR(255)          NULL,
+    driver_id     BIGINT                NULL,
     CONSTRAINT pk_situations PRIMARY KEY (situation_id)
 );
 

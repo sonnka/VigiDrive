@@ -23,7 +23,7 @@ public class DriverController {
                 .body(driverService.registerDriver(newDriver));
     }
 
-    @PatchMapping("/api/drivers/{driver-id}")
+    @PatchMapping("/drivers/{driver-id}")
     public DriverDTO updateDriver(@PathVariable("driver-id") Long driverId, @RequestBody @Valid UpdateDriverRequest driver)
             throws UserException {
         return driverService.updateDriver(driverId, driver);

@@ -34,6 +34,9 @@ public class Situation {
     @Column(name = "type")
     private SituationType type;
 
+    @Column(name = "description")
+    private String description;
+
     @Column(name = "video")
     private String video;
 
