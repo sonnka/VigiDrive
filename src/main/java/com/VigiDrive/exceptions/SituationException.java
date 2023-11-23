@@ -23,7 +23,11 @@ public class SituationException extends Exception {
     public enum SituationExceptionProfile {
 
         SITUATION_NOT_FOUND("situation_not_found",
-                "Situation is not found.", HttpStatus.NOT_FOUND);
+                "Situation is not found.", HttpStatus.NOT_FOUND),
+        INVALID_TIME("invalid_time",
+                "Situation time is invalid.", HttpStatus.BAD_REQUEST),
+        INVALID_VIDEO_URL("invalid_video_url",
+                "Situation video url is invalid.", HttpStatus.BAD_REQUEST);
 
 
         private final String exceptionName;

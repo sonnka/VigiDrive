@@ -1,5 +1,7 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.exceptions.SituationException;
+import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Situation;
 import com.VigiDrive.model.enums.SituationType;
 import com.VigiDrive.model.request.SituationRequest;
@@ -8,9 +10,7 @@ import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.SituationRepository;
 import com.VigiDrive.service.SituationService;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -27,9 +27,9 @@ public class SituationServiceImpl implements SituationService {
     private DriverRepository driverRepository;
 
     @Override
-    public List<SituationDTO> getSituations(Long driverId) {
+    public List<SituationDTO> getSituations(Long driverId) throws UserException {
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         return situationRepository.findAllByDriver(driver).stream()
                 .map(SituationDTO::new)
@@ -37,26 +37,26 @@ public class SituationServiceImpl implements SituationService {
     }
 
     @Override
-    public SituationDTO getSituation(Long driverId, Long situationId) {
+    public SituationDTO getSituation(Long driverId, Long situationId) throws UserException, SituationException {
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         var situation = situationRepository.findById(situationId)
-                .orElseThrow(() -> new RuntimeException("Situation not found!"));
+                .orElseThrow(() -> new SituationException(SituationException.SituationExceptionProfile.SITUATION_NOT_FOUND));
 
         if (!Objects.equals(situation.getDriver().getId(), driverId)) {
-            throw new RuntimeException("Permission denied");
+            throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
         }
 
         return new SituationDTO(situation);
     }
 
     @Override
-    public SituationDTO addSituation(Long driverId, SituationRequest situation) {
+    public SituationDTO addSituation(Long driverId, SituationRequest situation) throws UserException, SituationException {
         String videoUrlRegex = "^(https?://)?(www\\.)?([a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}(/\\S*)?$";
 
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         LocalDateTime start = null;
         LocalDateTime end = null;
@@ -65,8 +65,7 @@ public class SituationServiceImpl implements SituationService {
             start = LocalDateTime.parse(situation.getStart(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
             end = LocalDateTime.parse(situation.getEnd(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Time is invalid!");
+            throw new SituationException(SituationException.SituationExceptionProfile.INVALID_TIME);
         }
 
         SituationType type = SituationType.valueOf(situation.getType().toUpperCase());
@@ -76,8 +75,7 @@ public class SituationServiceImpl implements SituationService {
             Matcher matcher = pattern.matcher(situation.getVideo());
 
             if (!matcher.matches()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Video url is invalid!");
+                throw new SituationException(SituationException.SituationExceptionProfile.INVALID_VIDEO_URL);
             }
         }
         return new SituationDTO(situationRepository.save(

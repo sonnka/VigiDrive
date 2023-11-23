@@ -1,5 +1,6 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.HealthInfo;
 import com.VigiDrive.model.request.HealthInfoRequest;
 import com.VigiDrive.model.response.HealthInfoDTO;
@@ -20,13 +21,13 @@ public class HealthInfoServiceImpl implements HealthInfoService {
     private DriverRepository driverRepository;
 
     @Override
-    public HealthInfoDTO addHealthInfo(Long driverId, HealthInfoRequest healthInfoRequest) {
+    public HealthInfoDTO addHealthInfo(Long driverId, HealthInfoRequest healthInfoRequest) throws UserException {
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         if (healthInfoRequest.getSleepinessLevel() < 0 && healthInfoRequest.getConcentrationLevel() < 0
                 && healthInfoRequest.getStressLevel() < 0) {
-            throw new RuntimeException("Invalid health data!");
+            throw new UserException(UserException.UserExceptionProfile.INVALID_HEALTH_DATA);
         }
 
         return new HealthInfoDTO(healthInfoRepository.save(
@@ -41,9 +42,9 @@ public class HealthInfoServiceImpl implements HealthInfoService {
     }
 
     @Override
-    public HealthInfoDTO getCurrentHealthInfo(Long driverId) {
+    public HealthInfoDTO getCurrentHealthInfo(Long driverId) throws UserException {
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         var healthInfo = healthInfoRepository.findFirstByDriverOrderByTimeDesc(driver).orElse(null);
 

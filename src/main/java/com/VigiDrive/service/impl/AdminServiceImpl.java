@@ -1,5 +1,7 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.exceptions.SecurityException;
+import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Admin;
 import com.VigiDrive.model.enums.Role;
 import com.VigiDrive.model.request.RegisterRequest;
@@ -29,11 +31,11 @@ public class AdminServiceImpl implements AdminService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public AdminDTO registerAdmin(RegisterRequest newAdmin) {
+    public AdminDTO registerAdmin(RegisterRequest newAdmin) throws SecurityException {
         String keycloakId = keycloakService.createUser(newAdmin, Role.ADMIN);
 
         if (keycloakId == null || keycloakId.isEmpty()) {
-            throw new RuntimeException("Registration failed.");
+            throw new SecurityException(SecurityException.SecurityExceptionProfile.REGISTRATION_FAILED);
         }
 
         Admin admin = Admin.builder()
@@ -50,33 +52,33 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public void deleteDriver(Long adminId, Long driverId) {
+    public void deleteDriver(Long adminId, Long driverId) throws UserException, SecurityException {
         var admin = adminRepository.findById(adminId)
-                .orElseThrow(() -> new RuntimeException("Admin not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
 
         driverService.delete(driverId);
     }
 
     @Override
-    public void deleteManager(Long adminId, Long managerId) {
+    public void deleteManager(Long adminId, Long managerId) throws UserException, SecurityException {
         var admin = adminRepository.findById(adminId)
-                .orElseThrow(() -> new RuntimeException("Admin not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
 
         managerService.delete(managerId);
     }
 
     @Override
-    public List<ShortDriverDTO> getDrivers(Long adminId) {
+    public List<ShortDriverDTO> getDrivers(Long adminId) throws UserException {
         var admin = adminRepository.findById(adminId)
-                .orElseThrow(() -> new RuntimeException("Admin not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
 
         return driverService.getAllDrivers();
     }
 
     @Override
-    public List<ManagerDTO> getManagers(Long adminId) {
+    public List<ManagerDTO> getManagers(Long adminId) throws UserException {
         var admin = adminRepository.findById(adminId)
-                .orElseThrow(() -> new RuntimeException("Admin not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
 
         return managerService.getAllManagers();
     }

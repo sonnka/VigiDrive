@@ -1,6 +1,9 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Access;
+import com.VigiDrive.model.entity.Driver;
+import com.VigiDrive.model.entity.Manager;
 import com.VigiDrive.model.enums.TimeDuration;
 import com.VigiDrive.model.request.AccessRequest;
 import com.VigiDrive.model.request.ExtendAccessRequest;
@@ -26,13 +29,13 @@ public class AccessServiceImpl implements AccessService {
     private ManagerRepository managerRepository;
 
     @Override
-    public AccessDTO requestAccess(Long managerId, AccessRequest access) {
+    public AccessDTO requestAccess(Long managerId, AccessRequest access) throws UserException {
         // manager
         var driver = driverRepository.findByEmail(access.getDriverEmail().trim())
-                .orElseThrow(() -> new RuntimeException("Driver not found"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Manager not found"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
 
         TimeDuration duration = TimeDuration.valueOf(access.getAccessDuration().toUpperCase());
 
@@ -51,16 +54,16 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
-    public AccessDTO giveAccess(Long driverId, Long accessId) {
+    public AccessDTO giveAccess(Long driverId, Long accessId) throws UserException {
         //driver
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         var access = accessRepository.findById(accessId)
-                .orElseThrow(() -> new RuntimeException("Access not found"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ACCESS_NOT_FOUND));
 
         if (!Objects.equals(driver.getId(), access.getDriverId())) {
-            throw new RuntimeException("Permission denied");
+            throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
         }
 
         TimeDuration duration = access.getAccessDuration();
@@ -78,16 +81,16 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
-    public AccessDTO stopAccess(Long driverId, Long accessId) {
+    public AccessDTO stopAccess(Long driverId, Long accessId) throws UserException {
         // driver
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Manager not found"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         var access = accessRepository.findById(accessId)
-                .orElseThrow(() -> new RuntimeException("Access not found"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ACCESS_NOT_FOUND));
 
         if (!Objects.equals(driver.getId(), access.getDriverId())) {
-            throw new RuntimeException("Permission denied");
+            throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
         }
 
         access.setStartDateOfAccess(null);
@@ -99,20 +102,20 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
-    public AccessDTO extendAccess(Long managerId, Long accessId, ExtendAccessRequest timeDuration) {
+    public AccessDTO extendAccess(Long managerId, Long accessId, ExtendAccessRequest timeDuration) throws UserException {
         // manager
         var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Manager not found"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
 
         var access = accessRepository.findById(accessId)
-                .orElseThrow(() -> new RuntimeException("Access not found"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ACCESS_NOT_FOUND));
 
         if (!Objects.equals(manager.getId(), access.getManagerId())) {
-            throw new RuntimeException("Permission denied");
+            throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
         }
 
         if (!access.getIsExpiring()) {
-            throw new RuntimeException("Permission denied");
+            throw new UserException(UserException.UserExceptionProfile.ACCESS_NOT_EXPIRING);
         }
 
         TimeDuration duration = TimeDuration.valueOf(timeDuration.getAccessDuration().toUpperCase());
@@ -130,50 +133,50 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
-    public List<AccessDTO> getAllInactiveAccessesByDriver(Long driverId) {
+    public List<AccessDTO> getAllInactiveAccessesByDriver(Long driverId) throws UserException {
         //driver
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         return accessRepository.findAllByDriverIdAndIsActive(driver.getId(), false)
                 .stream().map(this::toAccessDTO).toList();
     }
 
     @Override
-    public List<AccessDTO> getAllActiveAccessesByDriver(Long driverId) {
+    public List<AccessDTO> getAllActiveAccessesByDriver(Long driverId) throws UserException {
         //driver
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         return accessRepository.findAllByDriverIdAndIsActive(driver.getId(), true)
                 .stream().map(this::toAccessDTO).toList();
     }
 
     @Override
-    public List<AccessDTO> getAllInactiveAccessesByManager(Long managerId) {
+    public List<AccessDTO> getAllInactiveAccessesByManager(Long managerId) throws UserException {
         //manager
         var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Manager not found"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
 
         return accessRepository.findAllByManagerIdAndIsActive(manager.getId(), false)
                 .stream().map(this::toAccessDTO).toList();
     }
 
     @Override
-    public List<AccessDTO> getAllActiveAccessesByManager(Long managerId) {
+    public List<AccessDTO> getAllActiveAccessesByManager(Long managerId) throws UserException {
         //manager
         var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Manager not found"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
 
         return accessRepository.findAllByManagerIdAndIsActive(manager.getId(), true)
                 .stream().map(this::toAccessDTO).toList();
     }
 
     @Override
-    public List<AccessDTO> getAllExpiringAccessesByManager(Long managerId) {
+    public List<AccessDTO> getAllExpiringAccessesByManager(Long managerId) throws UserException {
         //manager
         var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Manager not found"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
 
         return accessRepository.findAllByManagerIdAndIsExpiring(manager.getId(), true)
                 .stream().map(this::toAccessDTO).toList();
@@ -198,11 +201,21 @@ public class AccessServiceImpl implements AccessService {
     }
 
     private AccessDTO toAccessDTO(Access access) {
-        var manager = managerRepository.findById(access.getManagerId())
-                .orElseThrow(() -> new RuntimeException("Manager not found!"));
+        Manager manager = null;
+        try {
+            manager = managerRepository.findById(access.getManagerId())
+                    .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
+        } catch (UserException e) {
+            throw new RuntimeException(e);
+        }
 
-        var driver = driverRepository.findById(access.getDriverId())
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+        Driver driver = null;
+        try {
+            driver = driverRepository.findById(access.getDriverId())
+                    .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+        } catch (UserException e) {
+            throw new RuntimeException(e);
+        }
 
         return AccessDTO.builder()
                 .id(access.getId())

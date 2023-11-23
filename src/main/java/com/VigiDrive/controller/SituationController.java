@@ -1,5 +1,7 @@
 package com.VigiDrive.controller;
 
+import com.VigiDrive.exceptions.SituationException;
+import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.SituationRequest;
 import com.VigiDrive.model.response.SituationDTO;
 import com.VigiDrive.service.SituationService;
@@ -16,19 +18,21 @@ public class SituationController {
     private SituationService situationService;
 
     @GetMapping("/drivers/{driver-id}/situations")
-    public List<SituationDTO> getSituations(@PathVariable("driver-id") Long driverId) {
+    public List<SituationDTO> getSituations(@PathVariable("driver-id") Long driverId) throws UserException {
         return situationService.getSituations(driverId);
     }
 
     @GetMapping("/drivers/{driver-id}/situations/{situation-id}")
     public SituationDTO getSituation(@PathVariable("driver-id") Long driverId,
-                                     @PathVariable("situation-id") Long situationId) {
+                                     @PathVariable("situation-id") Long situationId)
+            throws SituationException, UserException {
         return situationService.getSituation(driverId, situationId);
     }
 
     @PostMapping("/drivers/{driver-id}/situations")
     public SituationDTO addSituation(@PathVariable("driver-id") Long driverId,
-                                     @RequestBody @Valid SituationRequest situation) {
+                                     @RequestBody @Valid SituationRequest situation)
+            throws SituationException, UserException {
         return situationService.addSituation(driverId, situation);
     }
 }

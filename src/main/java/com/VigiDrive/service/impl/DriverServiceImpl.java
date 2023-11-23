@@ -1,5 +1,7 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.exceptions.SecurityException;
+import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.enums.Role;
 import com.VigiDrive.model.request.RegisterRequest;
@@ -25,11 +27,11 @@ public class DriverServiceImpl implements DriverService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public DriverDTO registerDriver(RegisterRequest newDriver) {
+    public DriverDTO registerDriver(RegisterRequest newDriver) throws SecurityException {
         String keycloakId = keycloakService.createUser(newDriver, Role.DRIVER);
 
         if (keycloakId == null || keycloakId.isEmpty()) {
-            throw new RuntimeException("Registration failed.");
+            throw new SecurityException(SecurityException.SecurityExceptionProfile.REGISTRATION_FAILED);
         }
 
         Driver driver = Driver.builder()
@@ -45,9 +47,9 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public DriverDTO updateDriver(Long driverId, UpdateDriverRequest newDriver) {
+    public DriverDTO updateDriver(Long driverId, UpdateDriverRequest newDriver) throws UserException {
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         driver.setFirstName(newDriver.getFirstName());
         driver.setLastName(newDriver.getLastName());
@@ -59,9 +61,9 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public void delete(Long driverId) {
+    public void delete(Long driverId) throws UserException, SecurityException {
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         keycloakService.deleteUser(driver.getKeycloakId().toString());
 
@@ -69,25 +71,25 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public FullDriverDTO getFullDriver(Long driverId) {
+    public FullDriverDTO getFullDriver(Long driverId) throws UserException {
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         return toFullDriverDTO(driver);
     }
 
     @Override
-    public ManagerDTO getDriverManager(Long driverId) {
+    public ManagerDTO getDriverManager(Long driverId) throws UserException {
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         return new ManagerDTO(driver.getManager());
     }
 
     @Override
-    public void updateCurrentLocation(Long driverId, String currentLocation) {
+    public void updateCurrentLocation(Long driverId, String currentLocation) throws UserException {
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         driver.setCurrentLocation(currentLocation);
 
@@ -95,9 +97,9 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public void addEmergencyNumber(Long driverId, String emergencyNumber) {
+    public void addEmergencyNumber(Long driverId, String emergencyNumber) throws UserException {
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         driver.setEmergencyContact(emergencyNumber);
 

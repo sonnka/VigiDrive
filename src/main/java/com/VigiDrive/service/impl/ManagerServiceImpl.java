@@ -1,5 +1,7 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.exceptions.SecurityException;
+import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Manager;
 import com.VigiDrive.model.enums.Role;
 import com.VigiDrive.model.request.RegisterRequest;
@@ -32,11 +34,11 @@ public class ManagerServiceImpl implements ManagerService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public ManagerDTO registerManager(RegisterRequest newManager) {
+    public ManagerDTO registerManager(RegisterRequest newManager) throws SecurityException {
         String keycloakId = keycloakService.createUser(newManager, Role.MANAGER);
 
         if (keycloakId == null || keycloakId.isEmpty()) {
-            throw new RuntimeException("Registration failed.");
+            throw new SecurityException(SecurityException.SecurityExceptionProfile.REGISTRATION_FAILED);
         }
 
 
@@ -53,17 +55,17 @@ public class ManagerServiceImpl implements ManagerService {
     }
 
     @Override
-    public List<ShortDriverDTO> getDrivers(Long managerId) {
+    public List<ShortDriverDTO> getDrivers(Long managerId) throws UserException {
         var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Manager not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
 
         return driverService.getAllDriversByManager(manager.getId());
     }
 
     @Override
-    public FullDriverDTO getDriver(Long managerId, Long driverId) {
+    public FullDriverDTO getDriver(Long managerId, Long driverId) throws UserException {
         var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Manager not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
 
         var driver = driverService.getFullDriver(driverId);
 
@@ -75,9 +77,9 @@ public class ManagerServiceImpl implements ManagerService {
     }
 
     @Override
-    public ManagerDTO updateManager(Long managerId, UpdateManagerRequest newManager) {
+    public ManagerDTO updateManager(Long managerId, UpdateManagerRequest newManager) throws UserException {
         var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Manager not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
 
         manager.setFirstName(newManager.getFirstName());
         manager.setLastName(newManager.getLastName());
@@ -87,23 +89,23 @@ public class ManagerServiceImpl implements ManagerService {
     }
 
     @Override
-    public FullManagerDTO getManager(Long managerId) {
+    public FullManagerDTO getManager(Long managerId) throws UserException {
         var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Manager not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
 
         return new FullManagerDTO(manager);
     }
 
     @Override
-    public void setDestinationForDriver(Long managerId, Long driverId, String destination) {
+    public void setDestinationForDriver(Long managerId, Long driverId, String destination) throws UserException {
         var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Manager not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
 
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         if (!Objects.equals(driver.getManager().getId(), manager.getId())) {
-            throw new RuntimeException("Permission denied");
+            throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
         }
 
         driver.setDestination(destination);
@@ -112,9 +114,9 @@ public class ManagerServiceImpl implements ManagerService {
     }
 
     @Override
-    public void delete(Long managerId) {
+    public void delete(Long managerId) throws UserException, SecurityException {
         var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Manager not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
 
         keycloakService.deleteUser(manager.getKeycloakId().toString());
 

@@ -1,5 +1,6 @@
 package com.VigiDrive.controller;
 
+import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.AccessRequest;
 import com.VigiDrive.model.request.ExtendAccessRequest;
 import com.VigiDrive.model.response.AccessDTO;
@@ -18,51 +19,56 @@ public class AccessController {
 
     @PostMapping("/managers/{manager-id}/accesses")
     public AccessDTO requestAccess(@PathVariable("manager-id") Long managerId,
-                                   @RequestBody @Valid AccessRequest access) {
+                                   @RequestBody @Valid AccessRequest access) throws UserException {
         return accessService.requestAccess(managerId, access);
     }
 
     @PostMapping("/drivers/{driver-id}/accesses/{access-id}")
     public AccessDTO giveAccess(@PathVariable("driver-id") Long driverId,
-                                @PathVariable("access-id") Long accessId) {
+                                @PathVariable("access-id") Long accessId) throws UserException {
         return accessService.giveAccess(driverId, accessId);
     }
 
     @PatchMapping("/drivers/{driver-id}/accesses/{access-id}/stop")
     public AccessDTO stopAccess(@PathVariable("driver-id") Long driverId,
-                                @PathVariable("access-id") Long accessId) {
+                                @PathVariable("access-id") Long accessId) throws UserException {
         return accessService.stopAccess(driverId, accessId);
     }
 
     @PatchMapping("/managers/{manager-id}/accesses/{access-id}/extend")
     public AccessDTO extendAccess(@PathVariable("manager-id") Long managerId,
                                   @PathVariable("access-id") Long accessId,
-                                  @RequestBody @Valid ExtendAccessRequest access) {
+                                  @RequestBody @Valid ExtendAccessRequest access) throws UserException {
         return accessService.extendAccess(managerId, accessId, access);
     }
 
     @GetMapping("/drivers/{driver-id}/accesses/inactive")
-    public List<AccessDTO> getAllInactiveAccessesByDriver(@PathVariable("driver-id") Long driverId) {
+    public List<AccessDTO> getAllInactiveAccessesByDriver(@PathVariable("driver-id") Long driverId)
+            throws UserException {
         return accessService.getAllInactiveAccessesByDriver(driverId);
     }
 
     @GetMapping("/drivers/{driver-id}/accesses/active")
-    public List<AccessDTO> getAllActiveAccessesByDriver(@PathVariable("driver-id") Long driverId) {
+    public List<AccessDTO> getAllActiveAccessesByDriver(@PathVariable("driver-id") Long driverId)
+            throws UserException {
         return accessService.getAllActiveAccessesByDriver(driverId);
     }
 
     @GetMapping("/managers/{manager-id}/accesses/inactive")
-    public List<AccessDTO> getAllInactiveAccessesByManager(@PathVariable("manager-id") Long managerId) {
+    public List<AccessDTO> getAllInactiveAccessesByManager(@PathVariable("manager-id") Long managerId)
+            throws UserException {
         return accessService.getAllInactiveAccessesByManager(managerId);
     }
 
     @GetMapping("/managers/{manager-id}/accesses/active")
-    public List<AccessDTO> getAllActiveAccessesByManager(@PathVariable("manager-id") Long managerId) {
+    public List<AccessDTO> getAllActiveAccessesByManager(@PathVariable("manager-id") Long managerId)
+            throws UserException {
         return accessService.getAllActiveAccessesByManager(managerId);
     }
 
     @GetMapping("/managers/{manager-id}/accesses/expiring")
-    public List<AccessDTO> getAllExpiringAccessesByManager(@PathVariable("manager-id") Long managerId) {
+    public List<AccessDTO> getAllExpiringAccessesByManager(@PathVariable("manager-id") Long managerId)
+            throws UserException {
         return accessService.getAllExpiringAccessesByManager(managerId);
     }
 }

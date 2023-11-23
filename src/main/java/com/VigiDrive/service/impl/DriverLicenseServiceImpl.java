@@ -1,5 +1,7 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.exceptions.DriverLicenseException;
+import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.DriverLicense;
 import com.VigiDrive.model.request.DriverLicenseRequest;
 import com.VigiDrive.model.response.DriverLicenseDTO;
@@ -7,9 +9,7 @@ import com.VigiDrive.repository.DriverLicenseRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.service.DriverLicenseService;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -23,34 +23,34 @@ public class DriverLicenseServiceImpl implements DriverLicenseService {
     private DriverRepository driverRepository;
 
     @Override
-    public DriverLicenseDTO getDriverLicense(Long driverId) {
+    public DriverLicenseDTO getDriverLicense(Long driverId) throws UserException, DriverLicenseException {
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         var driverLicense = driverLicenseRepository.findDriverLicenseByDriver(driver)
-                .orElseThrow(() -> new RuntimeException("Driver license not found!"));
+                .orElseThrow(() -> new DriverLicenseException(
+                        DriverLicenseException.DriverLicenseExceptionProfile.DRIVER_LICENSE_NOT_FOUND));
 
         return new DriverLicenseDTO(driverLicense);
     }
 
     @Override
-    public DriverLicenseDTO addDriverLicense(Long driverId, DriverLicenseRequest driverLicense) {
+    public DriverLicenseDTO addDriverLicense(Long driverId, DriverLicenseRequest driverLicense) throws UserException, DriverLicenseException {
         var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found!"));
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         driverLicenseRepository.deleteAllByDriver(driver);
 
         LocalDate date = null;
-        
+
         try {
             date = LocalDate.parse(driverLicense.getDateTo(), DateTimeFormatter.ISO_LOCAL_DATE);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Date is invalid!");
+            throw new DriverLicenseException(DriverLicenseException.DriverLicenseExceptionProfile.INVALID_DATE);
         }
 
         if (date.isBefore(LocalDate.now(Clock.systemUTC()))) {
-            throw new RuntimeException("Driver license is expired!");
+            throw new DriverLicenseException(DriverLicenseException.DriverLicenseExceptionProfile.IS_EXPIRED);
         }
 
         return new DriverLicenseDTO(driverLicenseRepository.save(

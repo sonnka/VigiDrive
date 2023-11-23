@@ -1,5 +1,6 @@
 package com.VigiDrive.controller;
 
+import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.HealthInfoRequest;
 import com.VigiDrive.model.response.HealthInfoDTO;
 import com.VigiDrive.service.HealthInfoService;
@@ -15,12 +16,12 @@ public class HealthInfoController {
 
     @PostMapping("/drivers/{driver-id}/health-info")
     public HealthInfoDTO addHealthInfo(@PathVariable("driver-id") Long driverId,
-                                       @RequestBody @Valid HealthInfoRequest healthInfoRequest) {
+                                       @RequestBody @Valid HealthInfoRequest healthInfoRequest) throws UserException {
         return healthInfoService.addHealthInfo(driverId, healthInfoRequest);
     }
 
     @GetMapping("/drivers/{driver-id}/health-info")
-    public HealthInfoDTO getCurrentHealthInfo(@PathVariable("driver-id") Long driverId) {
+    public HealthInfoDTO getCurrentHealthInfo(@PathVariable("driver-id") Long driverId) throws UserException {
         return healthInfoService.getCurrentHealthInfo(driverId);
     }
 }

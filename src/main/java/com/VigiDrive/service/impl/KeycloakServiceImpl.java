@@ -1,6 +1,7 @@
 package com.VigiDrive.service.impl;
 
 import com.VigiDrive.config.KeycloakConfig;
+import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.model.enums.Role;
 import com.VigiDrive.model.request.AuthRequest;
 import com.VigiDrive.model.request.RegisterRequest;
@@ -45,7 +46,7 @@ public class KeycloakServiceImpl implements KeycloakService {
     private String keycloakUrl;
 
 
-    public AccessTokenResponse authenticate(AuthRequest request) {
+    public AccessTokenResponse authenticate(AuthRequest request) throws SecurityException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -62,7 +63,7 @@ public class KeycloakServiceImpl implements KeycloakService {
                     entity,
                     AccessTokenResponse.class).getBody();
         } catch (Exception e) {
-            throw new RuntimeException("Can't authenticate user " + request.getUsername(), e);
+            throw new SecurityException(SecurityException.SecurityExceptionProfile.WRONG_AUTHENTICATION_DATA);
         }
     }
 
@@ -84,7 +85,7 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
 
-    public String createUser(RegisterRequest newUser, Role role) {
+    public String createUser(RegisterRequest newUser, Role role) throws SecurityException {
         UserRepresentation userRepresentation = getUserRepresentation(newUser);
 
         Response response = addUser(userRepresentation);
@@ -96,25 +97,23 @@ public class KeycloakServiceImpl implements KeycloakService {
         return createdUserKeycloakId;
     }
 
-    private Response addUser(UserRepresentation userRepresentation) {
+    private Response addUser(UserRepresentation userRepresentation) throws SecurityException {
         UsersResource instance = getInstance();
         try (Response response = instance.create(userRepresentation)) {
             if (HttpStatus.CREATED.value() == response.getStatus()) {
                 return response;
             }
-            throw new RuntimeException("Something went wrong while register user in keycloak. Response Status : "
-                    + response.getStatusInfo().getReasonPhrase());
+            throw new SecurityException(SecurityException.SecurityExceptionProfile.REGISTRATION_FAILED);
         }
     }
 
-    public void deleteUser(String userId) {
+    public void deleteUser(String userId) throws SecurityException {
         UsersResource instance = getInstance();
         String reasonPhrase = null;
         try (Response response = instance.delete(userId)) {
             reasonPhrase = response.getStatusInfo().getReasonPhrase();
         } catch (Exception e) {
-            throw new RuntimeException("Something went wrong while deleting user in keycloak. Response Status : "
-                    + reasonPhrase);
+            throw new SecurityException(SecurityException.SecurityExceptionProfile.DELETING_FAILED);
         }
     }
 

@@ -26,10 +26,12 @@ public class DriverLicenseException extends Exception {
                 "Driver license is not found.", HttpStatus.NOT_FOUND),
 
         IS_EXPIRED("driver_license_expired",
-                "Driver license is expired.", HttpStatus.FORBIDDEN),
+                "Driver license is expired.", HttpStatus.BAD_REQUEST),
 
         INVALID_NUMBER("invalid_license_number",
-                "Driver license number is invalid.", HttpStatus.FORBIDDEN);
+                "Driver license number is invalid.", HttpStatus.BAD_REQUEST),
+        INVALID_DATE("invalid_license_date",
+                "Driver license date is invalid.", HttpStatus.BAD_REQUEST);
 
 
         private final String exceptionName;
