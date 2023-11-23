@@ -1,6 +1,5 @@
 package com.VigiDrive.model.entity;
 
-import com.VigiDrive.model.enums.CountryCode;
 import com.VigiDrive.model.enums.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -23,10 +22,6 @@ public class Driver extends User {
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "country_code")
-    private CountryCode countryCode;
 
     @Column(name = "phone_number")
     private String phoneNumber;
@@ -57,11 +52,6 @@ public class Driver extends User {
     @JsonIgnore
     @Column(name = "health_info")
     private List<HealthInfo> healthInfo = new ArrayList<>();
-
-    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "driver")
-    @JsonIgnore
-    @Column(name = "recommendations")
-    private List<Recommendation> recommendations = new ArrayList<>();
 
     public Driver() {
         this.setRole(Role.DRIVER);

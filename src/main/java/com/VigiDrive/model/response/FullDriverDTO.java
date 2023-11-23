@@ -1,13 +1,14 @@
 package com.VigiDrive.model.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Getter
 @Setter
+@AllArgsConstructor
 public class FullDriverDTO {
 
     private Long id;
@@ -31,8 +32,4 @@ public class FullDriverDTO {
     private ManagerDTO manager;
 
     private DriverLicenseDTO license;
-
-    private List<SituationDTO> currentSituation;
-
-    private HealthInfoDTO currentHealthInfo;
 }

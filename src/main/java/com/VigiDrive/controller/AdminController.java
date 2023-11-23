@@ -2,14 +2,16 @@ package com.VigiDrive.controller;
 
 import com.VigiDrive.model.request.RegisterRequest;
 import com.VigiDrive.model.response.AdminDTO;
+import com.VigiDrive.model.response.ManagerDTO;
+import com.VigiDrive.model.response.ShortDriverDTO;
 import com.VigiDrive.service.AdminService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -22,4 +24,27 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(adminService.registerAdmin(newAdmin));
     }
+
+    @GetMapping("/admins/{admin-id}/drivers")
+    public List<ShortDriverDTO> getDrivers(@PathVariable("admin-id") Long adminId) {
+        return adminService.getDrivers(adminId);
+    }
+
+    @GetMapping("/admins/{admin-id}/managers")
+    public List<ManagerDTO> getManagers(@PathVariable("admin-id") Long adminId) {
+        return adminService.getManagers(adminId);
+    }
+
+    @DeleteMapping("/admins/{admin-id}/drivers/{driver-id}")
+    public void deleteDriver(@PathVariable("admin-id") Long adminId,
+                             @PathVariable("driver-id") Long driverId) {
+        adminService.deleteDriver(adminId, driverId);
+    }
+
+    @DeleteMapping("/admins/{admin-id}/managers/{manager-id}")
+    public void deleteManager(@PathVariable("admin-id") Long adminId,
+                              @PathVariable("manager-id") Long managerId) {
+        adminService.deleteManager(adminId, managerId);
+    }
+
 }

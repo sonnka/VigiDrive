@@ -12,8 +12,7 @@ public class SituationTypeValidator implements ConstraintValidator<SituationType
                 || situationType.equals(com.VigiDrive.model.enums.SituationType.HIGH_SPEED.name())
                 || situationType.equals(com.VigiDrive.model.enums.SituationType.FALLING_ASLEEP.name())
                 || situationType.equals(com.VigiDrive.model.enums.SituationType.HIGH_LEVEL_OF_FATIGUE.name())
-                || situationType.equals(com.VigiDrive.model.enums.SituationType.DEVIATION_FROM_ROUT.name())
-                || situationType.equals(com.VigiDrive.model.enums.SituationType.OVERTIME.name());
+                || situationType.equals(com.VigiDrive.model.enums.SituationType.DEVIATION_FROM_ROUT.name());
         if (!valid) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "SituationType is invalid");

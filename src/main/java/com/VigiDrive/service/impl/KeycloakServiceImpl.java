@@ -113,7 +113,7 @@ public class KeycloakServiceImpl implements KeycloakService {
         try (Response response = instance.delete(userId)) {
             reasonPhrase = response.getStatusInfo().getReasonPhrase();
         } catch (Exception e) {
-            throw new RuntimeException("Something went wrong while register user in keycloak. Response Status : "
+            throw new RuntimeException("Something went wrong while deleting user in keycloak. Response Status : "
                     + reasonPhrase);
         }
     }

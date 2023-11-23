@@ -1,9 +1,10 @@
 package com.VigiDrive.controller;
 
-import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.RegisterRequest;
 import com.VigiDrive.model.request.UpdateDriverRequest;
 import com.VigiDrive.model.response.DriverDTO;
+import com.VigiDrive.model.response.FullDriverDTO;
+import com.VigiDrive.model.response.ManagerDTO;
 import com.VigiDrive.service.DriverService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -24,8 +25,35 @@ public class DriverController {
     }
 
     @PatchMapping("/drivers/{driver-id}")
-    public DriverDTO updateDriver(@PathVariable("driver-id") Long driverId, @RequestBody @Valid UpdateDriverRequest driver)
-            throws UserException {
+    public DriverDTO updateDriver(@PathVariable("driver-id") Long driverId,
+                                  @RequestBody @Valid UpdateDriverRequest driver) {
         return driverService.updateDriver(driverId, driver);
+    }
+
+    @DeleteMapping("/drivers/{driver-id}")
+    public void deleteDriver(@PathVariable("driver-id") Long driverId) {
+        driverService.delete(driverId);
+    }
+
+    @GetMapping("/drivers/{driver-id}")
+    public FullDriverDTO getDriver(@PathVariable("driver-id") Long driverId) {
+        return driverService.getFullDriver(driverId);
+    }
+
+    @GetMapping("/drivers/{driver-id}/manager")
+    public ManagerDTO getDriverManager(@PathVariable("driver-id") Long driverId) {
+        return driverService.getDriverManager(driverId);
+    }
+
+    @PatchMapping("/drivers/{driver-id}/currentLocation")
+    public void updateCurrentLocation(@PathVariable("driver-id") Long driverId,
+                                      @RequestBody String currentLocation) {
+        driverService.updateCurrentLocation(driverId, currentLocation);
+    }
+
+    @PatchMapping("/drivers/{driver-id}/emergency-number")
+    public void addEmergencyNumber(@PathVariable("driver-id") Long driverId,
+                                   @RequestBody String emergencyNumber) {
+        driverService.addEmergencyNumber(driverId, emergencyNumber);
     }
 }

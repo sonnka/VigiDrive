@@ -59,7 +59,6 @@ CREATE TABLE drivers
 (
     user_id           BIGINT       NOT NULL,
     date_of_birth     date         NULL,
-    country_code      VARCHAR(255) NULL,
     phone_number      VARCHAR(255) NULL,
     emergency_contact VARCHAR(255) NULL,
     destination       VARCHAR(255) NULL,
@@ -73,6 +72,7 @@ ALTER TABLE drivers
 
 ALTER TABLE drivers
     ADD CONSTRAINT FK_DRIVERS_ON_USER FOREIGN KEY (user_id) REFERENCES users (user_id);
+
 
 
 CREATE TABLE licenses
