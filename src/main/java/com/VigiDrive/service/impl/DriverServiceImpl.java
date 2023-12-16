@@ -9,36 +9,32 @@ import com.VigiDrive.model.request.UpdateDriverRequest;
 import com.VigiDrive.model.response.*;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.service.DriverService;
-import com.VigiDrive.service.KeycloakService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @AllArgsConstructor
 public class DriverServiceImpl implements DriverService {
 
     private DriverRepository driverRepository;
-    private KeycloakService keycloakService;
     private PasswordEncoder passwordEncoder;
 
     @Override
     public DriverDTO registerDriver(RegisterRequest newDriver) throws SecurityException {
-        String keycloakId = keycloakService.createUser(newDriver, Role.DRIVER);
+        //   String keycloakId = keycloakService.createUser(newDriver, Role.DRIVER);
 
-        if (keycloakId == null || keycloakId.isEmpty()) {
-            throw new SecurityException(SecurityException.SecurityExceptionProfile.REGISTRATION_FAILED);
-        }
+//        if (keycloakId == null || keycloakId.isEmpty()) {
+//            throw new SecurityException(SecurityException.SecurityExceptionProfile.REGISTRATION_FAILED);
+//        }
 
         Driver driver = Driver.builder()
                 .email(newDriver.getEmail())
                 .firstName(newDriver.getFirstName())
                 .lastName(newDriver.getLastName())
-                .keycloakId(UUID.fromString(keycloakId))
                 .password(passwordEncoder.encode(newDriver.getPassword()))
                 .role(Role.DRIVER)
                 .build();
@@ -65,7 +61,7 @@ public class DriverServiceImpl implements DriverService {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
-        keycloakService.deleteUser(driver.getKeycloakId().toString());
+        //       keycloakService.deleteUser(driver.getKeycloakId().toString());
 
         driverRepository.delete(driver);
     }
