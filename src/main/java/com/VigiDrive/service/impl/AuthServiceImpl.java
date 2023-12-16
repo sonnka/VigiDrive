@@ -21,20 +21,21 @@ public class AuthServiceImpl implements AuthService {
 
     private String clientId = "oidc-client";
 
-    private String clientSecret = "{noop}secret";
+    private String clientSecret = "secret";
 
     @Autowired
     private RestTemplate restTemplate;
 
     public String loginUser(AuthRequest user) {
+        log.error("error");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         MultiValueMap<String, String> loginRequest = new LinkedMultiValueMap<>();
-        loginRequest.add("grant_type", "client_credentials");
+        loginRequest.add("grant_type", "password");
         loginRequest.add("username", user.getUsername());
         loginRequest.add("password", user.getPassword());
-        loginRequest.add("scope", "scope-token");
+        loginRequest.add("scope", "any");
         loginRequest.add("client_id", clientId);
         loginRequest.add("client_secret", clientSecret);
 
