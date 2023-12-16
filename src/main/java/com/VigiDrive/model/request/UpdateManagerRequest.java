@@ -21,7 +21,6 @@ public class UpdateManagerRequest {
     @NotEmpty
     @NotNull
     private String lastName;
-
-    @Size(min = 2, max = 64)
+    
     private String avatar;
 }

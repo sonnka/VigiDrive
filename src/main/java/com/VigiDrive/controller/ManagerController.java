@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,36 +32,42 @@ public class ManagerController {
     }
 
     @PatchMapping("/managers/{manager-id}")
-    public ManagerDTO updateManager(@PathVariable("manager-id") Long managerId,
+    public ManagerDTO updateManager(Authentication auth,
+                                    @PathVariable("manager-id") Long managerId,
                                     @RequestBody @Valid UpdateManagerRequest manager) throws UserException {
-        return managerService.updateManager(managerId, manager);
+        return managerService.updateManager(auth, managerId, manager);
     }
 
     @DeleteMapping("/managers/{manager-id}")
-    public void deleteManager(@PathVariable("manager-id") Long managerId) throws SecurityException, UserException {
-        managerService.delete(managerId);
+    public void deleteManager(Authentication auth,
+                              @PathVariable("manager-id") Long managerId) throws SecurityException, UserException {
+        managerService.delete(auth, managerId);
     }
 
     @GetMapping("/managers/{manager-id}")
-    public FullManagerDTO getManager(@PathVariable("manager-id") Long managerId) throws UserException {
-        return managerService.getManager(managerId);
+    public FullManagerDTO getManager(Authentication auth,
+                                     @PathVariable("manager-id") Long managerId) throws UserException {
+        return managerService.getManager(auth, managerId);
     }
 
     @GetMapping("/managers/{manager-id}/drivers")
-    public List<ShortDriverDTO> getDrivers(@PathVariable("manager-id") Long managerId) throws UserException {
-        return managerService.getDrivers(managerId);
+    public List<ShortDriverDTO> getDrivers(Authentication auth,
+                                           @PathVariable("manager-id") Long managerId) throws UserException {
+        return managerService.getDrivers(auth, managerId);
     }
 
     @GetMapping("/managers/{manager-id}/drivers/{driver-id}")
-    public FullDriverDTO getDriver(@PathVariable("manager-id") Long managerId,
+    public FullDriverDTO getDriver(Authentication auth,
+                                   @PathVariable("manager-id") Long managerId,
                                    @PathVariable("driver-id") Long driverId) throws UserException {
-        return managerService.getDriver(managerId, driverId);
+        return managerService.getDriver(auth, managerId, driverId);
     }
 
-    @PatchMapping("/managers/{manager-id}/drivers/{driver-id}/destination")
-    public void setDestinationForDriver(@PathVariable("manager-id") Long managerId,
+    @PatchMapping("/managers/{manager-id}/drivers/{driver-id}/{destination}")
+    public void setDestinationForDriver(Authentication auth,
+                                        @PathVariable("manager-id") Long managerId,
                                         @PathVariable("driver-id") Long driverId,
-                                        @RequestBody String destination) throws UserException {
-        managerService.setDestinationForDriver(managerId, driverId, destination);
+                                        @PathVariable("destination") String destination) throws UserException {
+        managerService.setDestinationForDriver(auth, managerId, driverId, destination);
     }
 }

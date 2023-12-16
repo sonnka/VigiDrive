@@ -10,6 +10,7 @@ import com.VigiDrive.model.response.*;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.service.DriverService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,12 +25,7 @@ public class DriverServiceImpl implements DriverService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public DriverDTO registerDriver(RegisterRequest newDriver) throws SecurityException {
-        //   String keycloakId = keycloakService.createUser(newDriver, Role.DRIVER);
-
-//        if (keycloakId == null || keycloakId.isEmpty()) {
-//            throw new SecurityException(SecurityException.SecurityExceptionProfile.REGISTRATION_FAILED);
-//        }
+    public DriverDTO registerDriver(RegisterRequest newDriver) {
 
         Driver driver = Driver.builder()
                 .email(newDriver.getEmail())
@@ -43,7 +39,8 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public DriverDTO updateDriver(Long driverId, UpdateDriverRequest newDriver) throws UserException {
+    public DriverDTO updateDriver(Authentication auth, Long driverId, UpdateDriverRequest newDriver)
+            throws UserException {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
@@ -57,17 +54,15 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public void delete(Long driverId) throws UserException, SecurityException {
+    public void delete(Authentication auth, Long driverId) throws UserException, SecurityException {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
-
-        //       keycloakService.deleteUser(driver.getKeycloakId().toString());
 
         driverRepository.delete(driver);
     }
 
     @Override
-    public FullDriverDTO getFullDriver(Long driverId) throws UserException {
+    public FullDriverDTO getFullDriver(Authentication auth, Long driverId) throws UserException {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
@@ -75,15 +70,17 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public ManagerDTO getDriverManager(Long driverId) throws UserException {
+    public ManagerDTO getDriverManager(Authentication auth, Long driverId) throws UserException {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
-
+        if (driver.getManager() == null) {
+            return null;
+        }
         return new ManagerDTO(driver.getManager());
     }
 
     @Override
-    public void updateCurrentLocation(Long driverId, String currentLocation) throws UserException {
+    public void updateCurrentLocation(Authentication auth, Long driverId, String currentLocation) throws UserException {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
@@ -93,7 +90,7 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public void addEmergencyNumber(Long driverId, String emergencyNumber) throws UserException {
+    public void addEmergencyNumber(Authentication auth, Long driverId, String emergencyNumber) throws UserException {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
@@ -103,17 +100,26 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public List<ShortDriverDTO> getAllDrivers() {
+    public List<ShortDriverDTO> getAllDrivers(Authentication auth) {
         return driverRepository.findAll().stream().map(ShortDriverDTO::new).toList();
     }
 
     @Override
-    public List<ShortDriverDTO> getAllDriversByManager(Long managerId) {
+    public List<ShortDriverDTO> getAllDriversByManager(Authentication auth, Long managerId) {
         return driverRepository.findAllByManagerId(managerId).stream().map(ShortDriverDTO::new).toList();
     }
 
 
     private FullDriverDTO toFullDriverDTO(Driver driver) {
+        ManagerDTO manager = null;
+        DriverLicenseDTO driverLicense = null;
+
+        if (driver.getManager() != null) {
+            manager = new ManagerDTO(driver.getManager());
+        }
+        if (driver.getLicense() != null) {
+            driverLicense = new DriverLicenseDTO(driver.getLicense());
+        }
         return new FullDriverDTO(driver.getId(),
                 driver.getFirstName(),
                 driver.getLastName(),
@@ -123,7 +129,8 @@ public class DriverServiceImpl implements DriverService {
                 driver.getPhoneNumber(),
                 driver.getDestination(),
                 driver.getCurrentLocation(),
-                new ManagerDTO(driver.getManager()),
-                new DriverLicenseDTO(driver.getLicense()));
+                driver.getEmergencyContact(),
+                manager,
+                driverLicense);
     }
 }

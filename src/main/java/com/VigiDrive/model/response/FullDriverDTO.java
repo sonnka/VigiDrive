@@ -29,6 +29,8 @@ public class FullDriverDTO {
 
     private String currentLocation;
 
+    private String emergencyContact;
+
     private ManagerDTO manager;
 
     private DriverLicenseDTO license;

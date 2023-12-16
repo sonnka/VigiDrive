@@ -13,6 +13,8 @@ import com.VigiDrive.service.AdminService;
 import com.VigiDrive.service.DriverService;
 import com.VigiDrive.service.ManagerService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,21 +26,16 @@ public class AdminServiceImpl implements AdminService {
     private AdminRepository adminRepository;
     private DriverService driverService;
     private ManagerService managerService;
+    private PasswordEncoder passwordEncoder;
 
     @Override
-    public AdminDTO registerAdmin(RegisterRequest newAdmin) throws SecurityException {
-        //   String keycloakId = keycloakService.createUser(newAdmin, Role.ADMIN);
-//
-//        if (keycloakId == null || keycloakId.isEmpty()) {
-//            throw new SecurityException(SecurityException.SecurityExceptionProfile.REGISTRATION_FAILED);
-//        }
+    public AdminDTO registerAdmin(RegisterRequest newAdmin) {
 
         Admin admin = Admin.builder()
                 .email(newAdmin.getEmail())
                 .firstName(newAdmin.getFirstName())
                 .lastName(newAdmin.getLastName())
-                //  .keycloakId(UUID.fromString(keycloakId))
-                //    .password(passwordEncoder.encode(newAdmin.getPassword()))
+                .password(passwordEncoder.encode(newAdmin.getPassword()))
                 .role(Role.ADMIN)
                 .isApproved(false)
                 .build();
@@ -47,34 +44,36 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public void deleteDriver(Long adminId, Long driverId) throws UserException, SecurityException {
-        var admin = adminRepository.findById(adminId)
+    public void deleteDriver(Authentication auth, Long adminId, Long driverId)
+            throws UserException, SecurityException {
+        adminRepository.findById(adminId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
 
-        driverService.delete(driverId);
+        driverService.delete(auth, driverId);
     }
 
     @Override
-    public void deleteManager(Long adminId, Long managerId) throws UserException, SecurityException {
-        var admin = adminRepository.findById(adminId)
+    public void deleteManager(Authentication auth, Long adminId, Long managerId)
+            throws UserException, SecurityException {
+        adminRepository.findById(adminId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
 
-        managerService.delete(managerId);
+        managerService.delete(auth, managerId);
     }
 
     @Override
-    public List<ShortDriverDTO> getDrivers(Long adminId) throws UserException {
-        var admin = adminRepository.findById(adminId)
+    public List<ShortDriverDTO> getDrivers(Authentication auth, Long adminId) throws UserException {
+        adminRepository.findById(adminId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
 
-        return driverService.getAllDrivers();
+        return driverService.getAllDrivers(auth);
     }
 
     @Override
-    public List<ManagerDTO> getManagers(Long adminId) throws UserException {
-        var admin = adminRepository.findById(adminId)
+    public List<ManagerDTO> getManagers(Authentication auth, Long adminId) throws UserException {
+        adminRepository.findById(adminId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
 
-        return managerService.getAllManagers();
+        return managerService.getAllManagers(auth);
     }
 }

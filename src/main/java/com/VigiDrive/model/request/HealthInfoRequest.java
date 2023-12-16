@@ -1,21 +1,17 @@
 package com.VigiDrive.model.request;
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 @Data
 public class HealthInfoRequest {
 
-    @NotNull
-    @NotEmpty
+    @Positive
     private Double stressLevel;
 
-    @NotNull
-    @NotEmpty
+    @Positive
     private Double concentrationLevel;
 
-    @NotNull
-    @NotEmpty
+    @Positive
     private Double sleepinessLevel;
 }

@@ -8,6 +8,7 @@ import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.HealthInfoRepository;
 import com.VigiDrive.service.HealthInfoService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -21,7 +22,8 @@ public class HealthInfoServiceImpl implements HealthInfoService {
     private DriverRepository driverRepository;
 
     @Override
-    public HealthInfoDTO addHealthInfo(Long driverId, HealthInfoRequest healthInfoRequest) throws UserException {
+    public HealthInfoDTO addHealthInfo(Authentication auth, Long driverId, HealthInfoRequest healthInfoRequest)
+            throws UserException {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
@@ -42,7 +44,7 @@ public class HealthInfoServiceImpl implements HealthInfoService {
     }
 
     @Override
-    public HealthInfoDTO getCurrentHealthInfo(Long driverId) throws UserException {
+    public HealthInfoDTO getCurrentHealthInfo(Authentication auth, Long driverId) throws UserException {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 

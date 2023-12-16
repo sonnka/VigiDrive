@@ -9,6 +9,7 @@ import com.VigiDrive.repository.DriverLicenseRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.service.DriverLicenseService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -23,7 +24,8 @@ public class DriverLicenseServiceImpl implements DriverLicenseService {
     private DriverRepository driverRepository;
 
     @Override
-    public DriverLicenseDTO getDriverLicense(Long driverId) throws UserException, DriverLicenseException {
+    public DriverLicenseDTO getDriverLicense(Authentication auth, Long driverId)
+            throws UserException, DriverLicenseException {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
@@ -35,7 +37,8 @@ public class DriverLicenseServiceImpl implements DriverLicenseService {
     }
 
     @Override
-    public DriverLicenseDTO addDriverLicense(Long driverId, DriverLicenseRequest driverLicense) throws UserException, DriverLicenseException {
+    public DriverLicenseDTO addDriverLicense(Authentication auth, Long driverId, DriverLicenseRequest driverLicense)
+            throws UserException, DriverLicenseException {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 

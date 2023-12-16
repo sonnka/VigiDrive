@@ -10,6 +10,7 @@ import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.SituationRepository;
 import com.VigiDrive.service.SituationService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -27,7 +28,7 @@ public class SituationServiceImpl implements SituationService {
     private DriverRepository driverRepository;
 
     @Override
-    public List<SituationDTO> getSituations(Long driverId) throws UserException {
+    public List<SituationDTO> getSituations(Authentication auth, Long driverId) throws UserException {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
@@ -37,7 +38,8 @@ public class SituationServiceImpl implements SituationService {
     }
 
     @Override
-    public SituationDTO getSituation(Long driverId, Long situationId) throws UserException, SituationException {
+    public SituationDTO getSituation(Authentication auth, Long driverId, Long situationId)
+            throws UserException, SituationException {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
@@ -52,7 +54,8 @@ public class SituationServiceImpl implements SituationService {
     }
 
     @Override
-    public SituationDTO addSituation(Long driverId, SituationRequest situation) throws UserException, SituationException {
+    public SituationDTO addSituation(Authentication auth, Long driverId, SituationRequest situation)
+            throws UserException, SituationException {
         String videoUrlRegex = "^(https?://)?(www\\.)?([a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}(/\\S*)?$";
 
         var driver = driverRepository.findById(driverId)

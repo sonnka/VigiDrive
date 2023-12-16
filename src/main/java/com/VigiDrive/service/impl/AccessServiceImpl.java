@@ -13,6 +13,7 @@ import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.service.AccessService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -29,7 +30,7 @@ public class AccessServiceImpl implements AccessService {
     private ManagerRepository managerRepository;
 
     @Override
-    public AccessDTO requestAccess(Long managerId, AccessRequest access) throws UserException {
+    public AccessDTO requestAccess(Authentication auth, Long managerId, AccessRequest access) throws UserException {
         // manager
         var driver = driverRepository.findByEmail(access.getDriverEmail().trim())
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
@@ -38,7 +39,6 @@ public class AccessServiceImpl implements AccessService {
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
 
         TimeDuration duration = TimeDuration.valueOf(access.getAccessDuration().toUpperCase());
-
 
         return toAccessDTO(accessRepository.save(
                 Access.builder()
@@ -54,7 +54,7 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
-    public AccessDTO giveAccess(Long driverId, Long accessId) throws UserException {
+    public AccessDTO giveAccess(Authentication auth, Long driverId, Long accessId) throws UserException {
         //driver
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
@@ -77,11 +77,20 @@ public class AccessServiceImpl implements AccessService {
         access.setIsActive(true);
         access.setIsExpiring(checkExpiring(endDate));
 
-        return toAccessDTO(accessRepository.save(access));
+        var manager = managerRepository.findById(access.getManagerId())
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
+
+        var createdAccess = accessRepository.save(access);
+
+        driver.setManager(manager);
+
+        driverRepository.save(driver);
+
+        return toAccessDTO(createdAccess);
     }
 
     @Override
-    public AccessDTO stopAccess(Long driverId, Long accessId) throws UserException {
+    public AccessDTO stopAccess(Authentication auth, Long driverId, Long accessId) throws UserException {
         // driver
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
@@ -98,11 +107,18 @@ public class AccessServiceImpl implements AccessService {
         access.setIsActive(false);
         access.setIsExpiring(false);
 
-        return toAccessDTO(accessRepository.save(access));
+        var updatedAccess = accessRepository.save(access);
+
+        driver.setManager(null);
+
+        driverRepository.save(driver);
+
+        return toAccessDTO(updatedAccess);
     }
 
     @Override
-    public AccessDTO extendAccess(Long managerId, Long accessId, ExtendAccessRequest timeDuration) throws UserException {
+    public AccessDTO extendAccess(Authentication auth, Long managerId, Long accessId, ExtendAccessRequest timeDuration)
+            throws UserException {
         // manager
         var manager = managerRepository.findById(managerId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
@@ -133,7 +149,7 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
-    public List<AccessDTO> getAllInactiveAccessesByDriver(Long driverId) throws UserException {
+    public List<AccessDTO> getAllInactiveAccessesByDriver(Authentication auth, Long driverId) throws UserException {
         //driver
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
@@ -143,7 +159,7 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
-    public List<AccessDTO> getAllActiveAccessesByDriver(Long driverId) throws UserException {
+    public List<AccessDTO> getAllActiveAccessesByDriver(Authentication auth, Long driverId) throws UserException {
         //driver
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
@@ -153,7 +169,7 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
-    public List<AccessDTO> getAllInactiveAccessesByManager(Long managerId) throws UserException {
+    public List<AccessDTO> getAllInactiveAccessesByManager(Authentication auth, Long managerId) throws UserException {
         //manager
         var manager = managerRepository.findById(managerId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
@@ -163,7 +179,7 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
-    public List<AccessDTO> getAllActiveAccessesByManager(Long managerId) throws UserException {
+    public List<AccessDTO> getAllActiveAccessesByManager(Authentication auth, Long managerId) throws UserException {
         //manager
         var manager = managerRepository.findById(managerId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
@@ -173,7 +189,7 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
-    public List<AccessDTO> getAllExpiringAccessesByManager(Long managerId) throws UserException {
+    public List<AccessDTO> getAllExpiringAccessesByManager(Authentication auth, Long managerId) throws UserException {
         //manager
         var manager = managerRepository.findById(managerId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));

@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,25 +29,29 @@ public class AdminController {
     }
 
     @GetMapping("/admins/{admin-id}/drivers")
-    public List<ShortDriverDTO> getDrivers(@PathVariable("admin-id") Long adminId) throws UserException {
-        return adminService.getDrivers(adminId);
+    public List<ShortDriverDTO> getDrivers(Authentication auth,
+                                           @PathVariable("admin-id") Long adminId) throws UserException {
+        return adminService.getDrivers(auth, adminId);
     }
 
     @GetMapping("/admins/{admin-id}/managers")
-    public List<ManagerDTO> getManagers(@PathVariable("admin-id") Long adminId) throws UserException {
-        return adminService.getManagers(adminId);
+    public List<ManagerDTO> getManagers(Authentication auth,
+                                        @PathVariable("admin-id") Long adminId) throws UserException {
+        return adminService.getManagers(auth, adminId);
     }
 
     @DeleteMapping("/admins/{admin-id}/drivers/{driver-id}")
-    public void deleteDriver(@PathVariable("admin-id") Long adminId,
+    public void deleteDriver(Authentication auth,
+                             @PathVariable("admin-id") Long adminId,
                              @PathVariable("driver-id") Long driverId) throws SecurityException, UserException {
-        adminService.deleteDriver(adminId, driverId);
+        adminService.deleteDriver(auth, adminId, driverId);
     }
 
     @DeleteMapping("/admins/{admin-id}/managers/{manager-id}")
-    public void deleteManager(@PathVariable("admin-id") Long adminId,
+    public void deleteManager(Authentication auth,
+                              @PathVariable("admin-id") Long adminId,
                               @PathVariable("manager-id") Long managerId) throws SecurityException, UserException {
-        adminService.deleteManager(adminId, managerId);
+        adminService.deleteManager(auth, adminId, managerId);
     }
 
 }

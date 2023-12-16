@@ -6,6 +6,7 @@ import com.VigiDrive.model.response.HealthInfoDTO;
 import com.VigiDrive.service.HealthInfoService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,13 +16,15 @@ public class HealthInfoController {
     private HealthInfoService healthInfoService;
 
     @PostMapping("/drivers/{driver-id}/health-info")
-    public HealthInfoDTO addHealthInfo(@PathVariable("driver-id") Long driverId,
+    public HealthInfoDTO addHealthInfo(Authentication auth,
+                                       @PathVariable("driver-id") Long driverId,
                                        @RequestBody @Valid HealthInfoRequest healthInfoRequest) throws UserException {
-        return healthInfoService.addHealthInfo(driverId, healthInfoRequest);
+        return healthInfoService.addHealthInfo(auth, driverId, healthInfoRequest);
     }
 
     @GetMapping("/drivers/{driver-id}/health-info")
-    public HealthInfoDTO getCurrentHealthInfo(@PathVariable("driver-id") Long driverId) throws UserException {
-        return healthInfoService.getCurrentHealthInfo(driverId);
+    public HealthInfoDTO getCurrentHealthInfo(Authentication auth,
+                                              @PathVariable("driver-id") Long driverId) throws UserException {
+        return healthInfoService.getCurrentHealthInfo(auth, driverId);
     }
 }
