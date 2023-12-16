@@ -10,6 +10,7 @@ import com.VigiDrive.model.response.*;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.service.DriverService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,6 +21,7 @@ import java.util.List;
 public class DriverServiceImpl implements DriverService {
 
     private DriverRepository driverRepository;
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public DriverDTO registerDriver(RegisterRequest newDriver) throws SecurityException {
@@ -33,8 +35,7 @@ public class DriverServiceImpl implements DriverService {
                 .email(newDriver.getEmail())
                 .firstName(newDriver.getFirstName())
                 .lastName(newDriver.getLastName())
-                // .keycloakId(UUID.fromString(keycloakId))
-                //.password(passwordEncoder.encode(newDriver.getPassword()))
+                .password(passwordEncoder.encode(newDriver.getPassword()))
                 .role(Role.DRIVER)
                 .build();
 

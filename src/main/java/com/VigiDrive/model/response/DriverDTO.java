@@ -37,7 +37,11 @@ public class DriverDTO {
         this.dateOfBirth = driver.getDateOfBirth();
         this.phoneNumber = driver.getPhoneNumber();
         this.emergencyContact = driver.getEmergencyContact();
-        this.driverLicense = new DriverLicenseDTO(driver.getLicense());
+        if (driver.getLicense() == null) {
+            this.driverLicense = null;
+        } else {
+            this.driverLicense = new DriverLicenseDTO(driver.getLicense());
+        }
     }
 
 }

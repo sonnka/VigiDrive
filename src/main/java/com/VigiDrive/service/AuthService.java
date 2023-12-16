@@ -1,8 +1,9 @@
 package com.VigiDrive.service;
 
-import com.VigiDrive.model.request.AuthRequest;
+import com.VigiDrive.model.response.LoginResponse;
+import org.springframework.security.core.Authentication;
 
 public interface AuthService {
 
-    String loginUser(AuthRequest user);
+    LoginResponse login(Authentication auth);
 }

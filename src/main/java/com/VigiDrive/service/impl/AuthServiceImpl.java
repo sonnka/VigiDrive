@@ -1,47 +1,59 @@
 package com.VigiDrive.service.impl;
 
-import com.VigiDrive.model.request.AuthRequest;
+import com.VigiDrive.model.response.LoginResponse;
+import com.VigiDrive.repository.UserRepository;
 import com.VigiDrive.service.AuthService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    private final String AUTH_SERVER_BASE_URL = "http://localhost:8080";
-    private final String LOGIN_ENDPOINT = "/oauth/token";
+    private UserRepository userRepository;
+    private JwtEncoder jwtEncoder;
 
-    private String clientId = "oidc-client";
+    @Override
+    public LoginResponse login(Authentication authentication) {
+        return getLoginResponse(authentication.getName());
 
-    private String clientSecret = "secret";
+    }
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private LoginResponse getLoginResponse(String email) {
+        var user = userRepository.findByEmailIgnoreCase(email).get();
+        var now = Instant.now();
+        var claims = JwtClaimsSet.builder()
+                .issuer("self")
+                .issuedAt(now)
+                .expiresAt(now.plus(30, ChronoUnit.MINUTES))
+                .subject(email)
+                .claim("id", user.getId())
+                .build();
 
-    public String loginUser(AuthRequest user) {
-        log.error("error");
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        log.error("Logged in = {}", email);
 
-        MultiValueMap<String, String> loginRequest = new LinkedMultiValueMap<>();
-        loginRequest.add("grant_type", "password");
-        loginRequest.add("username", user.getUsername());
-        loginRequest.add("password", user.getPassword());
-        loginRequest.add("scope", "any");
-        loginRequest.add("client_id", clientId);
-        loginRequest.add("client_secret", clientSecret);
+        return LoginResponse.builder()
+                .id(user.getId())
+                .token(jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue())
+                .name(user.getFirstName())
+                .surname(user.getLastName())
+                .avatar(user.getAvatar())
+                .build();
+    }
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(loginRequest, headers);
-
-        return restTemplate.postForObject(AUTH_SERVER_BASE_URL + LOGIN_ENDPOINT, request, String.class);
+    private String createScope(Collection<String> authorities) {
+        return authorities.stream().findFirst().stream().collect(Collectors.joining(" "));
     }
 
 }
