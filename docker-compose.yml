@@ -13,22 +13,6 @@ services:
     networks:
       - "my-net"
 
-
-  keycloak-service:
-    image: keycloak/keycloak:latest
-    container_name: keycloak-service
-    environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=keycloak
-    ports:
-      - "8085:8085"
-    command:
-      - start-dev
-      - --http-port=8085
-    restart: always
-    networks:
-      - "my-net"
-
 networks:
   my-net:
     driver: bridge
