@@ -1,22 +1,5 @@
 version: '3.7'
 services:
-
-  VigiDrive:
-    image: vigi-drive
-    container_name: vigi-drive-app
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    restart: always
-    depends_on:
-      - mysql-db
-      - keycloak-service
-    user: "1000:1000"
-    networks:
-      - "my-net"
-
   mysql-db:
     image: mysql:latest
     container_name: mysql-db
@@ -26,22 +9,6 @@ services:
       - MYSQL_ROOT_PASSWORD=pass123
     ports:
       - "3306:3306"
-    restart: always
-    networks:
-      - "my-net"
-
-
-  keycloak-service:
-    image: keycloak/keycloak:latest
-    container_name: keycloak-service
-    environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=keycloak
-    ports:
-      - "8085:8085"
-    command:
-      - start-dev
-      - --http-port=8085
     restart: always
     networks:
       - "my-net"
