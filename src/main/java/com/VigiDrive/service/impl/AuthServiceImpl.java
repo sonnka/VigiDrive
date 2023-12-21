@@ -13,8 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -50,10 +48,6 @@ public class AuthServiceImpl implements AuthService {
                 .surname(user.getLastName())
                 .avatar(user.getAvatar())
                 .build();
-    }
-
-    private String createScope(Collection<String> authorities) {
-        return authorities.stream().findFirst().stream().collect(Collectors.joining(" "));
     }
 
 }
