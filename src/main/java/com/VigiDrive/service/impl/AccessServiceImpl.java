@@ -225,7 +225,7 @@ public class AccessServiceImpl implements AccessService {
             throw new RuntimeException(e);
         }
 
-        Driver driver = null;
+        Driver driver;
         try {
             driver = driverRepository.findById(access.getDriverId())
                     .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
