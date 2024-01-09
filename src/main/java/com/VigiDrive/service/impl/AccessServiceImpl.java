@@ -29,6 +29,12 @@ public class AccessServiceImpl implements AccessService {
     private DriverRepository driverRepository;
     private ManagerRepository managerRepository;
 
+
+    @Override
+    public AccessDTO getAccess(Authentication auth, Long driverId, Long accessId) {
+        return toAccessDTO(accessRepository.findById(accessId).get());
+    }
+
     @Override
     public AccessDTO requestAccess(Authentication auth, Long managerId, AccessRequest access) throws UserException {
         // manager

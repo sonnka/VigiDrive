@@ -20,6 +20,8 @@ public class RegisterRequest {
     @Size(min = 2, max = 24)
     private String lastName;
 
+    private String avatar;
+
     @NotEmpty
     @NotNull
     @Email
@@ -27,6 +29,6 @@ public class RegisterRequest {
 
     @NotEmpty
     @NotNull
-    @Size(min = 6, max = 24)
+    @Size(min = 5, max = 24)
     private String password;
 }

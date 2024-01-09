@@ -9,6 +9,9 @@ import org.springframework.security.core.Authentication;
 import java.util.List;
 
 public interface AccessService {
+
+    AccessDTO getAccess(Authentication auth, Long driverId, Long accessId);
+
     AccessDTO requestAccess(Authentication auth, Long managerId, AccessRequest access) throws UserException;
 
     AccessDTO giveAccess(Authentication auth, Long driverId, Long accessId) throws UserException;
