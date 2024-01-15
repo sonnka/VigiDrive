@@ -9,7 +9,6 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.util.Objects;
-import java.util.UUID;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -44,10 +43,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private Role role;
-
-    @Column(name = "keycloak_id")
-    private UUID keycloakId;
-
 
     @Override
     public boolean equals(Object o) {

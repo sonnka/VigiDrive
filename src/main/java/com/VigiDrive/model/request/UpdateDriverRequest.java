@@ -1,7 +1,5 @@
 package com.VigiDrive.model.request;
 
-import com.VigiDrive.validation.Date;
-import com.VigiDrive.validation.PhoneNumber;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -14,7 +12,7 @@ import lombok.Setter;
 @Builder
 public class UpdateDriverRequest {
 
-    @Size(min = 2, max = 64)
+    // @Size(min = 2, max = 64)
     private String avatar;
 
     @Size(min = 2, max = 24)
@@ -27,12 +25,12 @@ public class UpdateDriverRequest {
     @NotNull
     private String lastName;
 
-    @Date
+    // @Date
     @NotEmpty
     @NotNull
     private String dateOfBirth;
 
-    @PhoneNumber
+    //@PhoneNumber
     @NotEmpty
     @NotNull
     private String phoneNumber;

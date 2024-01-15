@@ -61,8 +61,7 @@ public class SituationServiceImpl implements SituationService {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
-        LocalDateTime start = null;
-        LocalDateTime end = null;
+        LocalDateTime start, end;
 
         try {
             start = LocalDateTime.parse(situation.getStart(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);

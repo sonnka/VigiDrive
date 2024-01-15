@@ -29,6 +29,12 @@ public class AccessServiceImpl implements AccessService {
     private DriverRepository driverRepository;
     private ManagerRepository managerRepository;
 
+
+    @Override
+    public AccessDTO getAccess(Authentication auth, Long driverId, Long accessId) {
+        return toAccessDTO(accessRepository.findById(accessId).get());
+    }
+
     @Override
     public AccessDTO requestAccess(Authentication auth, Long managerId, AccessRequest access) throws UserException {
         // manager
@@ -225,7 +231,7 @@ public class AccessServiceImpl implements AccessService {
             throw new RuntimeException(e);
         }
 
-        Driver driver = null;
+        Driver driver;
         try {
             driver = driverRepository.findById(access.getDriverId())
                     .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));

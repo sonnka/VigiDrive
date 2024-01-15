@@ -1,7 +1,6 @@
 package com.VigiDrive.model.request;
 
 import com.VigiDrive.validation.DateTime;
-import com.VigiDrive.validation.SituationType;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -22,7 +21,7 @@ public class SituationRequest {
 
     @NotEmpty
     @NotNull
-    @SituationType
+    //  @SituationType
     private String type;
 
     @NotEmpty

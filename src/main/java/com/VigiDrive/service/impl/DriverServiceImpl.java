@@ -9,6 +9,7 @@ import com.VigiDrive.model.request.UpdateDriverRequest;
 import com.VigiDrive.model.response.*;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.service.DriverService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,6 +33,7 @@ public class DriverServiceImpl implements DriverService {
                 .firstName(newDriver.getFirstName())
                 .lastName(newDriver.getLastName())
                 .password(passwordEncoder.encode(newDriver.getPassword()))
+                .avatar(newDriver.getAvatar())
                 .role(Role.DRIVER)
                 .build();
 
@@ -39,6 +41,7 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
+    @Transactional
     public DriverDTO updateDriver(Authentication auth, Long driverId, UpdateDriverRequest newDriver)
             throws UserException {
         var driver = driverRepository.findById(driverId)
