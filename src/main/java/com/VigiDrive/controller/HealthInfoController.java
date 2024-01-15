@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @AllArgsConstructor
+@CrossOrigin("http://localhost:4200")
 public class HealthInfoController {
 
     private HealthInfoService healthInfoService;

@@ -21,6 +21,7 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
+@CrossOrigin("http://localhost:4200")
 public class ManagerController {
 
     private ManagerService managerService;
