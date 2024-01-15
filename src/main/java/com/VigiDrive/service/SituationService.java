@@ -12,6 +12,8 @@ public interface SituationService {
 
     List<SituationDTO> getSituations(Authentication auth, Long driverId) throws UserException;
 
+    List<SituationDTO> getWeekSituations(Authentication auth, Long driverId) throws UserException;
+
     SituationDTO getSituation(Authentication auth, Long driverId, Long situationId)
             throws UserException, SituationException;
 

@@ -25,6 +25,12 @@ public class SituationController {
         return situationService.getSituations(auth, driverId);
     }
 
+    @GetMapping("/drivers/{driver-id}/situations/week")
+    public List<SituationDTO> getWeekSituations(Authentication auth,
+                                                @PathVariable("driver-id") Long driverId) throws UserException {
+        return situationService.getWeekSituations(auth, driverId);
+    }
+
     @GetMapping("/drivers/{driver-id}/situations/{situation-id}")
     public SituationDTO getSituation(Authentication auth,
                                      @PathVariable("driver-id") Long driverId,

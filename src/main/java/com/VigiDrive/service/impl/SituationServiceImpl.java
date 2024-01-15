@@ -38,6 +38,22 @@ public class SituationServiceImpl implements SituationService {
     }
 
     @Override
+    public List<SituationDTO> getWeekSituations(Authentication auth, Long driverId) throws UserException {
+        var driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+
+        return situationRepository.findAllByDriverAndStartGreaterThan(driver, getStartOfCurrentWeek())
+                .stream()
+                .map(SituationDTO::new)
+                .toList();
+    }
+
+    private LocalDateTime getStartOfCurrentWeek() {
+        var today = LocalDateTime.now();
+        return LocalDateTime.now().minusDays(today.getDayOfWeek().getValue() - 1L);
+    }
+
+    @Override
     public SituationDTO getSituation(Authentication auth, Long driverId, Long situationId)
             throws UserException, SituationException {
         var driver = driverRepository.findById(driverId)
