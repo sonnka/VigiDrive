@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -49,8 +50,10 @@ public class SituationServiceImpl implements SituationService {
     }
 
     private LocalDateTime getStartOfCurrentWeek() {
-        var today = LocalDateTime.now();
-        return LocalDateTime.now().minusDays(today.getDayOfWeek().getValue() - 1L);
+        var today = LocalDate.now();
+        return LocalDate.now()
+                .minusDays(today.getDayOfWeek().getValue() - 1L)
+                .atTime(0, 0, 0);
     }
 
     @Override
