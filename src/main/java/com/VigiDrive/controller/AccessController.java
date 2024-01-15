@@ -18,6 +18,13 @@ public class AccessController {
 
     private AccessService accessService;
 
+    @GetMapping("/drivers/{driver-id}/accesses/{access-id}")
+    public AccessDTO getAccess(Authentication auth,
+                               @PathVariable("driver-id") Long driverId,
+                               @PathVariable("access-id") Long accessId) {
+        return accessService.getAccess(auth, driverId, accessId);
+    }
+
     @PostMapping("/managers/{manager-id}/accesses")
     public AccessDTO requestAccess(Authentication auth,
                                    @PathVariable("manager-id") Long managerId,

@@ -28,7 +28,7 @@ CREATE TABLE users
     last_name  VARCHAR(255)          NULL,
     email      VARCHAR(255)          NULL,
     password   VARCHAR(255)          NULL,
-    avatar     VARCHAR(255)          NULL,
+    avatar     LONGTEXT              NULL,
     `role`     VARCHAR(255)          NULL,
     CONSTRAINT pk_users PRIMARY KEY (user_id)
 );
