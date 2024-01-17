@@ -43,7 +43,7 @@ public class SituationServiceImpl implements SituationService {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
-        return situationRepository.findAllByDriverAndStartGreaterThan(driver, getStartOfCurrentWeek())
+        return situationRepository.findAllByDriverAndStartGreaterThanOrderByStartAsc(driver, getStartOfCurrentWeek())
                 .stream()
                 .map(SituationDTO::new)
                 .toList();

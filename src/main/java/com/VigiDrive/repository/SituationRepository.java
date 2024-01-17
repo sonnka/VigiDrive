@@ -11,5 +11,5 @@ public interface SituationRepository extends JpaRepository<Situation, Long> {
 
     List<Situation> findAllByDriver(Driver driver);
 
-    List<Situation> findAllByDriverAndStartGreaterThan(Driver driver, LocalDateTime startOfWeek);
+    List<Situation> findAllByDriverAndStartGreaterThanOrderByStartAsc(Driver driver, LocalDateTime startOfWeek);
 }
