@@ -8,7 +8,7 @@ pipeline {
 	tools {
 		jdk 'JDK-17'
 	}
-// Test 3 Jenkins
+
 	stages {
 
 		stage('Build'){
@@ -18,9 +18,10 @@ pipeline {
 		}
 
         stage('Build Docker Image of DB') {
-                steps {
-                    bat 'docker-compose -f docker-compose.yml up -d --build'
-                }
+            steps {
+                bat 'docker-compose -f docker-compose.yml up -d --build'
+                bat 'sleep 20'
+            }
         }
 
 		stage('Test'){
