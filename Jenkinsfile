@@ -20,7 +20,7 @@ pipeline {
         stage('Build Docker Image of DB') {
             steps {
                 bat 'docker-compose -f docker-compose.yml up -d --build'
-                bat 'timeout 20'
+                sleep(10)
             }
         }
 
