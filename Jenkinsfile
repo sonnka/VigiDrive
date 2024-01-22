@@ -8,7 +8,7 @@ pipeline {
 	tools {
 		jdk 'JDK-17'
 	}
-// Test Jenkins
+// Test 2 Jenkins
 	stages {
 		stage('Build'){
 			steps {
