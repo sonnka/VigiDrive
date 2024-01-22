@@ -19,7 +19,7 @@ pipeline {
 
         stage('Build Docker Image of DB') {
                 steps {
-                    bat 'docker-compose -f docker-compose.yml run'
+                    bat 'docker-compose -f docker-compose.yml run –rm compile'
                 }
         }
 
