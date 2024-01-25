@@ -113,13 +113,15 @@ public class SituationServiceImpl implements SituationService {
         );
     }
 
-    public Map<Integer, List<SituationDTO>> getWeekStatistic(Long driverId) throws UserException {
+    @Override
+    public Map<LocalDate, List<SituationDTO>> getWeekStatistic(Authentication auth, Long driverId)
+            throws UserException {
 
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         var today = LocalDate.now().atTime(0, 0, 0);
-        var startOfWeek = today.minusDays(7);
+        var startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
 
         List<SituationDTO> situations = situationRepository
                 .findAllByDriverAndStartGreaterThanOrderByStartAsc(driver, startOfWeek)
@@ -127,7 +129,46 @@ public class SituationServiceImpl implements SituationService {
 
         return situations.stream()
                 .collect(Collectors.groupingBy(
-                        u -> u.getStart().getDayOfMonth())
+                        u -> u.getStart().toLocalDate())
+                );
+    }
+
+    @Override
+    public Map<LocalDate, List<SituationDTO>> getMonthStatistic(Authentication auth, Long driverId)
+            throws UserException {
+
+        var driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+
+        var today = LocalDate.now().atTime(0, 0, 0);
+        var startOfMonth = today.minusDays(today.getDayOfMonth() - 1);
+
+        List<SituationDTO> situations = situationRepository
+                .findAllByDriverAndStartGreaterThanOrderByStartAsc(driver, startOfMonth)
+                .stream().map(SituationDTO::new).toList();
+
+        return situations.stream()
+                .collect(Collectors.groupingBy(
+                        u -> u.getStart().toLocalDate())
+                );
+    }
+
+    @Override
+    public Map<Integer, List<SituationDTO>> getYearStatistic(Authentication auth, Long driverId) throws UserException {
+
+        var driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+
+        var today = LocalDate.now().atTime(0, 0, 0);
+        var startOfYear = today.minusMonths(today.getMonthValue() - 1).minusDays(today.getDayOfMonth() - 1);
+
+        List<SituationDTO> situations = situationRepository
+                .findAllByDriverAndStartGreaterThanOrderByStartAsc(driver, startOfYear)
+                .stream().map(SituationDTO::new).toList();
+
+        return situations.stream()
+                .collect(Collectors.groupingBy(
+                        u -> u.getStart().getMonth().getValue())
                 );
     }
 }
