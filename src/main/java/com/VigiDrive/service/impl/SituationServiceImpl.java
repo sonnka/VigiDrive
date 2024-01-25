@@ -17,9 +17,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -109,5 +111,23 @@ public class SituationServiceImpl implements SituationService {
                         .driver(driver)
                         .build())
         );
+    }
+
+    public Map<Integer, List<SituationDTO>> getWeekStatistic(Long driverId) throws UserException {
+
+        var driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+
+        var today = LocalDate.now().atTime(0, 0, 0);
+        var startOfWeek = today.minusDays(7);
+
+        List<SituationDTO> situations = situationRepository
+                .findAllByDriverAndStartGreaterThanOrderByStartAsc(driver, startOfWeek)
+                .stream().map(SituationDTO::new).toList();
+
+        return situations.stream()
+                .collect(Collectors.groupingBy(
+                        u -> u.getStart().getDayOfMonth())
+                );
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @AllArgsConstructor
@@ -45,5 +46,12 @@ public class SituationController {
                                      @RequestBody @Valid SituationRequest situation)
             throws SituationException, UserException {
         return situationService.addSituation(auth, driverId, situation);
+    }
+
+    @GetMapping("/drivers/{driver-id}/situations/statistic/week")
+    public Map<Integer, List<SituationDTO>> getWeekStatistic(Authentication auth,
+                                                             @PathVariable("driver-id") Long driverId)
+            throws UserException {
+        return situationService.getWeekStatistic(driverId);
     }
 }
