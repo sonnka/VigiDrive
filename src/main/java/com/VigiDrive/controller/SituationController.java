@@ -4,15 +4,14 @@ import com.VigiDrive.exceptions.SituationException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.SituationRequest;
 import com.VigiDrive.model.response.SituationDTO;
+import com.VigiDrive.model.response.SituationStatistics;
 import com.VigiDrive.service.SituationService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @AllArgsConstructor
@@ -49,24 +48,24 @@ public class SituationController {
         return situationService.addSituation(auth, driverId, situation);
     }
 
-    @GetMapping("/drivers/{driver-id}/situations/statistic/week")
-    public Map<LocalDate, List<SituationDTO>> getWeekStatistic(Authentication auth,
-                                                               @PathVariable("driver-id") Long driverId)
-            throws UserException {
+    @GetMapping("/drivers/{driver-id}/situations/statistics/week")
+    public SituationStatistics getWeekStatistic(Authentication auth,
+                                                @PathVariable("driver-id") Long driverId)
+            throws UserException, SituationException {
         return situationService.getWeekStatistic(auth, driverId);
     }
 
-    @GetMapping("/drivers/{driver-id}/situations/statistic/month")
-    public Map<LocalDate, List<SituationDTO>> getMonthStatistic(Authentication auth,
-                                                                @PathVariable("driver-id") Long driverId)
-            throws UserException {
+    @GetMapping("/drivers/{driver-id}/situations/statistics/month")
+    public SituationStatistics getMonthStatistic(Authentication auth,
+                                                 @PathVariable("driver-id") Long driverId)
+            throws UserException, SituationException {
         return situationService.getMonthStatistic(auth, driverId);
     }
 
-    @GetMapping("/drivers/{driver-id}/situations/statistic/year")
-    public Map<Integer, List<SituationDTO>> getYearStatistic(Authentication auth,
-                                                             @PathVariable("driver-id") Long driverId)
-            throws UserException {
+    @GetMapping("/drivers/{driver-id}/situations/statistics/year")
+    public SituationStatistics getYearStatistic(Authentication auth,
+                                                @PathVariable("driver-id") Long driverId)
+            throws UserException, SituationException {
         return situationService.getYearStatistic(auth, driverId);
     }
 }

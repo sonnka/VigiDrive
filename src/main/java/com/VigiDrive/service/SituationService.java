@@ -4,11 +4,10 @@ import com.VigiDrive.exceptions.SituationException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.SituationRequest;
 import com.VigiDrive.model.response.SituationDTO;
+import com.VigiDrive.model.response.SituationStatistics;
 import org.springframework.security.core.Authentication;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 public interface SituationService {
 
@@ -22,9 +21,9 @@ public interface SituationService {
     SituationDTO addSituation(Authentication auth, Long driverId, SituationRequest situation)
             throws UserException, SituationException;
 
-    Map<LocalDate, List<SituationDTO>> getWeekStatistic(Authentication auth, Long driverId) throws UserException;
+    SituationStatistics getWeekStatistic(Authentication auth, Long driverId) throws UserException, SituationException;
 
-    Map<LocalDate, List<SituationDTO>> getMonthStatistic(Authentication auth, Long driverId) throws UserException;
+    SituationStatistics getMonthStatistic(Authentication auth, Long driverId) throws UserException, SituationException;
 
-    Map<Integer, List<SituationDTO>> getYearStatistic(Authentication auth, Long driverId) throws UserException;
+    SituationStatistics getYearStatistic(Authentication auth, Long driverId) throws UserException, SituationException;
 }
