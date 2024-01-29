@@ -6,7 +6,6 @@ pipeline {
         stage('Build Docker') {
             steps {
                 bat 'docker-compose -f docker-compose.yml up -d --build'
-                sleep(10)
             }
         }
 	}
