@@ -10,4 +10,5 @@ public interface HealthInfoService {
             throws UserException;
 
     HealthInfoDTO getCurrentHealthInfo(Authentication auth, Long driverId) throws UserException;
+
 }

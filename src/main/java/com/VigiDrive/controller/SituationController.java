@@ -4,6 +4,7 @@ import com.VigiDrive.exceptions.SituationException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.SituationRequest;
 import com.VigiDrive.model.response.SituationDTO;
+import com.VigiDrive.model.response.SituationStatistics;
 import com.VigiDrive.service.SituationService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -45,5 +46,26 @@ public class SituationController {
                                      @RequestBody @Valid SituationRequest situation)
             throws SituationException, UserException {
         return situationService.addSituation(auth, driverId, situation);
+    }
+
+    @GetMapping("/drivers/{driver-id}/situations/statistics/week")
+    public SituationStatistics getWeekStatistic(Authentication auth,
+                                                @PathVariable("driver-id") Long driverId)
+            throws UserException, SituationException {
+        return situationService.getWeekStatistic(auth, driverId);
+    }
+
+    @GetMapping("/drivers/{driver-id}/situations/statistics/month")
+    public SituationStatistics getMonthStatistic(Authentication auth,
+                                                 @PathVariable("driver-id") Long driverId)
+            throws UserException, SituationException {
+        return situationService.getMonthStatistic(auth, driverId);
+    }
+
+    @GetMapping("/drivers/{driver-id}/situations/statistics/year")
+    public SituationStatistics getYearStatistic(Authentication auth,
+                                                @PathVariable("driver-id") Long driverId)
+            throws UserException, SituationException {
+        return situationService.getYearStatistic(auth, driverId);
     }
 }
