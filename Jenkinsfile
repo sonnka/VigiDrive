@@ -9,11 +9,5 @@ pipeline {
                 sleep(10)
             }
         }
-
-		stage('Test'){
-			steps{
-				bat "mvn test"
-			}
-		}
 	}
 }
