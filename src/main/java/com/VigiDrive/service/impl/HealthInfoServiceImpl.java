@@ -87,28 +87,54 @@ public class HealthInfoServiceImpl implements HealthInfoService {
                         info -> info.getTime().toLocalDate().getDayOfWeek().getValue()
                 ));
 
-        double average = BigDecimal.valueOf(
-                        healthInfo
-                                .stream()
-                                .mapToDouble(HealthInfoDTO::getGeneralStatus)
-                                .average()
-                                .orElse(0))
-                .setScale(2, RoundingMode.HALF_UP)
-                .doubleValue();
-
-        Map<Integer, Double> frequency = getFrequency(resultMap);
-
-        List<StatisticElement> statistics = new ArrayList<>();
-
-        frequency.forEach((key, value) -> statistics.add(new StatisticElement(key, value)));
-
-        return HealthStatistics.builder()
-                .generalLevelForPeriod(average)
-                .bestPeriod(getBestPeriod(frequency))
-                .worstPeriod(getWorstPeriod(frequency))
-                .statistics(statistics)
-                .build();
+        return getHealthStatistics(healthInfo, resultMap);
     }
+
+    @Override
+    public HealthStatistics getMonthHealthStatistics(Authentication auth, Long driverId)
+            throws UserException, HealthException {
+        var driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+
+        var today = LocalDate.now().atTime(0, 0, 0);
+        var startOfMonth = today.minusDays(today.getDayOfMonth() - 1);
+
+        List<HealthInfoDTO> healthInfo = healthInfoRepository.findAllByDriverAndTimeAfter(driver, startOfMonth)
+                .stream()
+                .map(HealthInfoDTO::new)
+                .toList();
+
+        Map<Integer, List<HealthInfoDTO>> resultMap = healthInfo.stream()
+                .collect(Collectors.groupingBy(
+                        info -> info.getTime().toLocalDate().getDayOfMonth()
+                ));
+
+        return getHealthStatistics(healthInfo, resultMap);
+    }
+
+
+    @Override
+    public HealthStatistics getYearHealthStatistics(Authentication auth, Long driverId)
+            throws UserException, HealthException {
+        var driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+
+        var today = LocalDate.now().atTime(0, 0, 0);
+        var startOfYear = today.minusMonths(today.getMonthValue() - 1).minusDays(today.getDayOfMonth() - 1);
+
+        List<HealthInfoDTO> healthInfo = healthInfoRepository.findAllByDriverAndTimeAfter(driver, startOfYear)
+                .stream()
+                .map(HealthInfoDTO::new)
+                .toList();
+
+        Map<Integer, List<HealthInfoDTO>> resultMap = healthInfo.stream()
+                .collect(Collectors.groupingBy(
+                        info -> info.getTime().toLocalDate().getMonth().getValue()
+                ));
+
+        return getHealthStatistics(healthInfo, resultMap);
+    }
+
 
     private int getBestPeriod(Map<Integer, Double> frequency)
             throws HealthException {
@@ -147,5 +173,30 @@ public class HealthInfoServiceImpl implements HealthInfoService {
         }
 
         return frequency;
+    }
+
+    private HealthStatistics getHealthStatistics(List<HealthInfoDTO> healthInfo,
+                                                 Map<Integer, List<HealthInfoDTO>> resultMap) throws HealthException {
+        double average = BigDecimal.valueOf(
+                        healthInfo
+                                .stream()
+                                .mapToDouble(HealthInfoDTO::getGeneralStatus)
+                                .average()
+                                .orElse(0))
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
+
+        Map<Integer, Double> frequency = getFrequency(resultMap);
+
+        List<StatisticElement> statistics = new ArrayList<>();
+
+        frequency.forEach((key, value) -> statistics.add(new StatisticElement(key, value)));
+
+        return HealthStatistics.builder()
+                .generalLevelForPeriod(average)
+                .bestPeriod(getBestPeriod(frequency))
+                .worstPeriod(getWorstPeriod(frequency))
+                .statistics(statistics)
+                .build();
     }
 }

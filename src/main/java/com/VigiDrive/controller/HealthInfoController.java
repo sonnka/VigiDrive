@@ -37,4 +37,18 @@ public class HealthInfoController {
             throws HealthException, UserException {
         return healthInfoService.getWeekHealthStatistics(auth, driverId);
     }
+
+    @GetMapping("/drivers/{driver-id}/health-info/statistics/month")
+    public HealthStatistics getMonthHealthStatistics(Authentication auth,
+                                                     @PathVariable("driver-id") Long driverId)
+            throws HealthException, UserException {
+        return healthInfoService.getMonthHealthStatistics(auth, driverId);
+    }
+
+    @GetMapping("/drivers/{driver-id}/health-info/statistics/year")
+    public HealthStatistics getYearHealthStatistics(Authentication auth,
+                                                    @PathVariable("driver-id") Long driverId)
+            throws HealthException, UserException {
+        return healthInfoService.getYearHealthStatistics(auth, driverId);
+    }
 }
