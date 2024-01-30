@@ -1,8 +1,10 @@
 package com.VigiDrive.controller;
 
+import com.VigiDrive.exceptions.HealthException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.HealthInfoRequest;
 import com.VigiDrive.model.response.HealthInfoDTO;
+import com.VigiDrive.model.response.HealthStatistics;
 import com.VigiDrive.service.HealthInfoService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -27,5 +29,12 @@ public class HealthInfoController {
     public HealthInfoDTO getCurrentHealthInfo(Authentication auth,
                                               @PathVariable("driver-id") Long driverId) throws UserException {
         return healthInfoService.getCurrentHealthInfo(auth, driverId);
+    }
+
+    @GetMapping("/drivers/{driver-id}/health-info/statistics/week")
+    public HealthStatistics getWeekHealthStatistics(Authentication auth,
+                                                    @PathVariable("driver-id") Long driverId)
+            throws HealthException, UserException {
+        return healthInfoService.getWeekHealthStatistics(auth, driverId);
     }
 }

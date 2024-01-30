@@ -13,5 +13,5 @@ public class StatisticElement {
 
     private Integer period;
 
-    private Integer amount;
+    private Double amount;
 }

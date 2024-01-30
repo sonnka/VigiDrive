@@ -35,14 +35,14 @@ public class HealthInfoDTO {
     }
 
     private Double calculateGeneralStatus() {
-        double stressWeight = 0.4;
-        double concentrationWeight = 0.3;
-        double sleepinessWeight = 0.3;
+        double stressWeight = 0.2;
+        double concentrationWeight = 0.6;
+        double sleepinessWeight = 0.2;
 
-        return ((stressWeight * (100 - stressLevel))
+        return ((stressWeight * (10 - stressLevel))
                 + (concentrationWeight * concentrationLevel)
-                + (sleepinessWeight * (100 - sleepinessLevel)))
-                / (stressWeight + concentrationWeight + sleepinessWeight);
+                + (sleepinessWeight * (10 - sleepinessLevel))) * 10;
+
     }
 
 }

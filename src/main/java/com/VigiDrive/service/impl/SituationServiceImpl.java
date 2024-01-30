@@ -182,10 +182,10 @@ public class SituationServiceImpl implements SituationService {
                                                        List<SituationDTO> situations) throws SituationException {
         List<StatisticElement> result = new ArrayList<>();
 
-        map.forEach((key, value) -> result.add(new StatisticElement(key, value.size())));
+        map.forEach((key, value) -> result.add(new StatisticElement(key, (double) value.size())));
 
         var mostFrequentPeriod = result.stream()
-                .max(Comparator.comparingInt(StatisticElement::getAmount))
+                .max(Comparator.comparingDouble(StatisticElement::getAmount))
                 .orElseThrow(() ->
                         new SituationException(SituationException.SituationExceptionProfile.SOMETHING_WRONG))
                 .getPeriod();
