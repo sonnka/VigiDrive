@@ -4,6 +4,8 @@ import com.VigiDrive.model.entity.HealthInfo;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @Getter
@@ -39,10 +41,13 @@ public class HealthInfoDTO {
         double concentrationWeight = 0.6;
         double sleepinessWeight = 0.2;
 
-        return ((stressWeight * (10 - stressLevel))
+        double general = ((stressWeight * (10 - stressLevel))
                 + (concentrationWeight * concentrationLevel)
                 + (sleepinessWeight * (10 - sleepinessLevel))) * 10;
 
+        return BigDecimal.valueOf(general)
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
     }
 
 }
