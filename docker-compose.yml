@@ -1,4 +1,5 @@
 version: '3.7'
+name: "vigidrive"
 services:
   vigi-drive-app:
     image: vigi-drive
