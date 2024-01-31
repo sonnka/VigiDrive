@@ -1,5 +1,6 @@
 package com.VigiDrive.controller;
 
+import com.VigiDrive.exceptions.AmazonException;
 import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.RegisterRequest;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -37,6 +39,13 @@ public class ManagerController {
                                     @PathVariable("manager-id") Long managerId,
                                     @RequestBody @Valid UpdateManagerRequest manager) throws UserException {
         return managerService.updateManager(auth, managerId, manager);
+    }
+
+    @PostMapping("/managers/{manager-id}/avatar")
+    public ManagerDTO uploadAvatar(Authentication auth,
+                                   @PathVariable("manager-id") Long managerId,
+                                   @RequestBody MultipartFile avatar) throws UserException, AmazonException {
+        return managerService.uploadAvatar(auth, managerId, avatar);
     }
 
     @DeleteMapping("/managers/{manager-id}")

@@ -1,5 +1,6 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.exceptions.AmazonException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Manager;
 import com.VigiDrive.model.enums.Role;
@@ -13,10 +14,12 @@ import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.service.DriverService;
 import com.VigiDrive.service.ManagerService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Objects;
@@ -29,6 +32,7 @@ public class ManagerServiceImpl implements ManagerService {
     private DriverService driverService;
     private DriverRepository driverRepository;
     private PasswordEncoder passwordEncoder;
+    private AmazonClient amazonClient;
 
     @Override
     public ManagerDTO registerManager(RegisterRequest newManager) {
@@ -75,7 +79,24 @@ public class ManagerServiceImpl implements ManagerService {
 
         manager.setFirstName(newManager.getFirstName());
         manager.setLastName(newManager.getLastName());
-        manager.setAvatar(newManager.getAvatar());
+
+        return new ManagerDTO(managerRepository.save(manager));
+    }
+
+    @Override
+    @Transactional
+    public ManagerDTO uploadAvatar(Authentication auth, Long managerId, MultipartFile avatar)
+            throws UserException, AmazonException {
+        var manager = managerRepository.findById(managerId)
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
+
+        if (manager.getAvatar() != null && !manager.getAvatar().isEmpty()) {
+            amazonClient.deleteFileFromS3Bucket(manager.getAvatar());
+        }
+
+        String fileName = amazonClient.uploadFile(avatar);
+
+        manager.setAvatar(fileName);
 
         return new ManagerDTO(managerRepository.save(manager));
     }
@@ -110,6 +131,10 @@ public class ManagerServiceImpl implements ManagerService {
     public void delete(Authentication auth, Long managerId) throws UserException {
         var manager = managerRepository.findById(managerId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
+
+        if (manager.getAvatar() != null && !manager.getAvatar().isEmpty()) {
+            amazonClient.deleteFileFromS3Bucket(manager.getAvatar());
+        }
 
         managerRepository.delete(manager);
     }

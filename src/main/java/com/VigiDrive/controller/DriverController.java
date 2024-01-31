@@ -1,5 +1,6 @@
 package com.VigiDrive.controller;
 
+import com.VigiDrive.exceptions.AmazonException;
 import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.RegisterRequest;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @AllArgsConstructor
@@ -33,6 +35,13 @@ public class DriverController {
                                   @PathVariable("driver-id") Long driverId,
                                   @RequestBody @Valid UpdateDriverRequest driver) throws UserException {
         return driverService.updateDriver(auth, driverId, driver);
+    }
+
+    @PostMapping("/drivers/{driver-id}/avatar")
+    public DriverDTO uploadAvatar(Authentication auth,
+                                  @PathVariable("driver-id") Long driverId,
+                                  @RequestBody MultipartFile avatar) throws UserException, AmazonException {
+        return driverService.uploadAvatar(auth, driverId, avatar);
     }
 
     @DeleteMapping("/drivers/{driver-id}")
