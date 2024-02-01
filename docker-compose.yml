@@ -11,7 +11,8 @@ services:
       - "8080:8080"
     restart: always
     volumes:
-      - ./:/tmp/reports
+      - ./files:/tmp/reports:rwx
+      - ./files:/tmp/images:rwx
     depends_on:
       - mysql-db
     env_file:
@@ -23,10 +24,8 @@ services:
   mysql-db:
     image: mysql:latest
     container_name: mysql-db
-    environment:
-      - MYSQL_DATABASE=mydb
-      - MYSQL_ROOT_USER=root
-      - MYSQL_ROOT_PASSWORD=pass123
+    env_file:
+      - api.env
     ports:
       - "3306:3306"
     restart: always

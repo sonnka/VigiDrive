@@ -1,5 +1,6 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.exceptions.AmazonException;
 import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Driver;
@@ -14,6 +15,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,6 +26,7 @@ public class DriverServiceImpl implements DriverService {
 
     private DriverRepository driverRepository;
     private PasswordEncoder passwordEncoder;
+    private AmazonClient amazonClient;
 
     @Override
     public DriverDTO registerDriver(RegisterRequest newDriver) {
@@ -33,7 +36,6 @@ public class DriverServiceImpl implements DriverService {
                 .firstName(newDriver.getFirstName())
                 .lastName(newDriver.getLastName())
                 .password(passwordEncoder.encode(newDriver.getPassword()))
-                .avatar(newDriver.getAvatar())
                 .role(Role.DRIVER)
                 .build();
 
@@ -51,7 +53,24 @@ public class DriverServiceImpl implements DriverService {
         driver.setLastName(newDriver.getLastName());
         driver.setDateOfBirth(LocalDate.parse(newDriver.getDateOfBirth()));
         driver.setPhoneNumber(newDriver.getPhoneNumber());
-        driver.setAvatar(newDriver.getAvatar());
+
+        return new DriverDTO(driverRepository.save(driver));
+    }
+
+    @Override
+    @Transactional
+    public DriverDTO uploadAvatar(Authentication auth, Long driverId, MultipartFile avatar)
+            throws UserException, AmazonException {
+        var driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+
+        if (driver.getAvatar() != null && !driver.getAvatar().isEmpty()) {
+            amazonClient.deleteFileFromS3Bucket(driver.getAvatar());
+        }
+
+        String fileName = amazonClient.uploadFile(avatar);
+
+        driver.setAvatar(fileName);
 
         return new DriverDTO(driverRepository.save(driver));
     }
@@ -60,6 +79,10 @@ public class DriverServiceImpl implements DriverService {
     public void delete(Authentication auth, Long driverId) throws UserException, SecurityException {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+
+        if (driver.getAvatar() != null && !driver.getAvatar().isEmpty()) {
+            amazonClient.deleteFileFromS3Bucket(driver.getAvatar());
+        }
 
         driverRepository.delete(driver);
     }

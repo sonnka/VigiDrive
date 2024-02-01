@@ -12,9 +12,6 @@ import lombok.Setter;
 @Builder
 public class UpdateDriverRequest {
 
-    // @Size(min = 2, max = 64)
-    private String avatar;
-
     @Size(min = 2, max = 24)
     @NotEmpty
     @NotNull
@@ -25,12 +22,10 @@ public class UpdateDriverRequest {
     @NotNull
     private String lastName;
 
-    // @Date
     @NotEmpty
     @NotNull
     private String dateOfBirth;
 
-    //@PhoneNumber
     @NotEmpty
     @NotNull
     private String phoneNumber;
