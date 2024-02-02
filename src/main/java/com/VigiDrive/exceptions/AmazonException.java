@@ -3,7 +3,7 @@ package com.VigiDrive.exceptions;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 
-public class AmazonException extends Exception {
+public class AmazonException extends RuntimeException {
     private final AmazonExceptionProfile amazonExceptionProfile;
 
     public AmazonException(AmazonExceptionProfile amazonExceptionProfile) {
@@ -21,6 +21,8 @@ public class AmazonException extends Exception {
 
     @AllArgsConstructor
     public enum AmazonExceptionProfile {
+        INVALID_INITIALIZATION("invalid_initialization",
+                "Something went wrong while initialization of application.", HttpStatus.BAD_REQUEST),
         SOMETHING_WRONG("invalid_uploading",
                 "Something went wrong while uploading avatar.", HttpStatus.BAD_REQUEST);
 
