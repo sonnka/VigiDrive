@@ -37,6 +37,7 @@ public class AuthServiceImpl implements AuthService {
                 .expiresAt(now.plus(30, ChronoUnit.MINUTES))
                 .subject(email)
                 .claim("id", user.getId())
+                .claim("role", user.getRole().name().toLowerCase())
                 .build();
 
         log.error("Logged in = {}", email);
@@ -46,6 +47,7 @@ public class AuthServiceImpl implements AuthService {
                 .token(jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue())
                 .name(user.getFirstName())
                 .surname(user.getLastName())
+                .role(user.getRole().name().toLowerCase())
                 .avatar(user.getAvatar())
                 .build();
     }
