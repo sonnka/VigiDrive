@@ -31,6 +31,4 @@ public interface ManagerService {
 
     void setDestinationForDriver(Authentication auth, Long managerId, Long driverId, String destination)
             throws UserException;
-
-    List<ManagerDTO> getAllManagers(Authentication auth);
 }

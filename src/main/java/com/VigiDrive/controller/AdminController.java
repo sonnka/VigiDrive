@@ -32,27 +32,27 @@ public class AdminController {
     @GetMapping("/admins/{admin-id}/drivers")
     public List<ShortDriverDTO> getDrivers(Authentication auth,
                                            @PathVariable("admin-id") Long adminId) throws UserException {
-        return adminService.getDrivers(auth, adminId);
+        return adminService.getDrivers(auth.getName(), adminId);
     }
 
     @GetMapping("/admins/{admin-id}/managers")
     public List<ManagerDTO> getManagers(Authentication auth,
                                         @PathVariable("admin-id") Long adminId) throws UserException {
-        return adminService.getManagers(auth, adminId);
+        return adminService.getManagers(auth.getName(), adminId);
     }
 
     @DeleteMapping("/admins/{admin-id}/drivers/{driver-id}")
     public void deleteDriver(Authentication auth,
                              @PathVariable("admin-id") Long adminId,
                              @PathVariable("driver-id") Long driverId) throws SecurityException, UserException {
-        adminService.deleteDriver(auth, adminId, driverId);
+        adminService.deleteDriver(auth.getName(), adminId, driverId);
     }
 
     @DeleteMapping("/admins/{admin-id}/managers/{manager-id}")
     public void deleteManager(Authentication auth,
                               @PathVariable("admin-id") Long adminId,
                               @PathVariable("manager-id") Long managerId) throws SecurityException, UserException {
-        adminService.deleteManager(auth, adminId, managerId);
+        adminService.deleteManager(auth.getName(), adminId, managerId);
     }
 
 }

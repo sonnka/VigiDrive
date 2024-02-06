@@ -138,9 +138,4 @@ public class ManagerServiceImpl implements ManagerService {
 
         managerRepository.delete(manager);
     }
-
-    @Override
-    public List<ManagerDTO> getAllManagers(Authentication auth) {
-        return managerRepository.findAll().stream().map(ManagerDTO::new).toList();
-    }
 }

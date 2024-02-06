@@ -1,6 +1,5 @@
 package com.VigiDrive.service.impl;
 
-import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Admin;
 import com.VigiDrive.model.enums.Role;
@@ -9,11 +8,10 @@ import com.VigiDrive.model.response.AdminDTO;
 import com.VigiDrive.model.response.ManagerDTO;
 import com.VigiDrive.model.response.ShortDriverDTO;
 import com.VigiDrive.repository.AdminRepository;
+import com.VigiDrive.repository.DriverRepository;
+import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.service.AdminService;
-import com.VigiDrive.service.DriverService;
-import com.VigiDrive.service.ManagerService;
 import lombok.AllArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,9 +22,10 @@ import java.util.List;
 public class AdminServiceImpl implements AdminService {
 
     private AdminRepository adminRepository;
-    private DriverService driverService;
-    private ManagerService managerService;
     private PasswordEncoder passwordEncoder;
+    private DriverRepository driverRepository;
+    private ManagerRepository managerRepository;
+    private AmazonClient amazonClient;
 
     @Override
     public AdminDTO registerAdmin(RegisterRequest newAdmin) {
@@ -44,36 +43,59 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public void deleteDriver(Authentication auth, Long adminId, Long driverId)
-            throws UserException, SecurityException {
-        adminRepository.findById(adminId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
+    public void deleteDriver(String email, Long adminId, Long driverId)
+            throws UserException {
+        checkAdminByEmailAndId(email, adminId);
 
-        driverService.delete(auth, driverId);
+        var driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+
+        if (driver.getAvatar() != null && !driver.getAvatar().isEmpty()) {
+            amazonClient.deleteFileFromS3Bucket(driver.getAvatar());
+        }
+
+        driverRepository.delete(driver);
     }
 
     @Override
-    public void deleteManager(Authentication auth, Long adminId, Long managerId)
-            throws UserException, SecurityException {
-        adminRepository.findById(adminId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
+    public void deleteManager(String email, Long adminId, Long managerId)
+            throws UserException {
+        checkAdminByEmailAndId(email, adminId);
 
-        managerService.delete(auth, managerId);
+        var manager = managerRepository.findById(managerId)
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
+
+        if (manager.getAvatar() != null && !manager.getAvatar().isEmpty()) {
+            amazonClient.deleteFileFromS3Bucket(manager.getAvatar());
+        }
+
+        managerRepository.delete(manager);
     }
 
     @Override
-    public List<ShortDriverDTO> getDrivers(Authentication auth, Long adminId) throws UserException {
-        adminRepository.findById(adminId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
+    public List<ShortDriverDTO> getDrivers(String email, Long adminId) throws UserException {
+        checkAdminByEmailAndId(email, adminId);
 
-        return driverService.getAllDrivers(auth);
+        return driverRepository.findAll().stream().map(ShortDriverDTO::new).toList();
     }
 
     @Override
-    public List<ManagerDTO> getManagers(Authentication auth, Long adminId) throws UserException {
-        adminRepository.findById(adminId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
+    public List<ManagerDTO> getManagers(String email, Long adminId) throws UserException {
+        checkAdminByEmailAndId(email, adminId);
 
-        return managerService.getAllManagers(auth);
+        return managerRepository.findAll().stream().map(ManagerDTO::new).toList();
+    }
+
+    private void checkAdminByEmailAndId(String email, Long adminId) throws UserException {
+        var admin = adminRepository.findById(adminId).orElseThrow(
+                () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
+
+        if (!admin.getEmail().equals(email)) {
+            throw new UserException(UserException.UserExceptionProfile.EMAIL_MISMATCH);
+        }
+
+        if (!Role.ADMIN.equals(admin.getRole())) {
+            throw new UserException(UserException.UserExceptionProfile.NOT_ADMIN);
+        }
     }
 }
