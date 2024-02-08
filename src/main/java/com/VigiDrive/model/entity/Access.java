@@ -1,6 +1,7 @@
 package com.VigiDrive.model.entity;
 
 import com.VigiDrive.model.enums.TimeDuration;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,11 +23,15 @@ public class Access {
     @Column(name = "access_id")
     private Long id;
 
-    @Column(name = "driver_id")
-    private Long driverId;
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @JsonIgnore
+    @JoinColumn(name = "driver_id")
+    private Driver driver;
 
-    @Column(name = "manager_id")
-    private Long managerId;
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @JsonIgnore
+    @JoinColumn(name = "manager_id")
+    private Manager manager;
 
     @Column(name = "start_date_of_access")
     private LocalDateTime startDateOfAccess;
