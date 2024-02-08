@@ -124,7 +124,9 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
-    public List<ShortDriverDTO> getAllDriversByManager(String email, Long managerId) {
+    public List<ShortDriverDTO> getAllDriversByManager(String email, Long managerId) throws UserException {
+        findDriverByEmailAndIdAndCheckByManager(email, managerId);
+
         return driverRepository.findAllByManagerId(managerId).stream().map(ShortDriverDTO::new).toList();
     }
 

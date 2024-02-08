@@ -31,5 +31,5 @@ public interface DriverService {
 
     void addEmergencyNumber(String email, Long driverId, String emergencyNumber) throws UserException;
 
-    List<ShortDriverDTO> getAllDriversByManager(String email, Long managerId);
+    List<ShortDriverDTO> getAllDriversByManager(String email, Long managerId) throws UserException;
 }
