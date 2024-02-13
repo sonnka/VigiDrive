@@ -21,6 +21,8 @@ public interface AccessService {
     AccessDTO extendAccess(String email, Long managerId, Long accessId, ExtendAccessRequest access)
             throws UserException;
 
+    List<AccessDTO> getAllAccessRequestsByDriver(String email, Long driverId) throws UserException;
+
     List<AccessDTO> getAllInactiveAccessesByDriver(String email, Long driverId) throws UserException;
 
     List<AccessDTO> getAllActiveAccessesByDriver(String email, Long driverId) throws UserException;

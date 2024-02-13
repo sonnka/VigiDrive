@@ -68,6 +68,7 @@ CREATE TABLE accesses
     start_date_of_access datetime              NULL,
     end_date_of_access   datetime              NULL,
     access_duration      VARCHAR(255)          NULL,
+    is_new               BIT(1)                NULL,
     is_active            BIT(1)                NULL,
     is_expiring          BIT(1)                NULL,
     CONSTRAINT pk_accesses PRIMARY KEY (access_id)
@@ -78,7 +79,6 @@ ALTER TABLE accesses
 
 ALTER TABLE accesses
     ADD CONSTRAINT FK_ACCESSES_ON_MANAGER FOREIGN KEY (manager_id) REFERENCES managers (user_id);
-
 
 
 CREATE TABLE licenses

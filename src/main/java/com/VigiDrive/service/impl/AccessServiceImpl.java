@@ -56,6 +56,7 @@ public class AccessServiceImpl implements AccessService {
                         .startDateOfAccess(null)
                         .accessDuration(duration)
                         .endDateOfAccess(null)
+                        .isNew(true)
                         .isActive(false)
                         .isExpiring(false)
                         .build())
@@ -81,6 +82,7 @@ public class AccessServiceImpl implements AccessService {
 
         access.setStartDateOfAccess(startDate);
         access.setEndDateOfAccess(endDate);
+        access.setIsNew(false);
         access.setIsActive(true);
         access.setIsExpiring(checkExpiring(endDate));
 
@@ -106,6 +108,7 @@ public class AccessServiceImpl implements AccessService {
 
         access.setStartDateOfAccess(null);
         access.setEndDateOfAccess(null);
+        access.setIsNew(false);
         access.setIsActive(false);
         access.setIsExpiring(false);
 
@@ -142,10 +145,21 @@ public class AccessServiceImpl implements AccessService {
 
         access.setStartDateOfAccess(startDate);
         access.setEndDateOfAccess(endDate);
+        access.setIsNew(false);
         access.setIsActive(true);
         access.setIsExpiring(checkExpiring(endDate));
 
         return toAccessDTO(accessRepository.save(access));
+    }
+
+    @Override
+    public List<AccessDTO> getAllAccessRequestsByDriver(String email, Long driverId) throws UserException {
+        var driver = findDriverByEmailAndId(email, driverId);
+
+        return driver.getAccesses().stream()
+                .filter(access -> access.getIsNew())
+                .map(this::toAccessDTO)
+                .toList();
     }
 
     @Override

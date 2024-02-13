@@ -43,6 +43,9 @@ public class Access {
     @Enumerated(EnumType.STRING)
     private TimeDuration accessDuration;
 
+    @Column(name = "is_new")
+    private Boolean isNew;
+
     @Column(name = "is_active")
     private Boolean isActive;
 
