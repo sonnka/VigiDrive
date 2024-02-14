@@ -19,7 +19,7 @@ import java.util.List;
 @Table(name = "managers")
 public class Manager extends User {
 
-    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "driver")
+    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "manager")
     @JsonIgnore
     @Column(name = "accesses")
     private List<Access> accesses = new ArrayList<>();

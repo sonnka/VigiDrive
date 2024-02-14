@@ -1,6 +1,7 @@
 package com.VigiDrive.service.impl;
 
 import com.VigiDrive.exceptions.AmazonException;
+import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Manager;
 import com.VigiDrive.model.enums.Role;
@@ -13,6 +14,7 @@ import com.VigiDrive.model.response.ShortDriverDTO;
 import com.VigiDrive.repository.AdminRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
+import com.VigiDrive.repository.UserRepository;
 import com.VigiDrive.service.DriverService;
 import com.VigiDrive.service.ManagerService;
 import jakarta.transaction.Transactional;
@@ -28,6 +30,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public class ManagerServiceImpl implements ManagerService {
 
+    private final UserRepository userRepository;
     private ManagerRepository managerRepository;
     private DriverService driverService;
     private DriverRepository driverRepository;
@@ -36,7 +39,13 @@ public class ManagerServiceImpl implements ManagerService {
     private AmazonClient amazonClient;
 
     @Override
-    public ManagerDTO registerManager(RegisterRequest newManager) {
+    public ManagerDTO registerManager(RegisterRequest newManager) throws SecurityException {
+
+        var user = userRepository.findByEmailIgnoreCase(newManager.getEmail()).orElse(null);
+
+        if (user != null) {
+            throw new SecurityException(SecurityException.SecurityExceptionProfile.EMAIL_OCCUPIED);
+        }
 
         Manager manager = Manager.builder()
                 .email(newManager.getEmail())

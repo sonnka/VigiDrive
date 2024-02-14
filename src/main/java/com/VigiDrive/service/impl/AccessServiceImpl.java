@@ -186,6 +186,8 @@ public class AccessServiceImpl implements AccessService {
     public List<AccessDTO> getAllSentAccessesByManager(String email, Long managerId) throws UserException {
         var manager = findManagerByEmailAndId(email, managerId);
 
+        System.out.println(manager.getAccesses());
+
         return manager.getAccesses().stream()
                 .filter(Access::getIsNew)
                 .map(this::toAccessDTO)

@@ -11,6 +11,7 @@ import com.VigiDrive.model.response.*;
 import com.VigiDrive.repository.AdminRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
+import com.VigiDrive.repository.UserRepository;
 import com.VigiDrive.service.DriverService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -25,6 +26,7 @@ import java.util.List;
 @AllArgsConstructor
 public class DriverServiceImpl implements DriverService {
 
+    private final UserRepository userRepository;
     private DriverRepository driverRepository;
     private AdminRepository adminRepository;
     private ManagerRepository managerRepository;
@@ -32,7 +34,13 @@ public class DriverServiceImpl implements DriverService {
     private AmazonClient amazonClient;
 
     @Override
-    public DriverDTO registerDriver(RegisterRequest newDriver) {
+    public DriverDTO registerDriver(RegisterRequest newDriver) throws SecurityException {
+
+        var user = userRepository.findByEmailIgnoreCase(newDriver.getEmail()).orElse(null);
+
+        if (user != null) {
+            throw new SecurityException(SecurityException.SecurityExceptionProfile.EMAIL_OCCUPIED);
+        }
 
         Driver driver = Driver.builder()
                 .email(newDriver.getEmail())

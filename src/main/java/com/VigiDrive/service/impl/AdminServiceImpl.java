@@ -1,5 +1,6 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Admin;
 import com.VigiDrive.model.enums.Role;
@@ -10,6 +11,7 @@ import com.VigiDrive.model.response.ShortDriverDTO;
 import com.VigiDrive.repository.AdminRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
+import com.VigiDrive.repository.UserRepository;
 import com.VigiDrive.service.AdminService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +23,7 @@ import java.util.List;
 @AllArgsConstructor
 public class AdminServiceImpl implements AdminService {
 
+    private final UserRepository userRepository;
     private AdminRepository adminRepository;
     private PasswordEncoder passwordEncoder;
     private DriverRepository driverRepository;
@@ -28,7 +31,13 @@ public class AdminServiceImpl implements AdminService {
     private AmazonClient amazonClient;
 
     @Override
-    public AdminDTO registerAdmin(RegisterRequest newAdmin) {
+    public AdminDTO registerAdmin(RegisterRequest newAdmin) throws SecurityException {
+
+        var user = userRepository.findByEmailIgnoreCase(newAdmin.getEmail()).orElse(null);
+
+        if (user != null) {
+            throw new SecurityException(SecurityException.SecurityExceptionProfile.EMAIL_OCCUPIED);
+        }
 
         Admin admin = Admin.builder()
                 .email(newAdmin.getEmail())
