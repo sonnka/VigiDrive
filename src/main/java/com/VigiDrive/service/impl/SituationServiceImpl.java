@@ -184,6 +184,10 @@ public class SituationServiceImpl implements SituationService {
 
         map.forEach((key, value) -> result.add(new StatisticElement(key, (double) value.size())));
 
+        if (result.isEmpty()) {
+            return new SituationStatistics();
+        }
+
         var mostFrequentPeriod = result.stream()
                 .max(Comparator.comparingDouble(StatisticElement::getAmount))
                 .orElseThrow(() ->
@@ -206,6 +210,10 @@ public class SituationServiceImpl implements SituationService {
                     situation.getType(),
                     list.stream().filter(s -> s.getType().equals(situation.getType())).toList().size()
             );
+        }
+
+        if (frequency.isEmpty()) {
+            return null;
         }
 
         return frequency.entrySet()

@@ -138,7 +138,9 @@ public class HealthInfoServiceImpl implements HealthInfoService {
 
     private int getBestPeriod(Map<Integer, Double> frequency)
             throws HealthException {
-
+        if (frequency == null || frequency.isEmpty()) {
+            return 0;
+        }
         return frequency.entrySet()
                 .stream().min(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                 .orElseThrow(() ->
@@ -148,7 +150,9 @@ public class HealthInfoServiceImpl implements HealthInfoService {
 
     private int getWorstPeriod(Map<Integer, Double> frequency)
             throws HealthException {
-
+        if (frequency == null || frequency.isEmpty()) {
+            return 0;
+        }
         return frequency.entrySet()
                 .stream().max(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                 .orElseThrow(() ->
