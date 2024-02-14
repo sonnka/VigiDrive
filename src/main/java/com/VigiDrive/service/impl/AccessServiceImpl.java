@@ -167,7 +167,7 @@ public class AccessServiceImpl implements AccessService {
         var driver = findDriverByEmailAndId(email, driverId);
 
         return driver.getAccesses().stream()
-                .filter(access -> !access.getIsActive())
+                .filter(access -> !access.getIsActive() && !access.getIsNew())
                 .map(this::toAccessDTO)
                 .toList();
     }
