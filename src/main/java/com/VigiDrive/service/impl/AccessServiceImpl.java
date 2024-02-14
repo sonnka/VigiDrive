@@ -183,6 +183,16 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
+    public List<AccessDTO> getAllSentAccessesByManager(String email, Long managerId) throws UserException {
+        var manager = findManagerByEmailAndId(email, managerId);
+
+        return manager.getAccesses().stream()
+                .filter(Access::getIsNew)
+                .map(this::toAccessDTO)
+                .toList();
+    }
+
+    @Override
     public List<AccessDTO> getAllInactiveAccessesByManager(String email, Long managerId) throws UserException {
         var manager = findManagerByEmailAndId(email, managerId);
 

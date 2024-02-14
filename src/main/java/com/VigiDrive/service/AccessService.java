@@ -27,6 +27,8 @@ public interface AccessService {
 
     List<AccessDTO> getAllActiveAccessesByDriver(String email, Long driverId) throws UserException;
 
+    List<AccessDTO> getAllSentAccessesByManager(String email, Long managerId) throws UserException;
+
     List<AccessDTO> getAllInactiveAccessesByManager(String email, Long managerId) throws UserException;
 
     List<AccessDTO> getAllActiveAccessesByManager(String email, Long managerId) throws UserException;

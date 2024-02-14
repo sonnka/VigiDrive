@@ -77,6 +77,13 @@ public class AccessController {
         return accessService.getAllActiveAccessesByDriver(auth.getName(), driverId);
     }
 
+    @GetMapping("/managers/{manager-id}/accesses/sent")
+    public List<AccessDTO> getAllSentAccessesByManager(Authentication auth,
+                                                       @PathVariable("manager-id") Long managerId)
+            throws UserException {
+        return accessService.getAllSentAccessesByManager(auth.getName(), managerId);
+    }
+
     @GetMapping("/managers/{manager-id}/accesses/inactive")
     public List<AccessDTO> getAllInactiveAccessesByManager(Authentication auth,
                                                            @PathVariable("manager-id") Long managerId)
