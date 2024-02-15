@@ -8,19 +8,6 @@ DROP TABLE IF EXISTS health;
 DROP TABLE IF EXISTS recommendations;
 DROP TABLE IF EXISTS situations;
 
-CREATE TABLE accesses
-(
-    access_id            BIGINT AUTO_INCREMENT NOT NULL,
-    driver_id            BIGINT                NULL,
-    manager_id           BIGINT                NULL,
-    start_date_of_access datetime              NULL,
-    end_date_of_access   datetime              NULL,
-    access_duration      VARCHAR(255)          NULL,
-    is_active            BIT(1)                NULL,
-    is_expiring          BIT(1)                NULL,
-    CONSTRAINT pk_accesses PRIMARY KEY (access_id)
-);
-
 CREATE TABLE users
 (
     user_id    BIGINT AUTO_INCREMENT NOT NULL,
@@ -28,7 +15,7 @@ CREATE TABLE users
     last_name  VARCHAR(255)          NULL,
     email      VARCHAR(255)          NULL,
     password   VARCHAR(255)          NULL,
-    avatar     LONGTEXT              NULL,
+    avatar     VARCHAR(255)          NULL,
     `role`     VARCHAR(255)          NULL,
     CONSTRAINT pk_users PRIMARY KEY (user_id)
 );
@@ -72,6 +59,26 @@ ALTER TABLE drivers
 ALTER TABLE drivers
     ADD CONSTRAINT FK_DRIVERS_ON_USER FOREIGN KEY (user_id) REFERENCES users (user_id);
 
+
+CREATE TABLE accesses
+(
+    access_id            BIGINT AUTO_INCREMENT NOT NULL,
+    driver_id            BIGINT                NULL,
+    manager_id           BIGINT                NULL,
+    start_date_of_access datetime              NULL,
+    end_date_of_access   datetime              NULL,
+    access_duration      VARCHAR(255)          NULL,
+    is_new               BIT(1)                NULL,
+    is_active            BIT(1)                NULL,
+    is_expiring          BIT(1)                NULL,
+    CONSTRAINT pk_accesses PRIMARY KEY (access_id)
+);
+
+ALTER TABLE accesses
+    ADD CONSTRAINT FK_ACCESSES_ON_DRIVER FOREIGN KEY (driver_id) REFERENCES drivers (user_id);
+
+ALTER TABLE accesses
+    ADD CONSTRAINT FK_ACCESSES_ON_MANAGER FOREIGN KEY (manager_id) REFERENCES managers (user_id);
 
 
 CREATE TABLE licenses

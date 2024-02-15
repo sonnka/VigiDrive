@@ -45,6 +45,11 @@ public class Driver extends User {
 
     @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "driver")
     @JsonIgnore
+    @Column(name = "accesses")
+    private List<Access> accesses = new ArrayList<>();
+
+    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "driver")
+    @JsonIgnore
     @Column(name = "situations")
     private List<Situation> situations = new ArrayList<>();
 

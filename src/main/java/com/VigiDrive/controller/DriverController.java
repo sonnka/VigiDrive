@@ -34,32 +34,32 @@ public class DriverController {
     public DriverDTO updateDriver(Authentication auth,
                                   @PathVariable("driver-id") Long driverId,
                                   @RequestBody @Valid UpdateDriverRequest driver) throws UserException {
-        return driverService.updateDriver(auth, driverId, driver);
+        return driverService.updateDriver(auth.getName(), driverId, driver);
     }
 
     @PostMapping("/drivers/{driver-id}/avatar")
     public DriverDTO uploadAvatar(Authentication auth,
                                   @PathVariable("driver-id") Long driverId,
                                   @RequestBody MultipartFile avatar) throws UserException, AmazonException {
-        return driverService.uploadAvatar(auth, driverId, avatar);
+        return driverService.uploadAvatar(auth.getName(), driverId, avatar);
     }
 
     @DeleteMapping("/drivers/{driver-id}")
     public void deleteDriver(Authentication auth,
                              @PathVariable("driver-id") Long driverId) throws SecurityException, UserException {
-        driverService.delete(auth, driverId);
+        driverService.delete(auth.getName(), driverId);
     }
 
     @GetMapping("/drivers/{driver-id}")
     public FullDriverDTO getDriver(Authentication auth,
                                    @PathVariable("driver-id") Long driverId) throws UserException {
-        return driverService.getFullDriver(auth, driverId);
+        return driverService.getFullDriver(auth.getName(), driverId);
     }
 
     @GetMapping("/drivers/{driver-id}/manager")
     public ManagerDTO getDriverManager(Authentication auth,
                                        @PathVariable("driver-id") Long driverId) throws UserException {
-        return driverService.getDriverManager(auth, driverId);
+        return driverService.getDriverManager(auth.getName(), driverId);
     }
 
     @PatchMapping("/drivers/{driver-id}/currentLocation/{currentLocation}")
@@ -67,13 +67,13 @@ public class DriverController {
                                       @PathVariable("driver-id") Long driverId,
                                       @PathVariable("currentLocation") String currentLocation)
             throws UserException {
-        driverService.updateCurrentLocation(auth, driverId, currentLocation);
+        driverService.updateCurrentLocation(auth.getName(), driverId, currentLocation);
     }
 
     @PatchMapping("/drivers/{driver-id}/emergency-number/{number}")
     public void addEmergencyNumber(Authentication auth,
                                    @PathVariable("driver-id") Long driverId,
                                    @PathVariable("number") String emergencyNumber) throws UserException {
-        driverService.addEmergencyNumber(auth, driverId, emergencyNumber);
+        driverService.addEmergencyNumber(auth.getName(), driverId, emergencyNumber);
     }
 }

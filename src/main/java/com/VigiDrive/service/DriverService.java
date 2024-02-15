@@ -9,7 +9,6 @@ import com.VigiDrive.model.response.DriverDTO;
 import com.VigiDrive.model.response.FullDriverDTO;
 import com.VigiDrive.model.response.ManagerDTO;
 import com.VigiDrive.model.response.ShortDriverDTO;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -18,21 +17,19 @@ public interface DriverService {
 
     DriverDTO registerDriver(RegisterRequest newDriver) throws SecurityException;
 
-    DriverDTO updateDriver(Authentication auth, Long driverId, UpdateDriverRequest driver) throws UserException;
+    DriverDTO updateDriver(String email, Long driverId, UpdateDriverRequest driver) throws UserException;
 
-    DriverDTO uploadAvatar(Authentication auth, Long driverId, MultipartFile avatar) throws UserException, AmazonException;
+    DriverDTO uploadAvatar(String email, Long driverId, MultipartFile avatar) throws UserException, AmazonException;
 
-    void delete(Authentication auth, Long driverId) throws UserException, SecurityException;
+    void delete(String email, Long driverId) throws UserException, SecurityException;
 
-    FullDriverDTO getFullDriver(Authentication auth, Long driverId) throws UserException;
+    FullDriverDTO getFullDriver(String email, Long driverId) throws UserException;
 
-    ManagerDTO getDriverManager(Authentication auth, Long driverId) throws UserException;
+    ManagerDTO getDriverManager(String email, Long driverId) throws UserException;
 
-    void updateCurrentLocation(Authentication auth, Long driverId, String currentLocation) throws UserException;
+    void updateCurrentLocation(String email, Long driverId, String currentLocation) throws UserException;
 
-    void addEmergencyNumber(Authentication auth, Long driverId, String emergencyNumber) throws UserException;
+    void addEmergencyNumber(String email, Long driverId, String emergencyNumber) throws UserException;
 
-    List<ShortDriverDTO> getAllDrivers(Authentication auth);
-
-    List<ShortDriverDTO> getAllDriversByManager(Authentication auth, Long managerId);
+    List<ShortDriverDTO> getAllDriversByManager(String email, Long managerId) throws UserException;
 }

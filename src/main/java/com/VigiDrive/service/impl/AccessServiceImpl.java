@@ -1,9 +1,11 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.exceptions.AccessException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Access;
 import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.entity.Manager;
+import com.VigiDrive.model.enums.Role;
 import com.VigiDrive.model.enums.TimeDuration;
 import com.VigiDrive.model.request.AccessRequest;
 import com.VigiDrive.model.request.ExtendAccessRequest;
@@ -13,7 +15,6 @@ import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.service.AccessService;
 import lombok.AllArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -31,28 +32,31 @@ public class AccessServiceImpl implements AccessService {
 
 
     @Override
-    public AccessDTO getAccess(Authentication auth, Long driverId, Long accessId) {
-        return toAccessDTO(accessRepository.findById(accessId).get());
+    public AccessDTO getAccessInfo(String email, Long driverId, Long accessId) throws UserException, AccessException {
+        findDriverByEmailAndId(email, driverId);
+        var access = accessRepository.findById(accessId).orElseThrow(
+                () -> new AccessException(AccessException.AccessExceptionProfile.INVALID_ACCESS));
+
+        return toAccessDTO(access);
     }
 
     @Override
-    public AccessDTO requestAccess(Authentication auth, Long managerId, AccessRequest access) throws UserException {
-        // manager
-        var driver = driverRepository.findByEmail(access.getDriverEmail().trim())
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+    public AccessDTO requestAccess(String email, Long managerId, AccessRequest access) throws UserException {
+        var manager = findManagerByEmailAndId(email, managerId);
 
-        var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
+        var driver = driverRepository.findByEmailIgnoreCase(access.getDriverEmail().trim())
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         TimeDuration duration = TimeDuration.valueOf(access.getAccessDuration().toUpperCase());
 
         return toAccessDTO(accessRepository.save(
                 Access.builder()
-                        .driverId(driver.getId())
-                        .managerId(manager.getId())
+                        .driver(driver)
+                        .manager(manager)
                         .startDateOfAccess(null)
                         .accessDuration(duration)
                         .endDateOfAccess(null)
+                        .isNew(true)
                         .isActive(false)
                         .isExpiring(false)
                         .build())
@@ -60,15 +64,13 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
-    public AccessDTO giveAccess(Authentication auth, Long driverId, Long accessId) throws UserException {
-        //driver
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+    public AccessDTO giveAccess(String email, Long driverId, Long accessId) throws UserException {
+        var driver = findDriverByEmailAndId(email, driverId);
 
         var access = accessRepository.findById(accessId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ACCESS_NOT_FOUND));
 
-        if (!Objects.equals(driver.getId(), access.getDriverId())) {
+        if (!Objects.equals(driver.getId(), access.getDriver().getId())) {
             throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
         }
 
@@ -80,15 +82,13 @@ public class AccessServiceImpl implements AccessService {
 
         access.setStartDateOfAccess(startDate);
         access.setEndDateOfAccess(endDate);
+        access.setIsNew(false);
         access.setIsActive(true);
         access.setIsExpiring(checkExpiring(endDate));
 
-        var manager = managerRepository.findById(access.getManagerId())
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
-
         var createdAccess = accessRepository.save(access);
 
-        driver.setManager(manager);
+        driver.setManager(access.getManager());
 
         driverRepository.save(driver);
 
@@ -96,20 +96,19 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
-    public AccessDTO stopAccess(Authentication auth, Long driverId, Long accessId) throws UserException {
-        // driver
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+    public AccessDTO stopAccess(String email, Long driverId, Long accessId) throws UserException {
+        var driver = findDriverByEmailAndId(email, driverId);
 
         var access = accessRepository.findById(accessId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ACCESS_NOT_FOUND));
 
-        if (!Objects.equals(driver.getId(), access.getDriverId())) {
+        if (!Objects.equals(driver.getId(), access.getDriver().getId())) {
             throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
         }
 
         access.setStartDateOfAccess(null);
         access.setEndDateOfAccess(null);
+        access.setIsNew(false);
         access.setIsActive(false);
         access.setIsExpiring(false);
 
@@ -123,16 +122,14 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
-    public AccessDTO extendAccess(Authentication auth, Long managerId, Long accessId, ExtendAccessRequest timeDuration)
+    public AccessDTO extendAccess(String email, Long managerId, Long accessId, ExtendAccessRequest timeDuration)
             throws UserException {
-        // manager
-        var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
+        var manager = findManagerByEmailAndId(email, managerId);
 
         var access = accessRepository.findById(accessId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ACCESS_NOT_FOUND));
 
-        if (!Objects.equals(manager.getId(), access.getManagerId())) {
+        if (!Objects.equals(manager.getId(), access.getManager().getId())) {
             throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
         }
 
@@ -148,6 +145,7 @@ public class AccessServiceImpl implements AccessService {
 
         access.setStartDateOfAccess(startDate);
         access.setEndDateOfAccess(endDate);
+        access.setIsNew(false);
         access.setIsActive(true);
         access.setIsExpiring(checkExpiring(endDate));
 
@@ -155,53 +153,75 @@ public class AccessServiceImpl implements AccessService {
     }
 
     @Override
-    public List<AccessDTO> getAllInactiveAccessesByDriver(Authentication auth, Long driverId) throws UserException {
-        //driver
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+    public List<AccessDTO> getAllAccessRequestsByDriver(String email, Long driverId) throws UserException {
+        var driver = findDriverByEmailAndId(email, driverId);
 
-        return accessRepository.findAllByDriverIdAndIsActive(driver.getId(), false)
-                .stream().map(this::toAccessDTO).toList();
+        return driver.getAccesses().stream()
+                .filter(access -> access.getIsNew())
+                .map(this::toAccessDTO)
+                .toList();
     }
 
     @Override
-    public List<AccessDTO> getAllActiveAccessesByDriver(Authentication auth, Long driverId) throws UserException {
-        //driver
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+    public List<AccessDTO> getAllInactiveAccessesByDriver(String email, Long driverId) throws UserException {
+        var driver = findDriverByEmailAndId(email, driverId);
 
-        return accessRepository.findAllByDriverIdAndIsActive(driver.getId(), true)
-                .stream().map(this::toAccessDTO).toList();
+        return driver.getAccesses().stream()
+                .filter(access -> !access.getIsActive() && !access.getIsNew())
+                .map(this::toAccessDTO)
+                .toList();
     }
 
     @Override
-    public List<AccessDTO> getAllInactiveAccessesByManager(Authentication auth, Long managerId) throws UserException {
-        //manager
-        var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
+    public List<AccessDTO> getAllActiveAccessesByDriver(String email, Long driverId) throws UserException {
+        var driver = findDriverByEmailAndId(email, driverId);
 
-        return accessRepository.findAllByManagerIdAndIsActive(manager.getId(), false)
-                .stream().map(this::toAccessDTO).toList();
+        return driver.getAccesses().stream()
+                .filter(Access::getIsActive)
+                .map(this::toAccessDTO)
+                .toList();
     }
 
     @Override
-    public List<AccessDTO> getAllActiveAccessesByManager(Authentication auth, Long managerId) throws UserException {
-        //manager
-        var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
+    public List<AccessDTO> getAllSentAccessesByManager(String email, Long managerId) throws UserException {
+        var manager = findManagerByEmailAndId(email, managerId);
 
-        return accessRepository.findAllByManagerIdAndIsActive(manager.getId(), true)
-                .stream().map(this::toAccessDTO).toList();
+        System.out.println(manager.getAccesses());
+
+        return manager.getAccesses().stream()
+                .filter(Access::getIsNew)
+                .map(this::toAccessDTO)
+                .toList();
     }
 
     @Override
-    public List<AccessDTO> getAllExpiringAccessesByManager(Authentication auth, Long managerId) throws UserException {
-        //manager
-        var manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
+    public List<AccessDTO> getAllInactiveAccessesByManager(String email, Long managerId) throws UserException {
+        var manager = findManagerByEmailAndId(email, managerId);
 
-        return accessRepository.findAllByManagerIdAndIsExpiring(manager.getId(), true)
-                .stream().map(this::toAccessDTO).toList();
+        return manager.getAccesses().stream()
+                .filter(access -> !access.getIsActive())
+                .map(this::toAccessDTO)
+                .toList();
+    }
+
+    @Override
+    public List<AccessDTO> getAllActiveAccessesByManager(String email, Long managerId) throws UserException {
+        var manager = findManagerByEmailAndId(email, managerId);
+
+        return manager.getAccesses().stream()
+                .filter(Access::getIsActive)
+                .map(this::toAccessDTO)
+                .toList();
+    }
+
+    @Override
+    public List<AccessDTO> getAllExpiringAccessesByManager(String email, Long managerId) throws UserException {
+        var manager = findManagerByEmailAndId(email, managerId);
+
+        return manager.getAccesses().stream()
+                .filter(Access::getIsExpiring)
+                .map(this::toAccessDTO)
+                .toList();
     }
 
 
@@ -223,31 +243,44 @@ public class AccessServiceImpl implements AccessService {
     }
 
     private AccessDTO toAccessDTO(Access access) {
-        Manager manager = null;
-        try {
-            manager = managerRepository.findById(access.getManagerId())
-                    .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
-        } catch (UserException e) {
-            throw new RuntimeException(e);
-        }
-
-        Driver driver;
-        try {
-            driver = driverRepository.findById(access.getDriverId())
-                    .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
-        } catch (UserException e) {
-            throw new RuntimeException(e);
-        }
 
         return AccessDTO.builder()
                 .id(access.getId())
-                .driverEmail(driver.getEmail())
-                .managerEmail(manager.getEmail())
+                .driverEmail(access.getDriver().getEmail())
+                .managerEmail(access.getManager().getEmail())
                 .startDateOfAccess(access.getStartDateOfAccess())
                 .endDateOfAccess(access.getEndDateOfAccess())
                 .accessDuration(access.getAccessDuration())
                 .isActive(access.getIsActive())
                 .isExpiring(access.getIsExpiring())
                 .build();
+    }
+
+    private Driver findDriverByEmailAndId(String email, Long driverId) throws UserException {
+        var driver = driverRepository.findById(driverId).orElseThrow(
+                () -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+
+        if (!driver.getEmail().equals(email)) {
+            throw new UserException(UserException.UserExceptionProfile.EMAIL_MISMATCH);
+        }
+
+        if (!Role.DRIVER.equals(driver.getRole())) {
+            throw new UserException(UserException.UserExceptionProfile.NOT_DRIVER);
+        }
+        return driver;
+    }
+
+    private Manager findManagerByEmailAndId(String email, Long managerId) throws UserException {
+        var manager = managerRepository.findById(managerId).orElseThrow(
+                () -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
+
+        if (!manager.getEmail().equals(email)) {
+            throw new UserException(UserException.UserExceptionProfile.EMAIL_MISMATCH);
+        }
+
+        if (!Role.MANAGER.equals(manager.getRole())) {
+            throw new UserException(UserException.UserExceptionProfile.NOT_MANAGER);
+        }
+        return manager;
     }
 }

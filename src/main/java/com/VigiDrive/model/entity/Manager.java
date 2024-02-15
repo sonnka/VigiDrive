@@ -17,7 +17,12 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @Table(name = "managers")
-public class Manager extends User{
+public class Manager extends User {
+
+    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "manager")
+    @JsonIgnore
+    @Column(name = "accesses")
+    private List<Access> accesses = new ArrayList<>();
 
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH},
             mappedBy = "manager")
@@ -25,7 +30,7 @@ public class Manager extends User{
     @Column(name = "drivers")
     private List<Driver> drivers = new ArrayList<>();
 
-    public Manager(){
+    public Manager() {
         this.setRole(Role.MANAGER);
     }
 }

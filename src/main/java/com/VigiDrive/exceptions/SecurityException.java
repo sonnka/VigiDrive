@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 public class SecurityException extends Exception {
+
     private final SecurityExceptionProfile securityExceptionProfile;
 
     public SecurityException(SecurityExceptionProfile securityExceptionProfile) {
@@ -22,11 +23,15 @@ public class SecurityException extends Exception {
     @AllArgsConstructor
     public enum SecurityExceptionProfile {
 
+        EMAIL_OCCUPIED("email_occupied",
+                "User with such email is already existed.", HttpStatus.UNAUTHORIZED),
+
         REGISTRATION_FAILED("registration_failed",
                 "Registration is failed. Try again later.", HttpStatus.UNAUTHORIZED),
 
         WRONG_AUTHENTICATION_DATA("wrong_authentication_data",
                 "Wrong authentication data.", HttpStatus.UNAUTHORIZED),
+
         DELETING_FAILED("deleting_failed",
                 "Something went wrong during deleting.", HttpStatus.BAD_REQUEST);
 

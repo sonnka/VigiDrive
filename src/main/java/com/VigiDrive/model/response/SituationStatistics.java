@@ -1,15 +1,15 @@
 package com.VigiDrive.model.response;
 
 import com.VigiDrive.model.enums.SituationType;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SituationStatistics {
 
     private int amountOfSituations;
