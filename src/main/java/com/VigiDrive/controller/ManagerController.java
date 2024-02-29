@@ -1,5 +1,6 @@
 package com.VigiDrive.controller;
 
+import com.VigiDrive.exceptions.AmazonException;
 import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.RegisterRequest;
@@ -15,12 +16,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 
 @RestController
 @AllArgsConstructor
+@CrossOrigin("http://localhost:4200")
 public class ManagerController {
 
     private ManagerService managerService;
@@ -35,32 +38,39 @@ public class ManagerController {
     public ManagerDTO updateManager(Authentication auth,
                                     @PathVariable("manager-id") Long managerId,
                                     @RequestBody @Valid UpdateManagerRequest manager) throws UserException {
-        return managerService.updateManager(auth, managerId, manager);
+        return managerService.updateManager(auth.getName(), managerId, manager);
+    }
+
+    @PostMapping("/managers/{manager-id}/avatar")
+    public ManagerDTO uploadAvatar(Authentication auth,
+                                   @PathVariable("manager-id") Long managerId,
+                                   @RequestBody MultipartFile avatar) throws UserException, AmazonException {
+        return managerService.uploadAvatar(auth.getName(), managerId, avatar);
     }
 
     @DeleteMapping("/managers/{manager-id}")
     public void deleteManager(Authentication auth,
                               @PathVariable("manager-id") Long managerId) throws SecurityException, UserException {
-        managerService.delete(auth, managerId);
+        managerService.delete(auth.getName(), managerId);
     }
 
     @GetMapping("/managers/{manager-id}")
     public FullManagerDTO getManager(Authentication auth,
                                      @PathVariable("manager-id") Long managerId) throws UserException {
-        return managerService.getManager(auth, managerId);
+        return managerService.getManager(auth.getName(), managerId);
     }
 
     @GetMapping("/managers/{manager-id}/drivers")
     public List<ShortDriverDTO> getDrivers(Authentication auth,
                                            @PathVariable("manager-id") Long managerId) throws UserException {
-        return managerService.getDrivers(auth, managerId);
+        return managerService.getDrivers(auth.getName(), managerId);
     }
 
     @GetMapping("/managers/{manager-id}/drivers/{driver-id}")
     public FullDriverDTO getDriver(Authentication auth,
                                    @PathVariable("manager-id") Long managerId,
                                    @PathVariable("driver-id") Long driverId) throws UserException {
-        return managerService.getDriver(auth, managerId, driverId);
+        return managerService.getDriver(auth.getName(), managerId, driverId);
     }
 
     @PatchMapping("/managers/{manager-id}/drivers/{driver-id}/{destination}")
@@ -68,6 +78,6 @@ public class ManagerController {
                                         @PathVariable("manager-id") Long managerId,
                                         @PathVariable("driver-id") Long driverId,
                                         @PathVariable("destination") String destination) throws UserException {
-        managerService.setDestinationForDriver(auth, managerId, driverId, destination);
+        managerService.setDestinationForDriver(auth.getName(), managerId, driverId, destination);
     }
 }

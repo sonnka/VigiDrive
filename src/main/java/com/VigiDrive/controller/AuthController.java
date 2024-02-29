@@ -3,14 +3,14 @@ package com.VigiDrive.controller;
 import com.VigiDrive.model.response.LoginResponse;
 import com.VigiDrive.service.AuthService;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @AllArgsConstructor
-@Slf4j
+@CrossOrigin("http://localhost:4200")
 public class AuthController {
 
     private AuthService authService;
@@ -20,10 +20,4 @@ public class AuthController {
         return authService.login(authentication);
     }
 
-//    @PostMapping("/api/sensordata")
-//    public String receiveSensorData(@RequestBody String sensorData) {
-//        log.error("Received sensor data: " + sensorData);
-//
-//        return "Received sensor data successfully";
-//    }
 }

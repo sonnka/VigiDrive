@@ -27,7 +27,9 @@ public class SituationException extends Exception {
         INVALID_TIME("invalid_time",
                 "Situation time is invalid.", HttpStatus.BAD_REQUEST),
         INVALID_VIDEO_URL("invalid_video_url",
-                "Situation video url is invalid.", HttpStatus.BAD_REQUEST);
+                "Situation video url is invalid.", HttpStatus.BAD_REQUEST),
+        SOMETHING_WRONG("invalid_statistics",
+                "Something went wrong while generating statistics.", HttpStatus.BAD_REQUEST);
 
 
         private final String exceptionName;

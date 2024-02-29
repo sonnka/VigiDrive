@@ -40,13 +40,19 @@ public class UserException extends Exception {
 
         NOT_DRIVER("not_driver",
                 "You are not driver.", HttpStatus.FORBIDDEN),
+
+        EMAIL_MISMATCH("email_mismatch",
+                "Email provided does not match the user's email.", HttpStatus.FORBIDDEN),
+
         ACCESS_NOT_FOUND("access_not_found",
                 "Access is not found.", HttpStatus.NOT_FOUND),
 
         PERMISSION_DENIED("permission_denied",
                 "Permission denied.", HttpStatus.FORBIDDEN),
+
         ACCESS_NOT_EXPIRING("access_not_expiring",
                 "Access is not expiring, so you can not extend it.", HttpStatus.BAD_REQUEST),
+
         INVALID_HEALTH_DATA("invalid_health_data",
                 "Health data is invalid.", HttpStatus.BAD_REQUEST);
 

@@ -1,5 +1,6 @@
 package com.VigiDrive.service;
 
+import com.VigiDrive.exceptions.AmazonException;
 import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.RegisterRequest;
@@ -8,25 +9,25 @@ import com.VigiDrive.model.response.FullDriverDTO;
 import com.VigiDrive.model.response.FullManagerDTO;
 import com.VigiDrive.model.response.ManagerDTO;
 import com.VigiDrive.model.response.ShortDriverDTO;
-import org.springframework.security.core.Authentication;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface ManagerService {
     ManagerDTO registerManager(RegisterRequest newManager) throws SecurityException;
 
-    List<ShortDriverDTO> getDrivers(Authentication auth, Long managerId) throws UserException;
+    ManagerDTO updateManager(String email, Long managerId, UpdateManagerRequest manager) throws UserException;
 
-    FullDriverDTO getDriver(Authentication auth, Long managerId, Long driverId) throws UserException;
+    ManagerDTO uploadAvatar(String email, Long managerId, MultipartFile avatar) throws UserException, AmazonException;
 
-    ManagerDTO updateManager(Authentication auth, Long managerId, UpdateManagerRequest manager) throws UserException;
+    void delete(String email, Long managerId) throws UserException, SecurityException;
 
-    FullManagerDTO getManager(Authentication auth, Long managerId) throws UserException;
+    List<ShortDriverDTO> getDrivers(String email, Long managerId) throws UserException;
 
-    void setDestinationForDriver(Authentication auth, Long managerId, Long driverId, String destination)
+    FullDriverDTO getDriver(String email, Long managerId, Long driverId) throws UserException;
+
+    FullManagerDTO getManager(String email, Long managerId) throws UserException;
+
+    void setDestinationForDriver(String email, Long managerId, Long driverId, String destination)
             throws UserException;
-
-    void delete(Authentication auth, Long managerId) throws UserException, SecurityException;
-
-    List<ManagerDTO> getAllManagers(Authentication auth);
 }

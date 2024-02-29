@@ -21,6 +21,4 @@ public class UpdateManagerRequest {
     @NotEmpty
     @NotNull
     private String lastName;
-    
-    private String avatar;
 }

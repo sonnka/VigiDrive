@@ -6,6 +6,8 @@ import com.VigiDrive.model.entity.Situation;
 import com.VigiDrive.model.enums.SituationType;
 import com.VigiDrive.model.request.SituationRequest;
 import com.VigiDrive.model.response.SituationDTO;
+import com.VigiDrive.model.response.SituationStatistics;
+import com.VigiDrive.model.response.StatisticElement;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.SituationRepository;
 import com.VigiDrive.service.SituationService;
@@ -13,12 +15,13 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -38,9 +41,27 @@ public class SituationServiceImpl implements SituationService {
     }
 
     @Override
+    public List<SituationDTO> getWeekSituations(Authentication auth, Long driverId) throws UserException {
+        var driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+
+        return situationRepository.findAllByDriverAndStartGreaterThanOrderByStartAsc(driver, getStartOfCurrentWeek())
+                .stream()
+                .map(SituationDTO::new)
+                .toList();
+    }
+
+    private LocalDateTime getStartOfCurrentWeek() {
+        var today = LocalDate.now();
+        return LocalDate.now()
+                .minusDays(today.getDayOfWeek().getValue() - 1L)
+                .atTime(0, 0, 0);
+    }
+
+    @Override
     public SituationDTO getSituation(Authentication auth, Long driverId, Long situationId)
             throws UserException, SituationException {
-        var driver = driverRepository.findById(driverId)
+        driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         var situation = situationRepository.findById(situationId)
@@ -61,7 +82,8 @@ public class SituationServiceImpl implements SituationService {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
-        LocalDateTime start, end;
+        LocalDateTime start;
+        LocalDateTime end;
 
         try {
             start = LocalDateTime.parse(situation.getStart(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
@@ -90,5 +112,114 @@ public class SituationServiceImpl implements SituationService {
                         .driver(driver)
                         .build())
         );
+    }
+
+    @Override
+    public SituationStatistics getWeekStatistic(Authentication auth, Long driverId)
+            throws UserException, SituationException {
+
+        var driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+
+        var today = LocalDate.now().atTime(0, 0, 0);
+        var startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
+
+        List<SituationDTO> situations = situationRepository
+                .findAllByDriverAndStartGreaterThanOrderByStartAsc(driver, startOfWeek)
+                .stream().map(SituationDTO::new).toList();
+
+        Map<Integer, List<SituationDTO>> resultMap = situations.stream().collect(Collectors.groupingBy(
+                u -> u.getStart().getDayOfWeek().getValue())
+        );
+
+        return getSituationStatistics(resultMap, situations);
+    }
+
+    @Override
+    public SituationStatistics getMonthStatistic(Authentication auth, Long driverId)
+            throws UserException, SituationException {
+
+        var driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+
+        var today = LocalDate.now().atTime(0, 0, 0);
+        var startOfMonth = today.minusDays(today.getDayOfMonth() - 1);
+
+        List<SituationDTO> situations = situationRepository
+                .findAllByDriverAndStartGreaterThanOrderByStartAsc(driver, startOfMonth)
+                .stream().map(SituationDTO::new).toList();
+
+        Map<Integer, List<SituationDTO>> resultMap = situations.stream()
+                .collect(Collectors.groupingBy(
+                        u -> u.getStart().getDayOfMonth())
+                );
+
+        return getSituationStatistics(resultMap, situations);
+    }
+
+    @Override
+    public SituationStatistics getYearStatistic(Authentication auth, Long driverId) throws UserException, SituationException {
+
+        var driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+
+        var today = LocalDate.now().atTime(0, 0, 0);
+        var startOfYear = today.minusMonths(today.getMonthValue() - 1).minusDays(today.getDayOfMonth() - 1);
+
+        List<SituationDTO> situations = situationRepository
+                .findAllByDriverAndStartGreaterThanOrderByStartAsc(driver, startOfYear)
+                .stream().map(SituationDTO::new).toList();
+
+        Map<Integer, List<SituationDTO>> resultMap = situations.stream()
+                .collect(Collectors.groupingBy(
+                        u -> u.getStart().getMonth().getValue())
+                );
+
+        return getSituationStatistics(resultMap, situations);
+    }
+
+    private SituationStatistics getSituationStatistics(Map<Integer, List<SituationDTO>> map,
+                                                       List<SituationDTO> situations) throws SituationException {
+        List<StatisticElement> result = new ArrayList<>();
+
+        map.forEach((key, value) -> result.add(new StatisticElement(key, (double) value.size())));
+
+        if (result.isEmpty()) {
+            return new SituationStatistics();
+        }
+
+        var mostFrequentPeriod = result.stream()
+                .max(Comparator.comparingDouble(StatisticElement::getAmount))
+                .orElseThrow(() ->
+                        new SituationException(SituationException.SituationExceptionProfile.SOMETHING_WRONG))
+                .getPeriod();
+
+        return SituationStatistics.builder()
+                .amountOfSituations(map.values().stream().mapToInt(List::size).sum())
+                .mostFrequentSituation(getMostFrequentSituation(situations))
+                .mostFrequentPeriod(mostFrequentPeriod)
+                .statistics(result)
+                .build();
+    }
+
+    private SituationType getMostFrequentSituation(List<SituationDTO> list) throws SituationException {
+        Map<SituationType, Integer> frequency = new EnumMap<>(SituationType.class);
+
+        for (SituationDTO situation : list) {
+            frequency.put(
+                    situation.getType(),
+                    list.stream().filter(s -> s.getType().equals(situation.getType())).toList().size()
+            );
+        }
+
+        if (frequency.isEmpty()) {
+            return null;
+        }
+
+        return frequency.entrySet()
+                .stream().min(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .orElseThrow(() ->
+                        new SituationException(SituationException.SituationExceptionProfile.SOMETHING_WRONG))
+                .getKey();
     }
 }
