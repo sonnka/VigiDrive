@@ -124,3 +124,20 @@ CREATE TABLE situations
 
 ALTER TABLE situations
     ADD CONSTRAINT FK_SITUATIONS_ON_DRIVER FOREIGN KEY (driver_id) REFERENCES drivers (user_id);
+
+
+CREATE TABLE messages
+(
+    message_id  BIGINT AUTO_INCREMENT NOT NULL,
+    time        datetime              NULL,
+    text        VARCHAR(255)          NULL,
+    sender_id   BIGINT                NULL,
+    receiver_id BIGINT                NULL,
+    CONSTRAINT pk_messages PRIMARY KEY (message_id)
+);
+
+ALTER TABLE messages
+    ADD CONSTRAINT FK_MESSAGES_ON_RECEIVER FOREIGN KEY (receiver_id) REFERENCES users (user_id);
+
+ALTER TABLE messages
+    ADD CONSTRAINT FK_MESSAGES_ON_SENDER FOREIGN KEY (sender_id) REFERENCES users (user_id);

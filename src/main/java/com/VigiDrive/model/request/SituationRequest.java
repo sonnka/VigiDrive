@@ -21,7 +21,6 @@ public class SituationRequest {
 
     @NotEmpty
     @NotNull
-    //  @SituationType
     private String type;
 
     @NotEmpty

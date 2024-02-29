@@ -1,6 +1,7 @@
 package com.VigiDrive.model.entity;
 
 import com.VigiDrive.model.enums.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -43,6 +45,18 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private Role role;
+
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH},
+            mappedBy = "sender")
+    @JsonIgnore
+    @Column(name = "sent_messages")
+    private List<Message> sentMessages;
+
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH},
+            mappedBy = "receiver")
+    @JsonIgnore
+    @Column(name = "received_messages")
+    private List<Message> receivedMessages;
 
     @Override
     public boolean equals(Object o) {

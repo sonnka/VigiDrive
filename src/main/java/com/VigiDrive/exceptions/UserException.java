@@ -23,11 +23,17 @@ public class UserException extends Exception {
     @AllArgsConstructor
     public enum UserExceptionProfile {
 
+        USER_NOT_FOUND("user_not_found",
+                "User is not found.", HttpStatus.NOT_FOUND),
+
         ADMIN_NOT_FOUND("admin_not_found",
                 "Admin is not found.", HttpStatus.NOT_FOUND),
 
         DRIVER_NOT_FOUND("driver_not_found",
                 "Driver is not found.", HttpStatus.NOT_FOUND),
+
+        RECEIVER_NOT_FOUND("receiver_not_found",
+                "Receiver is not found.", HttpStatus.NOT_FOUND),
 
         MANAGER_NOT_FOUND("manager_not_found",
                 "Manager is not found.", HttpStatus.NOT_FOUND),
