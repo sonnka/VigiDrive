@@ -2,9 +2,11 @@ package com.VigiDrive.service.impl;
 
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Message;
+import com.VigiDrive.model.entity.User;
 import com.VigiDrive.model.request.MessageRequest;
 import com.VigiDrive.model.response.MessageDTO;
 import com.VigiDrive.model.response.MessagesResponse;
+import com.VigiDrive.model.response.UserResponse;
 import com.VigiDrive.repository.MessageRepository;
 import com.VigiDrive.repository.UserRepository;
 import com.VigiDrive.service.MessageService;
@@ -12,6 +14,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -79,6 +82,33 @@ public class MessageServiceImpl implements MessageService {
                 ),
                 userId
         );
+    }
+
+    @Override
+    public List<UserResponse> getChats(String email, Long userId) throws UserException {
+        var user = userRepository.findByEmailIgnoreCase(email).orElseThrow(
+                () -> new UserException(UserException.UserExceptionProfile.USER_NOT_FOUND)
+        );
+
+        if (!Objects.equals(user.getId(), userId)) {
+            throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
+        }
+
+        var messages = messageRepository.findAllByReceiverOrSender(user, user);
+
+        List<User> users = new ArrayList<>();
+
+        for (Message message : messages) {
+            var sender = message.getSender();
+            var receiver = message.getReceiver();
+
+            if (!Objects.equals(sender.getId(), user.getId())) {
+                users.add(sender);
+            } else if (!Objects.equals(receiver.getId(), user.getId())) {
+                users.add(receiver);
+            }
+        }
+        return users.stream().distinct().map(UserResponse::new).toList();
     }
 
     private MessageDTO toMessageDTO(Message message, Long userId) {

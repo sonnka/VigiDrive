@@ -12,8 +12,8 @@ import java.time.format.DateTimeFormatter;
 @Controller
 @AllArgsConstructor
 public class GreetingController {
-    private SimpMessagingTemplate template;
 
+    private SimpMessagingTemplate template;
 
     @MessageMapping("/message")
     @SendTo("/broker")

@@ -1,5 +1,6 @@
 package com.VigiDrive.model.response;
 
+import com.VigiDrive.model.entity.User;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,4 +13,10 @@ public class UserResponse {
     private String fullName;
 
     private String avatar;
+
+    public UserResponse(User user) {
+        this.userId = user.getId();
+        this.fullName = user.getLastName() + " " + user.getFirstName();
+        this.avatar = user.getAvatar();
+    }
 }
