@@ -46,13 +46,13 @@ public class User {
     @Column(name = "role")
     private Role role;
 
-    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH},
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH},
             mappedBy = "sender")
     @JsonIgnore
     @Column(name = "sent_messages")
     private List<Message> sentMessages;
 
-    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH},
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH},
             mappedBy = "receiver")
     @JsonIgnore
     @Column(name = "received_messages")

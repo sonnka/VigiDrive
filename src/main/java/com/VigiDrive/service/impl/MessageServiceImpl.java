@@ -52,36 +52,33 @@ public class MessageServiceImpl implements MessageService {
                 .toList();
 
         return MessagesResponse.builder()
+                .receiverId(receiverId)
                 .receiverFullName(receiver.getLastName() + " " + receiver.getFirstName())
+                .avatar(receiver.getAvatar())
                 .chatMessages(chatMessages)
                 .build();
     }
 
     @Override
-    public MessageDTO sendMessage(String email, Long userId, Long receiverId, MessageRequest messageRequest)
+    public MessagesResponse sendMessage(Long userId, Long receiverId, MessageRequest message)
             throws UserException {
-        var user = userRepository.findByEmailIgnoreCase(email).orElseThrow(
+        var user = userRepository.findById(userId).orElseThrow(
                 () -> new UserException(UserException.UserExceptionProfile.USER_NOT_FOUND)
         );
-
-        if (!Objects.equals(user.getId(), userId)) {
-            throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
-        }
 
         var receiver = userRepository.findById(receiverId).orElseThrow(
                 () -> new UserException(UserException.UserExceptionProfile.RECEIVER_NOT_FOUND)
         );
 
-        return toMessageDTO(
-                messageRepository.save(Message.builder()
-                        .time(LocalDateTime.now())
-                        .text(messageRequest.getText())
-                        .sender(user)
-                        .receiver(receiver)
-                        .build()
-                ),
-                userId
+        messageRepository.save(Message.builder()
+                .time(LocalDateTime.now())
+                .text(message.getText())
+                .sender(user)
+                .receiver(receiver)
+                .build()
         );
+
+        return getChatHistory(user.getEmail(), userId, receiverId);
     }
 
     @Override

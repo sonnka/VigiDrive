@@ -11,7 +11,11 @@ import java.util.List;
 @Builder
 public class MessagesResponse {
 
+    private Long receiverId;
+
     private String receiverFullName;
+
+    private String avatar;
 
     private List<MessageDTO> chatMessages;
 }

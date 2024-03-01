@@ -1,23 +1,29 @@
 package com.VigiDrive.controller;
 
+import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.request.MessageRequest;
+import com.VigiDrive.model.response.MessagesResponse;
+import com.VigiDrive.service.MessageService;
 import lombok.AllArgsConstructor;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
-@Controller
+@RestController
 @AllArgsConstructor
+@CrossOrigin("http://localhost:4200")
 public class GreetingController {
 
-    private SimpMessagingTemplate template;
+    private MessageService messageService;
 
-    @MessageMapping("/message")
+    @MessageMapping("/users/{user-id}/chats/{receiver-id}/message")
     @SendTo("/broker")
-    public String greeting(String message) {
-        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + " - " + message;
+    public MessagesResponse sendMessage(MessageRequest message,
+                                        @DestinationVariable("user-id") Long userId,
+                                        @DestinationVariable("receiver-id") Long receiverId)
+            throws UserException {
+        return messageService.sendMessage(userId, receiverId, message);
     }
 }
