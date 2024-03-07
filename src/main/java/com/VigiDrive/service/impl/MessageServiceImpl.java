@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -47,8 +48,8 @@ public class MessageServiceImpl implements MessageService {
         receivedMessages.addAll(sentMessages);
 
         List<MessageDTO> chatMessages = receivedMessages.stream()
+                .sorted(Comparator.comparing(Message::getTime))
                 .map(message -> toMessageDTO(message, userId))
-                .sorted(Comparator.comparing(MessageDTO::getTime))
                 .toList();
 
         return MessagesResponse.builder()
@@ -111,7 +112,7 @@ public class MessageServiceImpl implements MessageService {
     private MessageDTO toMessageDTO(Message message, Long userId) {
         return MessageDTO.builder()
                 .messageId(message.getId())
-                .time(message.getTime())
+                .time(message.getTime().format(DateTimeFormatter.ofPattern("HH:mm:ss dd-MM-YYYY")))
                 .text(message.getText())
                 .me(Objects.equals(message.getSender().getId(), userId))
                 .build();
