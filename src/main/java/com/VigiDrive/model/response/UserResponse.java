@@ -16,7 +16,7 @@ public class UserResponse {
 
     public UserResponse(User user) {
         this.userId = user.getId();
-        this.fullName = user.getLastName() + " " + user.getFirstName();
+        this.fullName = user.getFirstName() + " " + user.getLastName();
         this.avatar = user.getAvatar();
     }
 }

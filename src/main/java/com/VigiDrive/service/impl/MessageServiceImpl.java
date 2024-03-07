@@ -1,6 +1,8 @@
 package com.VigiDrive.service.impl;
 
 import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.entity.Driver;
+import com.VigiDrive.model.entity.Manager;
 import com.VigiDrive.model.entity.Message;
 import com.VigiDrive.model.entity.User;
 import com.VigiDrive.model.request.MessageRequest;
@@ -54,7 +56,7 @@ public class MessageServiceImpl implements MessageService {
 
         return MessagesResponse.builder()
                 .receiverId(receiverId)
-                .receiverFullName(receiver.getLastName() + " " + receiver.getFirstName())
+                .receiverFullName(receiver.getFirstName() + " " + receiver.getLastName())
                 .avatar(receiver.getAvatar())
                 .chatMessages(chatMessages)
                 .build();
@@ -109,10 +111,18 @@ public class MessageServiceImpl implements MessageService {
         return users.stream().distinct().map(UserResponse::new).toList();
     }
 
+    @Override
+    public void creatNewChat(Driver driver, Manager manager) throws UserException {
+        sendMessage(manager.getId(), driver.getId(), new MessageRequest(
+                "Hi!\nMy name is " + manager.getFirstName() + " " + manager.getLastName() +
+                        ", I am your new manager.\nNice to meet you!"
+        ));
+    }
+
     private MessageDTO toMessageDTO(Message message, Long userId) {
         return MessageDTO.builder()
                 .messageId(message.getId())
-                .time(message.getTime().format(DateTimeFormatter.ofPattern("HH:mm:ss dd-MM-YYYY")))
+                .time(message.getTime().format(DateTimeFormatter.ofPattern("HH:mm:ss dd-MM-yyyy")))
                 .text(message.getText())
                 .me(Objects.equals(message.getSender().getId(), userId))
                 .build();

@@ -1,11 +1,11 @@
 package com.VigiDrive.model.request;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.io.Serializable;
-
 @Data
-public class MessageRequest implements Serializable {
+@AllArgsConstructor
+public class MessageRequest {
 
     private String text;
 }

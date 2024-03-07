@@ -14,6 +14,7 @@ import com.VigiDrive.repository.AccessRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.service.AccessService;
+import com.VigiDrive.service.MessageService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +30,7 @@ public class AccessServiceImpl implements AccessService {
     private AccessRepository accessRepository;
     private DriverRepository driverRepository;
     private ManagerRepository managerRepository;
+    private MessageService messageService;
 
 
     @Override
@@ -91,6 +93,8 @@ public class AccessServiceImpl implements AccessService {
         driver.setManager(access.getManager());
 
         driverRepository.save(driver);
+
+        messageService.creatNewChat(driver, access.getManager());
 
         return toAccessDTO(createdAccess);
     }

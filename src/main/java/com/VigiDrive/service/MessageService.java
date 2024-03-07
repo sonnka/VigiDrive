@@ -1,6 +1,8 @@
 package com.VigiDrive.service;
 
 import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.entity.Driver;
+import com.VigiDrive.model.entity.Manager;
 import com.VigiDrive.model.request.MessageRequest;
 import com.VigiDrive.model.response.MessagesResponse;
 import com.VigiDrive.model.response.UserResponse;
@@ -15,4 +17,6 @@ public interface MessageService {
             throws UserException;
 
     List<UserResponse> getChats(String email, Long userId) throws UserException;
+
+    void creatNewChat(Driver driver, Manager manager) throws UserException;
 }
