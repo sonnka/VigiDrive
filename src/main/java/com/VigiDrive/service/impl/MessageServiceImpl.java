@@ -16,7 +16,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -122,7 +121,7 @@ public class MessageServiceImpl implements MessageService {
     private MessageDTO toMessageDTO(Message message, Long userId) {
         return MessageDTO.builder()
                 .messageId(message.getId())
-                .time(message.getTime().format(DateTimeFormatter.ofPattern("HH:mm:ss dd-MM-yyyy")))
+                .time(message.getTime())
                 .text(message.getText())
                 .me(Objects.equals(message.getSender().getId(), userId))
                 .build();

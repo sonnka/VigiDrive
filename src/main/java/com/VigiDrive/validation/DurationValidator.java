@@ -13,7 +13,7 @@ public class DurationValidator implements ConstraintValidator<Duration, String> 
                 || duration.equals(TimeDuration.WEEK.name())
                 || duration.equals(TimeDuration.TWO_WEEKS.name())
                 || duration.equals(TimeDuration.MONTH.name())
-                || duration.equals(TimeDuration.SIX_MONTH.name())
+                || duration.equals(TimeDuration.SIX_MONTHS.name())
                 || duration.equals(TimeDuration.YEAR.name());
         if (!valid) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
