@@ -14,6 +14,7 @@ import com.VigiDrive.repository.AccessRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.service.AccessService;
+import com.VigiDrive.service.MessageService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +30,7 @@ public class AccessServiceImpl implements AccessService {
     private AccessRepository accessRepository;
     private DriverRepository driverRepository;
     private ManagerRepository managerRepository;
+    private MessageService messageService;
 
 
     @Override
@@ -76,7 +78,7 @@ public class AccessServiceImpl implements AccessService {
 
         TimeDuration duration = access.getAccessDuration();
 
-        LocalDateTime startDate = LocalDateTime.now(Clock.systemUTC());
+        LocalDateTime startDate = LocalDateTime.now();
 
         LocalDateTime endDate = calculateEndDateOfAccess(startDate, duration);
 
@@ -91,6 +93,8 @@ public class AccessServiceImpl implements AccessService {
         driver.setManager(access.getManager());
 
         driverRepository.save(driver);
+
+        messageService.creatNewChat(driver, access.getManager());
 
         return toAccessDTO(createdAccess);
     }
@@ -157,7 +161,7 @@ public class AccessServiceImpl implements AccessService {
         var driver = findDriverByEmailAndId(email, driverId);
 
         return driver.getAccesses().stream()
-                .filter(access -> access.getIsNew())
+                .filter(Access::getIsNew)
                 .map(this::toAccessDTO)
                 .toList();
     }
@@ -185,8 +189,6 @@ public class AccessServiceImpl implements AccessService {
     @Override
     public List<AccessDTO> getAllSentAccessesByManager(String email, Long managerId) throws UserException {
         var manager = findManagerByEmailAndId(email, managerId);
-
-        System.out.println(manager.getAccesses());
 
         return manager.getAccesses().stream()
                 .filter(Access::getIsNew)
@@ -236,7 +238,7 @@ public class AccessServiceImpl implements AccessService {
             case WEEK -> days = 7;
             case TWO_WEEKS -> days = 14;
             case MONTH -> days = 30;
-            case SIX_MONTH -> days = 180;
+            case SIX_MONTHS -> days = 180;
             case YEAR -> days = 360;
         }
         return startAccess.plusDays(days);

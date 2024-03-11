@@ -45,6 +45,8 @@ public class WebSecurityConfig {
         http
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/").permitAll()
+                        .requestMatchers("/websocket/**").permitAll()
+                        .requestMatchers("/websocket").permitAll()
                         .requestMatchers("/register/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/swagger-ui-custom.html").permitAll()

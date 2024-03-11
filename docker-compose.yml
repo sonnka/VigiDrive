@@ -15,20 +15,29 @@ services:
       - ./files:/tmp/images:rwx
     depends_on:
       - mysql-db
-    env_file:
-      - api.env
-    user: "1000:1000"
+    environment:
+      - DATASOURCE_URL=${DATASOURCE_URL}
+      - DATASOURCE_USERNAME=${DATASOURCE_USERNAME}
+      - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
+      - FLYWAY_USER=${FLYWAY_USER}
+      - FLYWAY_PASSWORD=${FLYWAY_PASSWORD}
+      - AMAZON_ENDPOINT=${AMAZON_ENDPOINT}
+      - AMAZON_ACCESS_KEY=${AMAZON_ACCESS_KEY}
+      - AMAZON_SECRET_KEY=${AMAZON_SECRET_KEY}
+      - AMAZON_BUCKET_NAME=${AMAZON_BUCKET_NAME}
     networks:
       - "net"
 
   mysql-db:
     image: mysql:latest
     container_name: mysql-db
-    env_file:
-      - api.env
     ports:
       - "3306:3306"
     restart: always
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ROOT_USER=${MYSQL_ROOT_USER}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     networks:
       - "net"
 
