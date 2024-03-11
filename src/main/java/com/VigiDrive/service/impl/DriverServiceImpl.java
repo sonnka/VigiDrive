@@ -59,6 +59,10 @@ public class DriverServiceImpl implements DriverService {
             throws UserException {
         var driver = findDriverByEmailAndId(email, driverId);
 
+        if (newDriver.getAvatar() != null && !newDriver.getAvatar().isEmpty()) {
+            driver.setAvatar(newDriver.getAvatar());
+        }
+
         driver.setFirstName(newDriver.getFirstName());
         driver.setLastName(newDriver.getLastName());
         driver.setDateOfBirth(LocalDate.parse(newDriver.getDateOfBirth()));

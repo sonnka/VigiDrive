@@ -8,6 +8,7 @@ import com.VigiDrive.model.response.DriverLicenseDTO;
 import com.VigiDrive.repository.DriverLicenseRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.service.DriverLicenseService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 
 @Service
 @AllArgsConstructor
+@Transactional
 public class DriverLicenseServiceImpl implements DriverLicenseService {
 
     private DriverLicenseRepository driverLicenseRepository;
@@ -37,6 +39,7 @@ public class DriverLicenseServiceImpl implements DriverLicenseService {
     }
 
     @Override
+    @Transactional
     public DriverLicenseDTO addDriverLicense(Authentication auth, Long driverId, DriverLicenseRequest driverLicense)
             throws UserException, DriverLicenseException {
         var driver = driverRepository.findById(driverId)

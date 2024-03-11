@@ -45,6 +45,7 @@ public class WebSecurityConfig {
         http
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/").permitAll()
+                        .requestMatchers("/pdf").permitAll()
                         .requestMatchers("/websocket/**").permitAll()
                         .requestMatchers("/websocket").permitAll()
                         .requestMatchers("/register/**").permitAll()

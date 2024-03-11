@@ -6,10 +6,18 @@ import com.VigiDrive.model.request.HealthInfoRequest;
 import com.VigiDrive.model.response.HealthInfoDTO;
 import com.VigiDrive.model.response.HealthStatistics;
 import com.VigiDrive.service.HealthInfoService;
+import com.VigiDrive.service.PDFService;
+import com.itextpdf.text.DocumentException;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.ByteArrayOutputStream;
 
 @RestController
 @AllArgsConstructor
@@ -17,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class HealthInfoController {
 
     private HealthInfoService healthInfoService;
+    private PDFService pdfService;
 
     @PostMapping("/drivers/{driver-id}/health-info")
     public HealthInfoDTO addHealthInfo(Authentication auth,
@@ -50,5 +59,15 @@ public class HealthInfoController {
                                                     @PathVariable("driver-id") Long driverId)
             throws HealthException, UserException {
         return healthInfoService.getYearHealthStatistics(auth, driverId);
+    }
+
+    @PostMapping("/pdf")
+    public ResponseEntity<byte[]> exportPdf() throws DocumentException {
+        ByteArrayOutputStream pdfStream = pdfService.generateReport();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=query_results.pdf");
+        headers.setContentLength(pdfStream.size());
+        return new ResponseEntity<>(pdfStream.toByteArray(), headers, HttpStatus.OK);
     }
 }
