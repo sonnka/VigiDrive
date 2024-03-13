@@ -102,7 +102,10 @@ public class AccessServiceImpl implements AccessService {
     @Override
     public AccessDTO stopAccess(String email, Long driverId, Long accessId) throws UserException {
         var driver = findDriverByEmailAndId(email, driverId);
+        return toAccessDTO(deactivateAccess(driver, accessId));
+    }
 
+    private Access deactivateAccess(Driver driver, Long accessId) throws UserException {
         var access = accessRepository.findById(accessId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ACCESS_NOT_FOUND));
 
@@ -122,7 +125,7 @@ public class AccessServiceImpl implements AccessService {
 
         driverRepository.save(driver);
 
-        return toAccessDTO(updatedAccess);
+        return updatedAccess;
     }
 
     @Override
@@ -160,7 +163,7 @@ public class AccessServiceImpl implements AccessService {
     public List<AccessDTO> getAllAccessRequestsByDriver(String email, Long driverId) throws UserException {
         var driver = findDriverByEmailAndId(email, driverId);
 
-        return driver.getAccesses().stream()
+        return driver.getAccesses().stream().map(this::checkActive)
                 .filter(Access::getIsNew)
                 .map(this::toAccessDTO)
                 .toList();
@@ -170,7 +173,7 @@ public class AccessServiceImpl implements AccessService {
     public List<AccessDTO> getAllInactiveAccessesByDriver(String email, Long driverId) throws UserException {
         var driver = findDriverByEmailAndId(email, driverId);
 
-        return driver.getAccesses().stream()
+        return driver.getAccesses().stream().map(this::checkActive)
                 .filter(access -> !access.getIsActive() && !access.getIsNew())
                 .map(this::toAccessDTO)
                 .toList();
@@ -180,7 +183,7 @@ public class AccessServiceImpl implements AccessService {
     public List<AccessDTO> getAllActiveAccessesByDriver(String email, Long driverId) throws UserException {
         var driver = findDriverByEmailAndId(email, driverId);
 
-        return driver.getAccesses().stream()
+        return driver.getAccesses().stream().map(this::checkActive)
                 .filter(Access::getIsActive)
                 .map(this::toAccessDTO)
                 .toList();
@@ -190,7 +193,7 @@ public class AccessServiceImpl implements AccessService {
     public List<AccessDTO> getAllSentAccessesByManager(String email, Long managerId) throws UserException {
         var manager = findManagerByEmailAndId(email, managerId);
 
-        return manager.getAccesses().stream()
+        return manager.getAccesses().stream().map(this::checkActive)
                 .filter(Access::getIsNew)
                 .map(this::toAccessDTO)
                 .toList();
@@ -200,7 +203,7 @@ public class AccessServiceImpl implements AccessService {
     public List<AccessDTO> getAllInactiveAccessesByManager(String email, Long managerId) throws UserException {
         var manager = findManagerByEmailAndId(email, managerId);
 
-        return manager.getAccesses().stream()
+        return manager.getAccesses().stream().map(this::checkActive)
                 .filter(access -> !access.getIsActive())
                 .map(this::toAccessDTO)
                 .toList();
@@ -210,7 +213,7 @@ public class AccessServiceImpl implements AccessService {
     public List<AccessDTO> getAllActiveAccessesByManager(String email, Long managerId) throws UserException {
         var manager = findManagerByEmailAndId(email, managerId);
 
-        return manager.getAccesses().stream()
+        return manager.getAccesses().stream().map(this::checkActive)
                 .filter(Access::getIsActive)
                 .map(this::toAccessDTO)
                 .toList();
@@ -220,7 +223,7 @@ public class AccessServiceImpl implements AccessService {
     public List<AccessDTO> getAllExpiringAccessesByManager(String email, Long managerId) throws UserException {
         var manager = findManagerByEmailAndId(email, managerId);
 
-        return manager.getAccesses().stream()
+        return manager.getAccesses().stream().map(this::checkActive)
                 .filter(Access::getIsExpiring)
                 .map(this::toAccessDTO)
                 .toList();
@@ -229,6 +232,22 @@ public class AccessServiceImpl implements AccessService {
 
     private Boolean checkExpiring(LocalDateTime endAccess) {
         return endAccess.minusDays(3).isBefore(LocalDateTime.now(Clock.systemUTC()));
+    }
+
+    private Access checkActive(Access access) {
+        if (access.getIsActive()) {
+            if (access.getEndDateOfAccess().isAfter(LocalDateTime.now(Clock.systemUTC()))) {
+                access.setIsActive(true);
+                access.setIsExpiring(checkExpiring(access.getEndDateOfAccess()));
+            } else {
+                try {
+                    access = deactivateAccess(access.getDriver(), access.getId());
+                } catch (Exception e) {
+                    System.err.println("Something was wrong with access with id = " + access.getId());
+                }
+            }
+        }
+        return access;
     }
 
     private LocalDateTime calculateEndDateOfAccess(LocalDateTime startAccess, TimeDuration duration) {

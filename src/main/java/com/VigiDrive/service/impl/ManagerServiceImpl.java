@@ -87,6 +87,10 @@ public class ManagerServiceImpl implements ManagerService {
         manager.setFirstName(newManager.getFirstName());
         manager.setLastName(newManager.getLastName());
 
+        if (newManager.getAvatar() != null && !newManager.getAvatar().isEmpty()) {
+            manager.setAvatar(newManager.getAvatar());
+        }
+
         return new ManagerDTO(managerRepository.save(manager));
     }
 
