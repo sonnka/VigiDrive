@@ -5,12 +5,16 @@ import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.SituationRequest;
 import com.VigiDrive.model.response.SituationDTO;
 import com.VigiDrive.model.response.SituationStatistics;
+import com.VigiDrive.service.PDFService;
 import com.VigiDrive.service.SituationService;
+import com.itextpdf.text.DocumentException;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -19,6 +23,7 @@ import java.util.List;
 public class SituationController {
 
     private SituationService situationService;
+    private PDFService pdfService;
 
     @GetMapping("/drivers/{driver-id}/situations")
     public List<SituationDTO> getSituations(Authentication auth,
@@ -67,5 +72,14 @@ public class SituationController {
                                                 @PathVariable("driver-id") Long driverId)
             throws UserException, SituationException {
         return situationService.getYearStatistic(auth.getName(), driverId);
+    }
+
+    @GetMapping("/managers/{manager-id}/drivers/{driver-id}/situation-report")
+    public void exportHealthReport(Authentication auth,
+                                   HttpServletResponse response,
+                                   @PathVariable("manager-id") Long managerId,
+                                   @PathVariable("driver-id") Long driverId)
+            throws DocumentException, IOException, UserException {
+        pdfService.generateSituationReport(auth.getName(), managerId, driverId, response);
     }
 }

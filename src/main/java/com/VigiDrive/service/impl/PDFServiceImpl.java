@@ -4,10 +4,12 @@ import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.entity.Manager;
 import com.VigiDrive.model.response.HealthInfoDTO;
+import com.VigiDrive.model.response.SituationDTO;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.service.HealthInfoService;
 import com.VigiDrive.service.PDFService;
+import com.VigiDrive.service.SituationService;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
@@ -30,32 +32,64 @@ public class PDFServiceImpl implements PDFService {
     private final Font font14 = FontFactory.getFont(FontFactory.TIMES_ROMAN, 14, BaseColor.BLACK);
     private final Font boldFont = FontFactory.getFont(FontFactory.TIMES_ROMAN, 14, Font.FontStyle.BOLD.ordinal(),
             BaseColor.BLACK);
-
     private final HealthInfoService healthInfoService;
+    private final SituationService situationService;
     private final DriverRepository driverRepository;
     private final ManagerRepository managerRepository;
+    private Driver driver;
 
-    public PDFServiceImpl(HealthInfoService healthInfoService, DriverRepository driverRepository,
-                          ManagerRepository managerRepository) {
+    public PDFServiceImpl(HealthInfoService healthInfoService, SituationService situationService,
+                          DriverRepository driverRepository, ManagerRepository managerRepository) {
         this.healthInfoService = healthInfoService;
+        this.situationService = situationService;
         this.driverRepository = driverRepository;
         this.managerRepository = managerRepository;
     }
 
     @Override
-    public void generateReport(String email, Long managerId, Long driverId, HttpServletResponse response)
+    public void generateHealthReport(String email, Long managerId, Long driverId, HttpServletResponse response)
             throws DocumentException, IOException, UserException {
-        configureResponse(response);
+        configureResponse(response, "_health_report");
 
         Document document = new Document(PageSize.A4);
         PdfWriter.getInstance(document, response.getOutputStream());
 
         document.open();
 
+        configureDocument(document, email, driverId, managerId, "Health report");
+
+        List<HealthInfoDTO> healthInfo = healthInfoService.getWeekHealthInfo(driver);
+
+        fillHealthData(document, healthInfo);
+
+        document.close();
+    }
+
+    @Override
+    public void generateSituationReport(String email, Long managerId, Long driverId, HttpServletResponse response)
+            throws DocumentException, IOException, UserException {
+        configureResponse(response, "_situation_report");
+
+        Document document = new Document(PageSize.A4);
+        PdfWriter.getInstance(document, response.getOutputStream());
+
+        document.open();
+
+        configureDocument(document, email, driverId, managerId, "Situation report");
+
+        List<SituationDTO> situations = situationService.getWeekSituations(email, driverId);
+
+        fillSituationData(document, situations);
+
+        document.close();
+    }
+
+    private void configureDocument(Document document, String email, Long driverId, Long managerId, String reportType)
+            throws DocumentException, UserException {
         var today = LocalDate.now().atTime(0, 0, 0);
         var startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1L);
 
-        var reportName = "Health report\n" + startOfWeek.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) +
+        var reportName = reportType + "\n" + startOfWeek.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) +
                 " - " + today.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
         var manager = managerRepository.findByEmailIgnoreCase(email).orElseThrow(
@@ -66,23 +100,17 @@ public class PDFServiceImpl implements PDFService {
             throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
         }
 
-        var driver = driverRepository.findById(driverId).orElseThrow(
+        driver = driverRepository.findById(driverId).orElseThrow(
                 () -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND)
         );
 
         setTitleOfDocument(document, reportName, driver, manager);
-
-        List<HealthInfoDTO> healthInfo = healthInfoService.getWeekHealthInfo(driver);
-
-        fillHealthData(document, healthInfo);
-
-        document.close();
     }
 
-    private void configureResponse(HttpServletResponse response) {
+    private void configureResponse(HttpServletResponse response, String reportType) {
         response.setContentType("application/pdf");
         var fileName = LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("dd.MM.yyyy_HH.mm.ss")) + "_health_report.pdf";
+                .format(DateTimeFormatter.ofPattern("dd.MM.yyyy_HH.mm.ss")) + reportType + ".pdf";
         String headerKey = "Content-Disposition";
         String headerValue = "attachment; filename=" + fileName;
         response.setHeader(headerKey, headerValue);
@@ -165,6 +193,47 @@ public class PDFServiceImpl implements PDFService {
                 cell.setHorizontalAlignment(1);
                 cell.setVerticalAlignment(1);
                 cell.setMinimumHeight(40f);
+            }
+        }
+        table.setWidthPercentage(100f);
+        document.add(table);
+    }
+
+    private void fillSituationData(Document document, List<SituationDTO> situations) throws DocumentException {
+        PdfPTable table = new PdfPTable(5);
+
+        Stream.of("Start", "End", "Type", "Description", "Video")
+                .forEach(columnTitle -> {
+                    PdfPCell header = new PdfPCell();
+                    header.setBackgroundColor(new BaseColor(153, 192, 192));
+                    header.setBorderWidth(0.5f);
+                    header.setPhrase(new Phrase(columnTitle, font14));
+                    var headerCell = table.addCell(header);
+                    headerCell.setHorizontalAlignment(1);
+                    headerCell.setVerticalAlignment(1);
+                    headerCell.setFixedHeight(40f);
+                });
+
+        for (SituationDTO situation : situations) {
+            var startCell = table.addCell(new PdfPCell(new Phrase(situation.getStart()
+                    .format(DateTimeFormatter.ofPattern("dd.MM.yy HH:mm:ss")), font12)));
+
+            var endCell = table.addCell(new PdfPCell(new Phrase(situation.getEnd()
+                    .format(DateTimeFormatter.ofPattern("dd.MM.yy HH:mm:ss")), font12)));
+
+            var typeCell = table.addCell(new PdfPCell(new Phrase(
+                    situation.getType().toString().toLowerCase().replace("_", " "),
+                    font12)));
+
+            var descCell = table.addCell(new PdfPCell(
+                    new Phrase(situation.getDescription(), font12)));
+
+            var videoCell = table.addCell(new PdfPCell(new Phrase(situation.getVideo(), font12)));
+
+            for (PdfPCell cell : List.of(startCell, endCell, typeCell, descCell, videoCell)) {
+                cell.setHorizontalAlignment(1);
+                cell.setVerticalAlignment(1);
+                cell.setMinimumHeight(50f);
             }
         }
         table.setWidthPercentage(100f);
