@@ -84,9 +84,9 @@ public class AccessServiceImpl implements AccessService {
 
         access.setStartDateOfAccess(startDate);
         access.setEndDateOfAccess(endDate);
-        access.setIsNew(false);
-        access.setIsActive(true);
-        access.setIsExpiring(checkExpiring(endDate));
+        access.setNew(false);
+        access.setActive(true);
+        access.setExpiring(checkExpiring(endDate));
 
         var createdAccess = accessRepository.save(access);
 
@@ -115,9 +115,9 @@ public class AccessServiceImpl implements AccessService {
 
         access.setStartDateOfAccess(null);
         access.setEndDateOfAccess(null);
-        access.setIsNew(false);
-        access.setIsActive(false);
-        access.setIsExpiring(false);
+        access.setNew(false);
+        access.setActive(false);
+        access.setExpiring(false);
 
         var updatedAccess = accessRepository.save(access);
 
@@ -140,7 +140,7 @@ public class AccessServiceImpl implements AccessService {
             throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
         }
 
-        if (!access.getIsExpiring()) {
+        if (!access.isExpiring()) {
             throw new UserException(UserException.UserExceptionProfile.ACCESS_NOT_EXPIRING);
         }
 
@@ -152,9 +152,10 @@ public class AccessServiceImpl implements AccessService {
 
         access.setStartDateOfAccess(startDate);
         access.setEndDateOfAccess(endDate);
-        access.setIsNew(false);
-        access.setIsActive(true);
-        access.setIsExpiring(checkExpiring(endDate));
+        access.setNew(false);
+        access.setActive(true);
+        access.setExpiring(checkExpiring(endDate));
+        access.setAccessDuration(duration);
 
         return toAccessDTO(accessRepository.save(access));
     }
@@ -164,7 +165,7 @@ public class AccessServiceImpl implements AccessService {
         var driver = findDriverByEmailAndId(email, driverId);
 
         return driver.getAccesses().stream().map(this::checkActive)
-                .filter(Access::getIsNew)
+                .filter(Access::isNew)
                 .map(this::toAccessDTO)
                 .toList();
     }
@@ -174,7 +175,7 @@ public class AccessServiceImpl implements AccessService {
         var driver = findDriverByEmailAndId(email, driverId);
 
         return driver.getAccesses().stream().map(this::checkActive)
-                .filter(access -> !access.getIsActive() && !access.getIsNew())
+                .filter(access -> !access.isActive() && !access.isNew())
                 .map(this::toAccessDTO)
                 .toList();
     }
@@ -184,7 +185,7 @@ public class AccessServiceImpl implements AccessService {
         var driver = findDriverByEmailAndId(email, driverId);
 
         return driver.getAccesses().stream().map(this::checkActive)
-                .filter(Access::getIsActive)
+                .filter(Access::isActive)
                 .map(this::toAccessDTO)
                 .toList();
     }
@@ -194,7 +195,7 @@ public class AccessServiceImpl implements AccessService {
         var manager = findManagerByEmailAndId(email, managerId);
 
         return manager.getAccesses().stream().map(this::checkActive)
-                .filter(Access::getIsNew)
+                .filter(Access::isNew)
                 .map(this::toAccessDTO)
                 .toList();
     }
@@ -204,7 +205,7 @@ public class AccessServiceImpl implements AccessService {
         var manager = findManagerByEmailAndId(email, managerId);
 
         return manager.getAccesses().stream().map(this::checkActive)
-                .filter(access -> !access.getIsActive())
+                .filter(access -> !access.isActive())
                 .map(this::toAccessDTO)
                 .toList();
     }
@@ -214,7 +215,7 @@ public class AccessServiceImpl implements AccessService {
         var manager = findManagerByEmailAndId(email, managerId);
 
         return manager.getAccesses().stream().map(this::checkActive)
-                .filter(Access::getIsActive)
+                .filter(Access::isActive)
                 .map(this::toAccessDTO)
                 .toList();
     }
@@ -224,7 +225,7 @@ public class AccessServiceImpl implements AccessService {
         var manager = findManagerByEmailAndId(email, managerId);
 
         return manager.getAccesses().stream().map(this::checkActive)
-                .filter(Access::getIsExpiring)
+                .filter(Access::isExpiring)
                 .map(this::toAccessDTO)
                 .toList();
     }
@@ -235,10 +236,10 @@ public class AccessServiceImpl implements AccessService {
     }
 
     private Access checkActive(Access access) {
-        if (access.getIsActive()) {
+        if (access.isActive()) {
             if (access.getEndDateOfAccess().isAfter(LocalDateTime.now(Clock.systemUTC()))) {
-                access.setIsActive(true);
-                access.setIsExpiring(checkExpiring(access.getEndDateOfAccess()));
+                access.setActive(true);
+                access.setExpiring(checkExpiring(access.getEndDateOfAccess()));
             } else {
                 try {
                     access = deactivateAccess(access.getDriver(), access.getId());
@@ -272,8 +273,8 @@ public class AccessServiceImpl implements AccessService {
                 .startDateOfAccess(access.getStartDateOfAccess())
                 .endDateOfAccess(access.getEndDateOfAccess())
                 .accessDuration(access.getAccessDuration())
-                .isActive(access.getIsActive())
-                .isExpiring(access.getIsExpiring())
+                .isActive(access.isActive())
+                .isExpiring(access.isExpiring())
                 .build();
     }
 

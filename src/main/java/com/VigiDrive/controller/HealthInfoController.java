@@ -8,16 +8,13 @@ import com.VigiDrive.model.response.HealthStatistics;
 import com.VigiDrive.service.HealthInfoService;
 import com.VigiDrive.service.PDFService;
 import com.itextpdf.text.DocumentException;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 @RestController
 @AllArgsConstructor
@@ -61,13 +58,12 @@ public class HealthInfoController {
         return healthInfoService.getYearHealthStatistics(auth, driverId);
     }
 
-    @PostMapping("/pdf")
-    public ResponseEntity<byte[]> exportPdf() throws DocumentException {
-        ByteArrayOutputStream pdfStream = pdfService.generateReport();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=query_results.pdf");
-        headers.setContentLength(pdfStream.size());
-        return new ResponseEntity<>(pdfStream.toByteArray(), headers, HttpStatus.OK);
+    @GetMapping("/managers/{manager-id}/drivers/{driver-id}/health-report")
+    public void exportHealthReport(Authentication auth,
+                                   HttpServletResponse response,
+                                   @PathVariable("manager-id") Long managerId,
+                                   @PathVariable("driver-id") Long driverId)
+            throws DocumentException, IOException, UserException {
+        pdfService.generateReport(auth.getName(), managerId, driverId, response);
     }
 }

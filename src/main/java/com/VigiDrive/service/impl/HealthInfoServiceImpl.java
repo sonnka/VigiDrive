@@ -2,6 +2,7 @@ package com.VigiDrive.service.impl;
 
 import com.VigiDrive.exceptions.HealthException;
 import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.entity.HealthInfo;
 import com.VigiDrive.model.request.HealthInfoRequest;
 import com.VigiDrive.model.response.HealthInfoDTO;
@@ -65,7 +66,19 @@ public class HealthInfoServiceImpl implements HealthInfoService {
         }
 
         return new HealthInfoDTO(healthInfo);
+    }
 
+    @Override
+    public List<HealthInfoDTO> getWeekHealthInfo(Driver driver) {
+        var today = LocalDate.now().atTime(0, 0, 0);
+        var startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1L);
+
+        List<HealthInfo> info = healthInfoRepository.findAllByDriverAndTimeAfter(driver, startOfWeek);
+
+        return info.stream()
+                .map(HealthInfoDTO::new)
+                .sorted(Comparator.comparing(HealthInfoDTO::getTime))
+                .toList();
     }
 
     @Override
@@ -75,7 +88,7 @@ public class HealthInfoServiceImpl implements HealthInfoService {
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         var today = LocalDate.now().atTime(0, 0, 0);
-        var startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
+        var startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1L);
 
         List<HealthInfoDTO> healthInfo = healthInfoRepository.findAllByDriverAndTimeAfter(driver, startOfWeek)
                 .stream()
@@ -97,7 +110,7 @@ public class HealthInfoServiceImpl implements HealthInfoService {
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         var today = LocalDate.now().atTime(0, 0, 0);
-        var startOfMonth = today.minusDays(today.getDayOfMonth() - 1);
+        var startOfMonth = today.minusDays(today.getDayOfMonth() - 1L);
 
         List<HealthInfoDTO> healthInfo = healthInfoRepository.findAllByDriverAndTimeAfter(driver, startOfMonth)
                 .stream()
@@ -120,7 +133,7 @@ public class HealthInfoServiceImpl implements HealthInfoService {
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
         var today = LocalDate.now().atTime(0, 0, 0);
-        var startOfYear = today.minusMonths(today.getMonthValue() - 1).minusDays(today.getDayOfMonth() - 1);
+        var startOfYear = today.minusMonths(today.getMonthValue() - 1L).minusDays(today.getDayOfMonth() - 1L);
 
         List<HealthInfoDTO> healthInfo = healthInfoRepository.findAllByDriverAndTimeAfter(driver, startOfYear)
                 .stream()

@@ -26,6 +26,6 @@ public class AdminDTO {
         this.lastName = admin.getLastName();
         this.email = admin.getEmail();
         this.avatar = admin.getAvatar();
-        this.isApproved = admin.getIsApproved();
+        this.isApproved = admin.isApproved();
     }
 }
