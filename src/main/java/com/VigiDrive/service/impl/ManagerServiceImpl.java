@@ -17,6 +17,7 @@ import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.repository.UserRepository;
 import com.VigiDrive.service.DriverService;
 import com.VigiDrive.service.ManagerService;
+import com.VigiDrive.util.AuthUtil;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -60,14 +61,14 @@ public class ManagerServiceImpl implements ManagerService {
 
     @Override
     public List<ShortDriverDTO> getDrivers(String email, Long managerId) throws UserException {
-        var manager = findManagerByEmailAndId(email, managerId);
+        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
 
         return driverService.getAllDriversByManager(email, manager.getId());
     }
 
     @Override
     public FullDriverDTO getDriver(String email, Long managerId, Long driverId) throws UserException {
-        var manager = findManagerByEmailAndId(email, managerId);
+        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
 
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
@@ -82,7 +83,7 @@ public class ManagerServiceImpl implements ManagerService {
     @Override
     public ManagerDTO updateManager(String email, Long managerId, UpdateManagerRequest newManager)
             throws UserException {
-        var manager = findManagerByEmailAndId(email, managerId);
+        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
 
         manager.setFirstName(newManager.getFirstName());
         manager.setLastName(newManager.getLastName());
@@ -98,7 +99,7 @@ public class ManagerServiceImpl implements ManagerService {
     @Transactional
     public ManagerDTO uploadAvatar(String email, Long managerId, MultipartFile avatar)
             throws UserException, AmazonException {
-        var manager = findManagerByEmailAndId(email, managerId);
+        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
 
         if (manager.getAvatar() != null && !manager.getAvatar().isEmpty()) {
             amazonClient.deleteFileFromS3Bucket(manager.getAvatar());
@@ -113,7 +114,7 @@ public class ManagerServiceImpl implements ManagerService {
 
     @Override
     public FullManagerDTO getManager(String email, Long managerId) throws UserException {
-        var manager = findManagerByEmailAndId(email, managerId);
+        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
 
         return new FullManagerDTO(manager);
     }
@@ -121,7 +122,7 @@ public class ManagerServiceImpl implements ManagerService {
     @Override
     public void setDestinationForDriver(String email, Long managerId, Long driverId, String destination)
             throws UserException {
-        var manager = findManagerByEmailAndId(email, managerId);
+        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
 
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
@@ -137,42 +138,13 @@ public class ManagerServiceImpl implements ManagerService {
 
     @Override
     public void delete(String email, Long managerId) throws UserException {
-        var manager = findManagerByEmailAndIdAndCheckByAdmin(email, managerId);
+        var manager = AuthUtil.findManagerByEmailAndIdAndCheckByAdmin(email, managerId, managerRepository,
+                adminRepository);
 
         if (manager.getAvatar() != null && !manager.getAvatar().isEmpty()) {
             amazonClient.deleteFileFromS3Bucket(manager.getAvatar());
         }
 
         managerRepository.delete(manager);
-    }
-
-    private Manager findManagerByEmailAndId(String email, Long managerId) throws UserException {
-        var manager = managerRepository.findById(managerId).orElseThrow(
-                () -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
-
-        if (!manager.getEmail().equals(email)) {
-            throw new UserException(UserException.UserExceptionProfile.EMAIL_MISMATCH);
-        }
-
-        if (!Role.MANAGER.equals(manager.getRole())) {
-            throw new UserException(UserException.UserExceptionProfile.NOT_MANAGER);
-        }
-        return manager;
-    }
-
-    private Manager findManagerByEmailAndIdAndCheckByAdmin(String email, Long managerId) throws UserException {
-        var manager = managerRepository.findById(managerId).orElseThrow(
-                () -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
-
-        if (!manager.getEmail().equals(email)) {
-            var admin = adminRepository.findByEmailIgnoreCase(email).orElseThrow(
-                    () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
-
-            if (!Role.ADMIN.equals(admin.getRole())) {
-                throw new UserException(UserException.UserExceptionProfile.NOT_ADMIN);
-            }
-        }
-
-        return manager;
     }
 }

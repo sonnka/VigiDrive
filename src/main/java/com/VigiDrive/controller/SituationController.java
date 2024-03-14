@@ -23,13 +23,13 @@ public class SituationController {
     @GetMapping("/drivers/{driver-id}/situations")
     public List<SituationDTO> getSituations(Authentication auth,
                                             @PathVariable("driver-id") Long driverId) throws UserException {
-        return situationService.getSituations(auth, driverId);
+        return situationService.getSituations(auth.getName(), driverId);
     }
 
     @GetMapping("/drivers/{driver-id}/situations/week")
     public List<SituationDTO> getWeekSituations(Authentication auth,
                                                 @PathVariable("driver-id") Long driverId) throws UserException {
-        return situationService.getWeekSituations(auth, driverId);
+        return situationService.getWeekSituations(auth.getName(), driverId);
     }
 
     @GetMapping("/drivers/{driver-id}/situations/{situation-id}")
@@ -37,7 +37,7 @@ public class SituationController {
                                      @PathVariable("driver-id") Long driverId,
                                      @PathVariable("situation-id") Long situationId)
             throws SituationException, UserException {
-        return situationService.getSituation(auth, driverId, situationId);
+        return situationService.getSituation(auth.getName(), driverId, situationId);
     }
 
     @PostMapping("/drivers/{driver-id}/situations")
@@ -45,27 +45,27 @@ public class SituationController {
                                      @PathVariable("driver-id") Long driverId,
                                      @RequestBody @Valid SituationRequest situation)
             throws SituationException, UserException {
-        return situationService.addSituation(auth, driverId, situation);
+        return situationService.addSituation(auth.getName(), driverId, situation);
     }
 
     @GetMapping("/drivers/{driver-id}/situations/statistics/week")
     public SituationStatistics getWeekStatistic(Authentication auth,
                                                 @PathVariable("driver-id") Long driverId)
             throws UserException, SituationException {
-        return situationService.getWeekStatistic(auth, driverId);
+        return situationService.getWeekStatistic(auth.getName(), driverId);
     }
 
     @GetMapping("/drivers/{driver-id}/situations/statistics/month")
     public SituationStatistics getMonthStatistic(Authentication auth,
                                                  @PathVariable("driver-id") Long driverId)
             throws UserException, SituationException {
-        return situationService.getMonthStatistic(auth, driverId);
+        return situationService.getMonthStatistic(auth.getName(), driverId);
     }
 
     @GetMapping("/drivers/{driver-id}/situations/statistics/year")
     public SituationStatistics getYearStatistic(Authentication auth,
                                                 @PathVariable("driver-id") Long driverId)
             throws UserException, SituationException {
-        return situationService.getYearStatistic(auth, driverId);
+        return situationService.getYearStatistic(auth.getName(), driverId);
     }
 }

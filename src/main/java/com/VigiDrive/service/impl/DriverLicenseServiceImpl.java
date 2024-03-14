@@ -8,9 +8,9 @@ import com.VigiDrive.model.response.DriverLicenseDTO;
 import com.VigiDrive.repository.DriverLicenseRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.service.DriverLicenseService;
+import com.VigiDrive.util.AuthUtil;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -26,10 +26,9 @@ public class DriverLicenseServiceImpl implements DriverLicenseService {
     private DriverRepository driverRepository;
 
     @Override
-    public DriverLicenseDTO getDriverLicense(Authentication auth, Long driverId)
+    public DriverLicenseDTO getDriverLicense(String email, Long driverId)
             throws UserException, DriverLicenseException {
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
 
         var driverLicense = driverLicenseRepository.findDriverLicenseByDriver(driver)
                 .orElseThrow(() -> new DriverLicenseException(
@@ -40,14 +39,13 @@ public class DriverLicenseServiceImpl implements DriverLicenseService {
 
     @Override
     @Transactional
-    public DriverLicenseDTO addDriverLicense(Authentication auth, Long driverId, DriverLicenseRequest driverLicense)
+    public DriverLicenseDTO addDriverLicense(String email, Long driverId, DriverLicenseRequest driverLicense)
             throws UserException, DriverLicenseException {
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
 
         driverLicenseRepository.deleteAllByDriver(driver);
 
-        LocalDate date = null;
+        LocalDate date;
 
         try {
             date = LocalDate.parse(driverLicense.getDateTo(), DateTimeFormatter.ISO_LOCAL_DATE);

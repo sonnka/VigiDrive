@@ -9,10 +9,11 @@ import com.VigiDrive.model.response.SituationDTO;
 import com.VigiDrive.model.response.SituationStatistics;
 import com.VigiDrive.model.response.StatisticElement;
 import com.VigiDrive.repository.DriverRepository;
+import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.repository.SituationRepository;
 import com.VigiDrive.service.SituationService;
+import com.VigiDrive.util.AuthUtil;
 import lombok.AllArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -29,11 +30,11 @@ public class SituationServiceImpl implements SituationService {
 
     private SituationRepository situationRepository;
     private DriverRepository driverRepository;
+    private ManagerRepository managerRepository;
 
     @Override
-    public List<SituationDTO> getSituations(Authentication auth, Long driverId) throws UserException {
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+    public List<SituationDTO> getSituations(String email, Long driverId) throws UserException {
+        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
 
         return situationRepository.findAllByDriver(driver).stream()
                 .map(SituationDTO::new)
@@ -41,9 +42,9 @@ public class SituationServiceImpl implements SituationService {
     }
 
     @Override
-    public List<SituationDTO> getWeekSituations(Authentication auth, Long driverId) throws UserException {
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+    public List<SituationDTO> getWeekSituations(String email, Long driverId) throws UserException {
+        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
+                managerRepository);
 
         return situationRepository.findAllByDriverAndStartGreaterThanOrderByStartAsc(driver, getStartOfCurrentWeek())
                 .stream()
@@ -59,10 +60,9 @@ public class SituationServiceImpl implements SituationService {
     }
 
     @Override
-    public SituationDTO getSituation(Authentication auth, Long driverId, Long situationId)
+    public SituationDTO getSituation(String email, Long driverId, Long situationId)
             throws UserException, SituationException {
-        driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+        AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
 
         var situation = situationRepository.findById(situationId)
                 .orElseThrow(() -> new SituationException(SituationException.SituationExceptionProfile.SITUATION_NOT_FOUND));
@@ -75,12 +75,11 @@ public class SituationServiceImpl implements SituationService {
     }
 
     @Override
-    public SituationDTO addSituation(Authentication auth, Long driverId, SituationRequest situation)
+    public SituationDTO addSituation(String email, Long driverId, SituationRequest situation)
             throws UserException, SituationException {
         String videoUrlRegex = "^(https?://)?(www\\.)?([a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}(/\\S*)?$";
 
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
 
         LocalDateTime start;
         LocalDateTime end;
@@ -115,14 +114,14 @@ public class SituationServiceImpl implements SituationService {
     }
 
     @Override
-    public SituationStatistics getWeekStatistic(Authentication auth, Long driverId)
+    public SituationStatistics getWeekStatistic(String email, Long driverId)
             throws UserException, SituationException {
 
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
+                managerRepository);
 
         var today = LocalDate.now().atTime(0, 0, 0);
-        var startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
+        var startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1L);
 
         List<SituationDTO> situations = situationRepository
                 .findAllByDriverAndStartGreaterThanOrderByStartAsc(driver, startOfWeek)
@@ -136,14 +135,14 @@ public class SituationServiceImpl implements SituationService {
     }
 
     @Override
-    public SituationStatistics getMonthStatistic(Authentication auth, Long driverId)
+    public SituationStatistics getMonthStatistic(String email, Long driverId)
             throws UserException, SituationException {
 
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
+                managerRepository);
 
         var today = LocalDate.now().atTime(0, 0, 0);
-        var startOfMonth = today.minusDays(today.getDayOfMonth() - 1);
+        var startOfMonth = today.minusDays(today.getDayOfMonth() - 1L);
 
         List<SituationDTO> situations = situationRepository
                 .findAllByDriverAndStartGreaterThanOrderByStartAsc(driver, startOfMonth)
@@ -158,13 +157,13 @@ public class SituationServiceImpl implements SituationService {
     }
 
     @Override
-    public SituationStatistics getYearStatistic(Authentication auth, Long driverId) throws UserException, SituationException {
+    public SituationStatistics getYearStatistic(String email, Long driverId) throws UserException, SituationException {
 
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
+                managerRepository);
 
         var today = LocalDate.now().atTime(0, 0, 0);
-        var startOfYear = today.minusMonths(today.getMonthValue() - 1).minusDays(today.getDayOfMonth() - 1);
+        var startOfYear = today.minusMonths(today.getMonthValue() - 1L).minusDays(today.getDayOfMonth() - 1L);
 
         List<SituationDTO> situations = situationRepository
                 .findAllByDriverAndStartGreaterThanOrderByStartAsc(driver, startOfYear)
