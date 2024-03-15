@@ -23,12 +23,12 @@ public class Access {
     @Column(name = "access_id")
     private Long id;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "driver_id")
     private Driver driver;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "manager_id")
     private Manager manager;

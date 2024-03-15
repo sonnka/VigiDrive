@@ -90,12 +90,20 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
+    @Transactional
     public void delete(String email, Long driverId) throws UserException, SecurityException {
         var driver = AuthUtil.findDriverByEmailAndIdAndCheckByAdmin(email, driverId, driverRepository, adminRepository);
 
         if (driver.getAvatar() != null && !driver.getAvatar().isEmpty()) {
-            amazonClient.deleteFileFromS3Bucket(driver.getAvatar());
+            try {
+                amazonClient.deleteFileFromS3Bucket(driver.getAvatar());
+            } catch (Exception exception) {
+                System.err.println(exception);
+            }
         }
+
+        driver.setManager(null);
+        driverRepository.save(driver);
 
         driverRepository.delete(driver);
     }

@@ -27,12 +27,12 @@ public class Message {
     @Column(name = "text")
     private String text;
 
-    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "sender_id")
     private User sender;
 
-    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "receiver_id")
     private User receiver;

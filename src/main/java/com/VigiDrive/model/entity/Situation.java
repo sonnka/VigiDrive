@@ -40,7 +40,7 @@ public class Situation {
     @Column(name = "video")
     private String video;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "driver_id")
     private Driver driver;

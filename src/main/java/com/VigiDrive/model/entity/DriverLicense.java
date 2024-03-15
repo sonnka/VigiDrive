@@ -26,7 +26,7 @@ public class DriverLicense {
     @Column(name = "date_to")
     private LocalDate dateTo;
 
-    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @OneToOne
     @JoinColumn(name = "driver_id", referencedColumnName = "user_id")
     private Driver driver;
 }

@@ -35,25 +35,25 @@ public class Driver extends User {
     @Column(name = "current_location")
     private String currentLocation;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "manager_id")
     private Manager manager;
 
-    @OneToOne(mappedBy = "driver")
+    @OneToOne(cascade = {CascadeType.ALL}, mappedBy = "driver", orphanRemoval = true)
     private DriverLicense license;
 
-    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "driver")
+    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "driver", orphanRemoval = true)
     @JsonIgnore
     @Column(name = "accesses")
     private List<Access> accesses = new ArrayList<>();
 
-    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "driver")
+    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "driver", orphanRemoval = true)
     @JsonIgnore
     @Column(name = "situations")
     private List<Situation> situations = new ArrayList<>();
 
-    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "driver")
+    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "driver", orphanRemoval = true)
     @JsonIgnore
     @Column(name = "health_info")
     private List<HealthInfo> healthInfo = new ArrayList<>();
