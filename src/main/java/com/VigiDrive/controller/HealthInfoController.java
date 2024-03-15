@@ -6,15 +6,10 @@ import com.VigiDrive.model.request.HealthInfoRequest;
 import com.VigiDrive.model.response.HealthInfoDTO;
 import com.VigiDrive.model.response.HealthStatistics;
 import com.VigiDrive.service.HealthInfoService;
-import com.VigiDrive.service.PDFService;
-import com.itextpdf.text.DocumentException;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
 
 @RestController
 @AllArgsConstructor
@@ -22,7 +17,6 @@ import java.io.IOException;
 public class HealthInfoController {
 
     private HealthInfoService healthInfoService;
-    private PDFService pdfService;
 
     @PostMapping("/drivers/{driver-id}/health-info")
     public HealthInfoDTO addHealthInfo(Authentication auth,
@@ -56,14 +50,5 @@ public class HealthInfoController {
                                                     @PathVariable("driver-id") Long driverId)
             throws HealthException, UserException {
         return healthInfoService.getYearHealthStatistics(auth.getName(), driverId);
-    }
-
-    @GetMapping("/managers/{manager-id}/drivers/{driver-id}/health-report")
-    public void exportHealthReport(Authentication auth,
-                                   HttpServletResponse response,
-                                   @PathVariable("manager-id") Long managerId,
-                                   @PathVariable("driver-id") Long driverId)
-            throws DocumentException, IOException, UserException {
-        pdfService.generateHealthReport(auth.getName(), managerId, driverId, response);
     }
 }

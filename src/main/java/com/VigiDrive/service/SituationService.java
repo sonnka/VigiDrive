@@ -2,6 +2,7 @@ package com.VigiDrive.service;
 
 import com.VigiDrive.exceptions.SituationException;
 import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.request.SituationRequest;
 import com.VigiDrive.model.response.SituationDTO;
 import com.VigiDrive.model.response.SituationStatistics;
@@ -13,6 +14,8 @@ public interface SituationService {
     List<SituationDTO> getSituations(String email, Long driverId) throws UserException;
 
     List<SituationDTO> getWeekSituations(String email, Long driverId) throws UserException;
+
+    List<SituationDTO> getMonthSituations(Driver driver);
 
     SituationDTO getSituation(String email, Long driverId, Long situationId)
             throws UserException, SituationException;

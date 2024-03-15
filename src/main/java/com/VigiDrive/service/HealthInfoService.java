@@ -18,6 +18,8 @@ public interface HealthInfoService {
 
     List<HealthInfoDTO> getWeekHealthInfo(Driver driver);
 
+    List<HealthInfoDTO> getMonthHealthInfo(Driver driver);
+
     HealthStatistics getWeekHealthStatistics(String email, Long driverId) throws UserException, HealthException;
 
     HealthStatistics getMonthHealthStatistics(String email, Long driverId) throws UserException, HealthException;

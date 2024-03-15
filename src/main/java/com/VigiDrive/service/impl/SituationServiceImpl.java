@@ -2,6 +2,7 @@ package com.VigiDrive.service.impl;
 
 import com.VigiDrive.exceptions.SituationException;
 import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.entity.Situation;
 import com.VigiDrive.model.enums.SituationType;
 import com.VigiDrive.model.request.SituationRequest;
@@ -50,6 +51,15 @@ public class SituationServiceImpl implements SituationService {
                 .stream()
                 .map(SituationDTO::new)
                 .toList();
+    }
+
+    @Override
+    public List<SituationDTO> getMonthSituations(Driver driver) {
+        var today = LocalDate.now().atTime(0, 0, 0);
+        var startOfMonth = today.minusDays(today.getDayOfMonth() - 1L);
+
+        return situationRepository.findAllByDriverAndStartGreaterThanOrderByStartAsc(driver, startOfMonth)
+                .stream().map(SituationDTO::new).toList();
     }
 
     private LocalDateTime getStartOfCurrentWeek() {

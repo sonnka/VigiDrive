@@ -1,8 +1,10 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.exceptions.SituationException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.entity.Manager;
+import com.VigiDrive.model.response.GeneralReportTemplate;
 import com.VigiDrive.model.response.HealthInfoDTO;
 import com.VigiDrive.model.response.SituationDTO;
 import com.VigiDrive.repository.DriverRepository;
@@ -18,11 +20,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -44,6 +49,25 @@ public class PDFServiceImpl implements PDFService {
         this.situationService = situationService;
         this.driverRepository = driverRepository;
         this.managerRepository = managerRepository;
+    }
+
+    @Override
+    public void generateGeneralReport(String email, Long managerId, Long driverId, HttpServletResponse response)
+            throws IOException, DocumentException, UserException, SituationException {
+        configureResponse(response, "_general_report");
+
+        Document document = new Document(PageSize.A4);
+        PdfWriter.getInstance(document, response.getOutputStream());
+
+        document.open();
+
+        configureDocument(document, email, driverId, managerId, "General report");
+        List<HealthInfoDTO> healthInfo = healthInfoService.getMonthHealthInfo(driver);
+        List<SituationDTO> situations = situationService.getMonthSituations(driver);
+
+        fillGeneralData(document, healthInfo, situations);
+
+        document.close();
     }
 
     @Override
@@ -150,6 +174,51 @@ public class PDFServiceImpl implements PDFService {
         document.add(new Paragraph("\n\n"));
     }
 
+    private void fillGeneralData(Document document, List<HealthInfoDTO> info, List<SituationDTO> situations)
+            throws SituationException, DocumentException {
+
+        var data = getGeneralData(info, situations);
+
+        PdfPTable table = new PdfPTable(4);
+
+        Stream.of("Date", "General health status", "Amount of situations", "Most frequent situation")
+                .forEach(columnTitle -> {
+                    PdfPCell header = new PdfPCell();
+                    header.setBackgroundColor(new BaseColor(153, 192, 192));
+                    header.setBorderWidth(0.5f);
+                    header.setPhrase(new Phrase(columnTitle, font14));
+                    var headerCell = table.addCell(header);
+                    headerCell.setHorizontalAlignment(1);
+                    headerCell.setVerticalAlignment(1);
+                    headerCell.setFixedHeight(40f);
+                });
+
+        for (Map.Entry<LocalDate, GeneralReportTemplate> genInfo : data) {
+            var dateCell = table.addCell(new PdfPCell(new Phrase(genInfo.getKey()
+                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy")), font12)));
+
+            var healthCell = table.addCell(new PdfPCell(new Phrase(
+                    genInfo.getValue().getGeneralHealthStatus(),
+                    font12)));
+
+            var amountCell = table.addCell(new PdfPCell(new Phrase(
+                    genInfo.getValue().getAmountOfSituations(),
+                    font12)));
+
+            var freqCell = table.addCell(new PdfPCell(new Phrase(
+                    genInfo.getValue().getMostFrequentSituation().toLowerCase().replace("_", " "),
+                    font12)));
+
+            for (PdfPCell cell : List.of(dateCell, healthCell, amountCell, freqCell)) {
+                cell.setHorizontalAlignment(1);
+                cell.setVerticalAlignment(1);
+                cell.setMinimumHeight(40f);
+            }
+        }
+        table.setWidthPercentage(100f);
+        document.add(table);
+    }
+
     private void fillHealthData(Document document, List<HealthInfoDTO> info) throws DocumentException {
         PdfPTable table = new PdfPTable(6);
 
@@ -240,4 +309,83 @@ public class PDFServiceImpl implements PDFService {
         document.add(table);
     }
 
+    private List<Map.Entry<LocalDate, GeneralReportTemplate>> getGeneralData(List<HealthInfoDTO> info,
+                                                                             List<SituationDTO> situations)
+            throws SituationException {
+        Map<LocalDate, List<HealthInfoDTO>> resultHealth = info.stream()
+                .collect(Collectors.groupingBy(
+                        o -> o.getTime().toLocalDate())
+                );
+
+        Map<LocalDate, List<SituationDTO>> resultSituations = situations.stream()
+                .collect(Collectors.groupingBy(
+                        o -> o.getStart().toLocalDate())
+                );
+
+        Map<LocalDate, GeneralReportTemplate> result = new HashMap<>();
+
+        for (LocalDate date : resultHealth.keySet()) {
+            var currentInfo = resultHealth.get(date);
+
+            var optionalGeneralHealthStatus = currentInfo.stream()
+                    .mapToDouble(HealthInfoDTO::getGeneralStatus)
+                    .average().orElse(0);
+
+            var generalHealthStatus = BigDecimal.valueOf(optionalGeneralHealthStatus)
+                    .setScale(2, RoundingMode.HALF_UP)
+                    .toString();
+
+            List<SituationDTO> currentSituations = resultSituations.get(date);
+
+            String mostFrequentSituation = "-";
+            String amount = "-";
+
+            if (currentSituations != null) {
+                amount = String.valueOf(currentSituations.size());
+
+                mostFrequentSituation = calculateMostFrequentSituation(currentSituations);
+            }
+
+            result.put(date, GeneralReportTemplate.builder()
+                    .generalHealthStatus(generalHealthStatus)
+                    .amountOfSituations(amount)
+                    .mostFrequentSituation(mostFrequentSituation)
+                    .build()
+            );
+        }
+
+        for (LocalDate date : resultSituations.keySet()) {
+
+            if (!result.containsKey(date)) {
+                List<SituationDTO> currentSituations = resultSituations.get(date);
+
+                String mostFrequentSituation = "-";
+
+                if (!currentSituations.isEmpty()) {
+                    mostFrequentSituation = calculateMostFrequentSituation(currentSituations);
+                }
+
+                result.put(date, GeneralReportTemplate.builder()
+                        .generalHealthStatus("-")
+                        .amountOfSituations(String.valueOf(currentSituations.size()))
+                        .mostFrequentSituation(mostFrequentSituation)
+                        .build()
+                );
+            }
+        }
+
+        return result.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByKey(Comparator.naturalOrder()))
+                .toList();
+    }
+
+
+    private String calculateMostFrequentSituation(List<SituationDTO> situations) throws SituationException {
+        return situations.stream()
+                .max(Comparator.comparing(SituationDTO::getType))
+                .orElseThrow(() ->
+                        new SituationException(SituationException.SituationExceptionProfile.SOMETHING_WRONG))
+                .getType().toString();
+    }
 }

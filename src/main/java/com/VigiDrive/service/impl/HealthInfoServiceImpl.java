@@ -84,6 +84,19 @@ public class HealthInfoServiceImpl implements HealthInfoService {
     }
 
     @Override
+    public List<HealthInfoDTO> getMonthHealthInfo(Driver driver) {
+        var today = LocalDate.now().atTime(0, 0, 0);
+        var startOfMonth = today.minusDays(today.getDayOfMonth() - 1L);
+
+        List<HealthInfo> info = healthInfoRepository.findAllByDriverAndTimeAfter(driver, startOfMonth);
+
+        return info.stream()
+                .map(HealthInfoDTO::new)
+                .sorted(Comparator.comparing(HealthInfoDTO::getTime))
+                .toList();
+    }
+
+    @Override
     public HealthStatistics getWeekHealthStatistics(String email, Long driverId)
             throws UserException, HealthException {
         var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
