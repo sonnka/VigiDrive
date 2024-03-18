@@ -1,10 +1,11 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.exceptions.MailException;
 import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Admin;
 import com.VigiDrive.model.enums.Role;
-import com.VigiDrive.model.request.RegisterRequest;
+import com.VigiDrive.model.request.UpdateAdminRequest;
 import com.VigiDrive.model.response.AdminDTO;
 import com.VigiDrive.model.response.ManagerDTO;
 import com.VigiDrive.model.response.ShortDriverDTO;
@@ -13,11 +14,15 @@ import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.repository.UserRepository;
 import com.VigiDrive.service.AdminService;
+import com.VigiDrive.service.MailService;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -29,26 +34,128 @@ public class AdminServiceImpl implements AdminService {
     private DriverRepository driverRepository;
     private ManagerRepository managerRepository;
     private AmazonClient amazonClient;
+    private MailService mailService;
+
 
     @Override
-    public AdminDTO registerAdmin(RegisterRequest newAdmin) throws SecurityException {
+    public void addAdmin(String email, String newAdminEmail) throws UserException, SecurityException, MailException {
+        adminRepository.findByEmailIgnoreCase(email).orElseThrow(
+                () -> new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED));
 
-        var user = userRepository.findByEmailIgnoreCase(newAdmin.getEmail()).orElse(null);
+        var user = userRepository.findByEmailIgnoreCase(newAdminEmail).orElse(null);
 
         if (user != null) {
             throw new SecurityException(SecurityException.SecurityExceptionProfile.EMAIL_OCCUPIED);
         }
 
-        Admin admin = Admin.builder()
-                .email(newAdmin.getEmail())
-                .firstName(newAdmin.getFirstName())
-                .lastName(newAdmin.getLastName())
-                .password(passwordEncoder.encode(newAdmin.getPassword()))
+        Admin newAdmin = Admin.builder()
+                .email(newAdminEmail)
                 .role(Role.ADMIN)
-                .isApproved(false)
+                .approved(false)
                 .build();
 
-        return new AdminDTO(adminRepository.save(admin));
+        adminRepository.save(newAdmin);
+
+        mailService.sendNewAdminMessage(newAdminEmail);
+    }
+
+    @Override
+    public void approveAdmin(String email, Long adminId) throws UserException, MailException {
+        var admin = adminRepository.findByEmailIgnoreCase(email).orElseThrow(
+                () -> new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED));
+
+        if (!admin.isChiefAdmin()) {
+            throw new UserException(UserException.UserExceptionProfile.NOT_CHIEF_ADMIN);
+        }
+
+        var newAdmin = adminRepository.findById(adminId).orElseThrow(
+                () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
+
+        var password = RandomStringUtils.random(7, true, true);
+
+        newAdmin.setApproved(true);
+        newAdmin.setDateOfApproving(LocalDateTime.now());
+        newAdmin.setPassword(passwordEncoder.encode(password));
+
+        adminRepository.save(newAdmin);
+
+        mailService.sendApprovedAdminMessage(newAdmin.getEmail(), password);
+    }
+
+    @Override
+    public void declineAdmin(String email, Long adminId) throws UserException, MailException {
+        var admin = adminRepository.findByEmailIgnoreCase(email).orElseThrow(
+                () -> new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED));
+
+        if (!admin.isChiefAdmin()) {
+            throw new UserException(UserException.UserExceptionProfile.NOT_CHIEF_ADMIN);
+        }
+
+        var newAdmin = adminRepository.findById(adminId).orElseThrow(
+                () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
+
+        adminRepository.delete(newAdmin);
+
+        mailService.sendNotApprovedAdminMessage(newAdmin.getEmail());
+    }
+
+    @Override
+    public void updateAdmin(String email, Long adminId, UpdateAdminRequest updatedAdmin) throws UserException {
+        var admin = adminRepository.findByEmailIgnoreCase(email).orElseThrow(
+                () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
+
+        if (!Objects.equals(admin.getId(), adminId)) {
+            throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
+        }
+
+        if (!admin.isApproved()) {
+            throw new UserException(UserException.UserExceptionProfile.SOMETHING_WRONG);
+        }
+
+        admin.setAvatar(updatedAdmin.getAvatar());
+        admin.setFirstName(updatedAdmin.getFirstName());
+        admin.setLastName(updatedAdmin.getLastName());
+        admin.setPassword(passwordEncoder.encode(updatedAdmin.getPassword()));
+
+        adminRepository.save(admin);
+    }
+
+    @Override
+    public List<AdminDTO> getApprovedAdmins(String email) throws UserException {
+        var admin = adminRepository.findByEmailIgnoreCase(email).orElseThrow(
+                () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
+
+        if (!admin.isChiefAdmin()) {
+            throw new UserException(UserException.UserExceptionProfile.NOT_CHIEF_ADMIN);
+        }
+
+        return adminRepository.findAllByApproved(true).stream()
+                .map(AdminDTO::new)
+                .toList();
+    }
+
+    @Override
+    public List<AdminDTO> getNotApprovedAdmins(String email) throws UserException {
+        var admin = adminRepository.findByEmailIgnoreCase(email).orElseThrow(
+                () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
+
+        if (!admin.isChiefAdmin()) {
+            throw new UserException(UserException.UserExceptionProfile.NOT_CHIEF_ADMIN);
+        }
+
+        return adminRepository.findAllByApproved(false).stream()
+                .map(AdminDTO::new)
+                .toList();
+    }
+
+    @Override
+    public void exportDatabase(String email) {
+
+    }
+
+    @Override
+    public void importDatabase(String email) {
+
     }
 
     @Override

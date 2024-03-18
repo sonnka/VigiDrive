@@ -1,16 +1,14 @@
 package com.VigiDrive.controller;
 
+import com.VigiDrive.exceptions.MailException;
 import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
-import com.VigiDrive.model.request.RegisterRequest;
+import com.VigiDrive.model.request.UpdateAdminRequest;
 import com.VigiDrive.model.response.AdminDTO;
 import com.VigiDrive.model.response.ManagerDTO;
 import com.VigiDrive.model.response.ShortDriverDTO;
 import com.VigiDrive.service.AdminService;
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,12 +20,6 @@ import java.util.List;
 public class AdminController {
 
     private AdminService adminService;
-
-    @PostMapping("/register/admin")
-    public ResponseEntity<AdminDTO> register(@Valid @RequestBody RegisterRequest newAdmin) throws SecurityException {
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(adminService.registerAdmin(newAdmin));
-    }
 
     @GetMapping("/admins/{admin-id}/drivers")
     public List<ShortDriverDTO> getDrivers(Authentication auth,
@@ -55,4 +47,38 @@ public class AdminController {
         adminService.deleteManager(auth.getName(), adminId, managerId);
     }
 
+    @GetMapping("/admins/approved")
+    public List<AdminDTO> getApprovedAdmins(Authentication auth) throws UserException {
+        return adminService.getApprovedAdmins(auth.getName());
+    }
+
+    @GetMapping("/admins/not-approved")
+    public List<AdminDTO> getNotApprovedAdmins(Authentication auth) throws UserException {
+        return adminService.getNotApprovedAdmins(auth.getName());
+    }
+
+    @PostMapping("/admins/{email}")
+    public void addAdmin(Authentication auth,
+                         @PathVariable("email") String email) throws UserException, SecurityException, MailException {
+        adminService.addAdmin(auth.getName(), email);
+    }
+
+    @PostMapping("/admins/{admin-id}/approve")
+    public void approveAdmin(Authentication auth,
+                             @PathVariable("admin-id") Long adminId) throws UserException, MailException {
+        adminService.approveAdmin(auth.getName(), adminId);
+    }
+
+    @PostMapping("/admins/{admin-id}/decline")
+    public void declineAdmin(Authentication auth,
+                             @PathVariable("admin-id") Long adminId) throws UserException, MailException {
+        adminService.declineAdmin(auth.getName(), adminId);
+    }
+
+    @PatchMapping("/admins/{admin-id}")
+    public void updateAdmin(Authentication auth,
+                            @PathVariable("admin-id") Long adminId,
+                            @RequestBody UpdateAdminRequest updatedAdmin) throws UserException, MailException {
+        adminService.updateAdmin(auth.getName(), adminId, updatedAdmin);
+    }
 }

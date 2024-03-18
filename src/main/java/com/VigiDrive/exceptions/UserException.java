@@ -41,6 +41,9 @@ public class UserException extends Exception {
         NOT_ADMIN("not_admin",
                 "You are not admin.", HttpStatus.FORBIDDEN),
 
+        NOT_CHIEF_ADMIN("not_chief_admin",
+                "You are not chief admin.", HttpStatus.FORBIDDEN),
+
         NOT_MANAGER("not_manager",
                 "You are not manager.", HttpStatus.FORBIDDEN),
 
