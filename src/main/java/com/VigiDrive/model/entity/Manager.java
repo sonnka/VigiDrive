@@ -24,7 +24,7 @@ public class Manager extends User {
     @Column(name = "accesses")
     private List<Access> accesses = new ArrayList<>();
 
-    @OneToMany(cascade = {CascadeType.PERSIST},
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH},
             mappedBy = "manager")
     @JsonIgnore
     @Column(name = "drivers")

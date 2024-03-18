@@ -3,6 +3,7 @@ package com.VigiDrive.service.impl;
 import com.VigiDrive.exceptions.AmazonException;
 import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.entity.Manager;
 import com.VigiDrive.model.enums.Role;
 import com.VigiDrive.model.request.RegisterRequest;
@@ -150,8 +151,11 @@ public class ManagerServiceImpl implements ManagerService {
             }
         }
 
-        manager.getDrivers().clear();
-        managerRepository.save(manager);
+        for (Driver driver : manager.getDrivers()) {
+            driver.setManager(null);
+        }
+
+        driverRepository.saveAll(manager.getDrivers());
 
         managerRepository.delete(manager);
     }
