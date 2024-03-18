@@ -4,8 +4,6 @@ import com.VigiDrive.exceptions.AccessException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Access;
 import com.VigiDrive.model.entity.Driver;
-import com.VigiDrive.model.entity.Manager;
-import com.VigiDrive.model.enums.Role;
 import com.VigiDrive.model.enums.TimeDuration;
 import com.VigiDrive.model.request.AccessRequest;
 import com.VigiDrive.model.request.ExtendAccessRequest;
@@ -15,6 +13,7 @@ import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.service.AccessService;
 import com.VigiDrive.service.MessageService;
+import com.VigiDrive.util.AuthUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +34,7 @@ public class AccessServiceImpl implements AccessService {
 
     @Override
     public AccessDTO getAccessInfo(String email, Long driverId, Long accessId) throws UserException, AccessException {
-        findDriverByEmailAndId(email, driverId);
+        AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
         var access = accessRepository.findById(accessId).orElseThrow(
                 () -> new AccessException(AccessException.AccessExceptionProfile.INVALID_ACCESS));
 
@@ -44,7 +43,7 @@ public class AccessServiceImpl implements AccessService {
 
     @Override
     public AccessDTO requestAccess(String email, Long managerId, AccessRequest access) throws UserException {
-        var manager = findManagerByEmailAndId(email, managerId);
+        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
 
         var driver = driverRepository.findByEmailIgnoreCase(access.getDriverEmail().trim())
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
@@ -67,7 +66,7 @@ public class AccessServiceImpl implements AccessService {
 
     @Override
     public AccessDTO giveAccess(String email, Long driverId, Long accessId) throws UserException {
-        var driver = findDriverByEmailAndId(email, driverId);
+        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
 
         var access = accessRepository.findById(accessId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ACCESS_NOT_FOUND));
@@ -84,9 +83,9 @@ public class AccessServiceImpl implements AccessService {
 
         access.setStartDateOfAccess(startDate);
         access.setEndDateOfAccess(endDate);
-        access.setIsNew(false);
-        access.setIsActive(true);
-        access.setIsExpiring(checkExpiring(endDate));
+        access.setNew(false);
+        access.setActive(true);
+        access.setExpiring(checkExpiring(endDate));
 
         var createdAccess = accessRepository.save(access);
 
@@ -101,8 +100,11 @@ public class AccessServiceImpl implements AccessService {
 
     @Override
     public AccessDTO stopAccess(String email, Long driverId, Long accessId) throws UserException {
-        var driver = findDriverByEmailAndId(email, driverId);
+        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        return toAccessDTO(deactivateAccess(driver, accessId));
+    }
 
+    private Access deactivateAccess(Driver driver, Long accessId) throws UserException {
         var access = accessRepository.findById(accessId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ACCESS_NOT_FOUND));
 
@@ -112,9 +114,9 @@ public class AccessServiceImpl implements AccessService {
 
         access.setStartDateOfAccess(null);
         access.setEndDateOfAccess(null);
-        access.setIsNew(false);
-        access.setIsActive(false);
-        access.setIsExpiring(false);
+        access.setNew(false);
+        access.setActive(false);
+        access.setExpiring(false);
 
         var updatedAccess = accessRepository.save(access);
 
@@ -122,13 +124,13 @@ public class AccessServiceImpl implements AccessService {
 
         driverRepository.save(driver);
 
-        return toAccessDTO(updatedAccess);
+        return updatedAccess;
     }
 
     @Override
     public AccessDTO extendAccess(String email, Long managerId, Long accessId, ExtendAccessRequest timeDuration)
             throws UserException {
-        var manager = findManagerByEmailAndId(email, managerId);
+        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
 
         var access = accessRepository.findById(accessId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ACCESS_NOT_FOUND));
@@ -137,7 +139,7 @@ public class AccessServiceImpl implements AccessService {
             throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
         }
 
-        if (!access.getIsExpiring()) {
+        if (!access.isExpiring()) {
             throw new UserException(UserException.UserExceptionProfile.ACCESS_NOT_EXPIRING);
         }
 
@@ -149,79 +151,80 @@ public class AccessServiceImpl implements AccessService {
 
         access.setStartDateOfAccess(startDate);
         access.setEndDateOfAccess(endDate);
-        access.setIsNew(false);
-        access.setIsActive(true);
-        access.setIsExpiring(checkExpiring(endDate));
+        access.setNew(false);
+        access.setActive(true);
+        access.setExpiring(checkExpiring(endDate));
+        access.setAccessDuration(duration);
 
         return toAccessDTO(accessRepository.save(access));
     }
 
     @Override
     public List<AccessDTO> getAllAccessRequestsByDriver(String email, Long driverId) throws UserException {
-        var driver = findDriverByEmailAndId(email, driverId);
+        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
 
-        return driver.getAccesses().stream()
-                .filter(Access::getIsNew)
+        return driver.getAccesses().stream().map(this::checkActive)
+                .filter(Access::isNew)
                 .map(this::toAccessDTO)
                 .toList();
     }
 
     @Override
     public List<AccessDTO> getAllInactiveAccessesByDriver(String email, Long driverId) throws UserException {
-        var driver = findDriverByEmailAndId(email, driverId);
+        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
 
-        return driver.getAccesses().stream()
-                .filter(access -> !access.getIsActive() && !access.getIsNew())
+        return driver.getAccesses().stream().map(this::checkActive)
+                .filter(access -> !access.isActive() && !access.isNew())
                 .map(this::toAccessDTO)
                 .toList();
     }
 
     @Override
     public List<AccessDTO> getAllActiveAccessesByDriver(String email, Long driverId) throws UserException {
-        var driver = findDriverByEmailAndId(email, driverId);
+        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
 
-        return driver.getAccesses().stream()
-                .filter(Access::getIsActive)
+        return driver.getAccesses().stream().map(this::checkActive)
+                .filter(Access::isActive)
                 .map(this::toAccessDTO)
                 .toList();
     }
 
     @Override
     public List<AccessDTO> getAllSentAccessesByManager(String email, Long managerId) throws UserException {
-        var manager = findManagerByEmailAndId(email, managerId);
+        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
 
-        return manager.getAccesses().stream()
-                .filter(Access::getIsNew)
+        return manager.getAccesses().stream().map(this::checkActive)
+                .filter(Access::isNew)
                 .map(this::toAccessDTO)
                 .toList();
     }
 
     @Override
     public List<AccessDTO> getAllInactiveAccessesByManager(String email, Long managerId) throws UserException {
-        var manager = findManagerByEmailAndId(email, managerId);
+        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
 
-        return manager.getAccesses().stream()
-                .filter(access -> !access.getIsActive())
+        return manager.getAccesses().stream().map(this::checkActive)
+                .filter(access -> !access.isActive())
                 .map(this::toAccessDTO)
                 .toList();
     }
 
     @Override
     public List<AccessDTO> getAllActiveAccessesByManager(String email, Long managerId) throws UserException {
-        var manager = findManagerByEmailAndId(email, managerId);
+        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
 
-        return manager.getAccesses().stream()
-                .filter(Access::getIsActive)
+        return manager.getAccesses().stream().map(this::checkActive)
+                .filter(Access::isActive)
                 .map(this::toAccessDTO)
                 .toList();
     }
 
     @Override
     public List<AccessDTO> getAllExpiringAccessesByManager(String email, Long managerId) throws UserException {
-        var manager = findManagerByEmailAndId(email, managerId);
+        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
 
-        return manager.getAccesses().stream()
-                .filter(Access::getIsExpiring)
+        return manager.getAccesses().stream().map(this::checkActive)
+                .filter(Access::isExpiring)
                 .map(this::toAccessDTO)
                 .toList();
     }
@@ -229,6 +232,22 @@ public class AccessServiceImpl implements AccessService {
 
     private Boolean checkExpiring(LocalDateTime endAccess) {
         return endAccess.minusDays(3).isBefore(LocalDateTime.now(Clock.systemUTC()));
+    }
+
+    private Access checkActive(Access access) {
+        if (access.isActive()) {
+            if (access.getEndDateOfAccess().isAfter(LocalDateTime.now(Clock.systemUTC()))) {
+                access.setActive(true);
+                access.setExpiring(checkExpiring(access.getEndDateOfAccess()));
+            } else {
+                try {
+                    access = deactivateAccess(access.getDriver(), access.getId());
+                } catch (Exception e) {
+                    System.err.println("Something was wrong with access with id = " + access.getId());
+                }
+            }
+        }
+        return access;
     }
 
     private LocalDateTime calculateEndDateOfAccess(LocalDateTime startAccess, TimeDuration duration) {
@@ -253,36 +272,8 @@ public class AccessServiceImpl implements AccessService {
                 .startDateOfAccess(access.getStartDateOfAccess())
                 .endDateOfAccess(access.getEndDateOfAccess())
                 .accessDuration(access.getAccessDuration())
-                .isActive(access.getIsActive())
-                .isExpiring(access.getIsExpiring())
+                .isActive(access.isActive())
+                .isExpiring(access.isExpiring())
                 .build();
-    }
-
-    private Driver findDriverByEmailAndId(String email, Long driverId) throws UserException {
-        var driver = driverRepository.findById(driverId).orElseThrow(
-                () -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
-
-        if (!driver.getEmail().equals(email)) {
-            throw new UserException(UserException.UserExceptionProfile.EMAIL_MISMATCH);
-        }
-
-        if (!Role.DRIVER.equals(driver.getRole())) {
-            throw new UserException(UserException.UserExceptionProfile.NOT_DRIVER);
-        }
-        return driver;
-    }
-
-    private Manager findManagerByEmailAndId(String email, Long managerId) throws UserException {
-        var manager = managerRepository.findById(managerId).orElseThrow(
-                () -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
-
-        if (!manager.getEmail().equals(email)) {
-            throw new UserException(UserException.UserExceptionProfile.EMAIL_MISMATCH);
-        }
-
-        if (!Role.MANAGER.equals(manager.getRole())) {
-            throw new UserException(UserException.UserExceptionProfile.NOT_MANAGER);
-        }
-        return manager;
     }
 }

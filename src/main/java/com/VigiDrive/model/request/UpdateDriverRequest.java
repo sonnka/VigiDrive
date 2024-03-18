@@ -12,6 +12,8 @@ import lombok.Setter;
 @Builder
 public class UpdateDriverRequest {
 
+    private String avatar;
+
     @Size(min = 2, max = 24)
     @NotEmpty
     @NotNull

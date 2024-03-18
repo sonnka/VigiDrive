@@ -21,7 +21,7 @@ public class DriverLicenseController {
     public DriverLicenseDTO getDriverLicense(Authentication auth,
                                              @PathVariable("driver-id") Long driverId)
             throws DriverLicenseException, UserException {
-        return driverLicenseService.getDriverLicense(auth, driverId);
+        return driverLicenseService.getDriverLicense(auth.getName(), driverId);
     }
 
     @PostMapping("/drivers/{driver-id}/driver-license")
@@ -29,6 +29,6 @@ public class DriverLicenseController {
                                              @PathVariable("driver-id") Long driverId,
                                              @RequestBody @Valid DriverLicenseRequest driverLicense)
             throws DriverLicenseException, UserException {
-        return driverLicenseService.addDriverLicense(auth, driverId, driverLicense);
+        return driverLicenseService.addDriverLicense(auth.getName(), driverId, driverLicense);
     }
 }

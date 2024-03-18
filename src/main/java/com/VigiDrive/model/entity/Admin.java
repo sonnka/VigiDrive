@@ -19,10 +19,10 @@ public class Admin extends User {
 
 
     @Column(name = "is_approved")
-    private Boolean isApproved;
+    private boolean isApproved;
 
     public Admin() {
         this.setRole(Role.ADMIN);
-        this.setIsApproved(false);
+        this.setApproved(false);
     }
 }

@@ -19,12 +19,12 @@ import java.util.List;
 @Table(name = "managers")
 public class Manager extends User {
 
-    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "manager")
+    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "manager", orphanRemoval = true)
     @JsonIgnore
     @Column(name = "accesses")
     private List<Access> accesses = new ArrayList<>();
 
-    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH},
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH},
             mappedBy = "manager")
     @JsonIgnore
     @Column(name = "drivers")

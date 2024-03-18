@@ -22,33 +22,33 @@ public class HealthInfoController {
     public HealthInfoDTO addHealthInfo(Authentication auth,
                                        @PathVariable("driver-id") Long driverId,
                                        @RequestBody @Valid HealthInfoRequest healthInfoRequest) throws UserException {
-        return healthInfoService.addHealthInfo(auth, driverId, healthInfoRequest);
+        return healthInfoService.addHealthInfo(auth.getName(), driverId, healthInfoRequest);
     }
 
     @GetMapping("/drivers/{driver-id}/health-info")
     public HealthInfoDTO getCurrentHealthInfo(Authentication auth,
                                               @PathVariable("driver-id") Long driverId) throws UserException {
-        return healthInfoService.getCurrentHealthInfo(auth, driverId);
+        return healthInfoService.getCurrentHealthInfo(auth.getName(), driverId);
     }
 
     @GetMapping("/drivers/{driver-id}/health-info/statistics/week")
     public HealthStatistics getWeekHealthStatistics(Authentication auth,
                                                     @PathVariable("driver-id") Long driverId)
             throws HealthException, UserException {
-        return healthInfoService.getWeekHealthStatistics(auth, driverId);
+        return healthInfoService.getWeekHealthStatistics(auth.getName(), driverId);
     }
 
     @GetMapping("/drivers/{driver-id}/health-info/statistics/month")
     public HealthStatistics getMonthHealthStatistics(Authentication auth,
                                                      @PathVariable("driver-id") Long driverId)
             throws HealthException, UserException {
-        return healthInfoService.getMonthHealthStatistics(auth, driverId);
+        return healthInfoService.getMonthHealthStatistics(auth.getName(), driverId);
     }
 
     @GetMapping("/drivers/{driver-id}/health-info/statistics/year")
     public HealthStatistics getYearHealthStatistics(Authentication auth,
                                                     @PathVariable("driver-id") Long driverId)
             throws HealthException, UserException {
-        return healthInfoService.getYearHealthStatistics(auth, driverId);
+        return healthInfoService.getYearHealthStatistics(auth.getName(), driverId);
     }
 }

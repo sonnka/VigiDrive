@@ -18,5 +18,4 @@ public class DriverLicenseRequest {
     @NotEmpty
     @Date
     private String dateTo;
-
 }

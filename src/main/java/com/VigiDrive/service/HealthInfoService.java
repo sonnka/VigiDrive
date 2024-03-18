@@ -2,20 +2,27 @@ package com.VigiDrive.service;
 
 import com.VigiDrive.exceptions.HealthException;
 import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.request.HealthInfoRequest;
 import com.VigiDrive.model.response.HealthInfoDTO;
 import com.VigiDrive.model.response.HealthStatistics;
-import org.springframework.security.core.Authentication;
+
+import java.util.List;
 
 public interface HealthInfoService {
-    HealthInfoDTO addHealthInfo(Authentication auth, Long driverId, HealthInfoRequest healthInfoRequest)
+
+    HealthInfoDTO addHealthInfo(String email, Long driverId, HealthInfoRequest healthInfoRequest)
             throws UserException;
 
-    HealthInfoDTO getCurrentHealthInfo(Authentication auth, Long driverId) throws UserException;
+    HealthInfoDTO getCurrentHealthInfo(String email, Long driverId) throws UserException;
 
-    HealthStatistics getWeekHealthStatistics(Authentication auth, Long driverId) throws UserException, HealthException;
+    List<HealthInfoDTO> getWeekHealthInfo(Driver driver);
 
-    HealthStatistics getMonthHealthStatistics(Authentication auth, Long driverId) throws UserException, HealthException;
+    List<HealthInfoDTO> getMonthHealthInfo(Driver driver);
 
-    HealthStatistics getYearHealthStatistics(Authentication auth, Long driverId) throws UserException, HealthException;
+    HealthStatistics getWeekHealthStatistics(String email, Long driverId) throws UserException, HealthException;
+
+    HealthStatistics getMonthHealthStatistics(String email, Long driverId) throws UserException, HealthException;
+
+    HealthStatistics getYearHealthStatistics(String email, Long driverId) throws UserException, HealthException;
 }

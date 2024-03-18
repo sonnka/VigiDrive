@@ -13,6 +13,7 @@ import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.repository.UserRepository;
 import com.VigiDrive.service.DriverService;
+import com.VigiDrive.util.AuthUtil;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,8 +29,8 @@ public class DriverServiceImpl implements DriverService {
 
     private final UserRepository userRepository;
     private DriverRepository driverRepository;
-    private AdminRepository adminRepository;
     private ManagerRepository managerRepository;
+    private AdminRepository adminRepository;
     private PasswordEncoder passwordEncoder;
     private AmazonClient amazonClient;
 
@@ -57,7 +58,11 @@ public class DriverServiceImpl implements DriverService {
     @Transactional
     public DriverDTO updateDriver(String email, Long driverId, UpdateDriverRequest newDriver)
             throws UserException {
-        var driver = findDriverByEmailAndId(email, driverId);
+        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+
+        if (newDriver.getAvatar() != null && !newDriver.getAvatar().isEmpty()) {
+            driver.setAvatar(newDriver.getAvatar());
+        }
 
         driver.setFirstName(newDriver.getFirstName());
         driver.setLastName(newDriver.getLastName());
@@ -71,7 +76,7 @@ public class DriverServiceImpl implements DriverService {
     @Transactional
     public DriverDTO uploadAvatar(String email, Long driverId, MultipartFile avatar)
             throws UserException, AmazonException {
-        var driver = findDriverByEmailAndId(email, driverId);
+        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
 
         if (driver.getAvatar() != null && !driver.getAvatar().isEmpty()) {
             amazonClient.deleteFileFromS3Bucket(driver.getAvatar());
@@ -85,26 +90,35 @@ public class DriverServiceImpl implements DriverService {
     }
 
     @Override
+    @Transactional
     public void delete(String email, Long driverId) throws UserException, SecurityException {
-        var driver = findDriverByEmailAndIdAndCheckByAdmin(email, driverId);
+        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByAdmin(email, driverId, driverRepository, adminRepository);
 
         if (driver.getAvatar() != null && !driver.getAvatar().isEmpty()) {
-            amazonClient.deleteFileFromS3Bucket(driver.getAvatar());
+            try {
+                amazonClient.deleteFileFromS3Bucket(driver.getAvatar());
+            } catch (Exception exception) {
+                System.err.println(exception);
+            }
         }
+
+        driver.setManager(null);
+        driverRepository.save(driver);
 
         driverRepository.delete(driver);
     }
 
     @Override
     public FullDriverDTO getFullDriver(String email, Long driverId) throws UserException {
-        var driver = findDriverByEmailAndIdAndCheckByManager(email, driverId);
+        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
+                managerRepository);
 
         return toFullDriverDTO(driver);
     }
 
     @Override
     public ManagerDTO getDriverManager(String email, Long driverId) throws UserException {
-        var driver = findDriverByEmailAndId(email, driverId);
+        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
 
         if (driver.getManager() == null) {
             return null;
@@ -115,7 +129,7 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     public void updateCurrentLocation(String email, Long driverId, String currentLocation) throws UserException {
-        var driver = findDriverByEmailAndId(email, driverId);
+        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
 
         driver.setCurrentLocation(currentLocation);
 
@@ -124,7 +138,7 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     public void addEmergencyNumber(String email, Long driverId, String emergencyNumber) throws UserException {
-        var driver = findDriverByEmailAndId(email, driverId);
+        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
 
         driver.setEmergencyContact(emergencyNumber);
 
@@ -133,7 +147,7 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     public List<ShortDriverDTO> getAllDriversByManager(String email, Long managerId) throws UserException {
-        findDriverByEmailAndIdAndCheckByManager(email, managerId);
+        AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, managerId, driverRepository, managerRepository);
 
         return driverRepository.findAllByManagerId(managerId).stream().map(ShortDriverDTO::new).toList();
     }
@@ -161,54 +175,5 @@ public class DriverServiceImpl implements DriverService {
                 driver.getEmergencyContact(),
                 manager,
                 driverLicense);
-    }
-
-    private Driver findDriverByEmailAndId(String email, Long driverId) throws UserException {
-        var driver = driverRepository.findById(driverId).orElseThrow(
-                () -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
-
-        if (!driver.getEmail().equals(email)) {
-            throw new UserException(UserException.UserExceptionProfile.EMAIL_MISMATCH);
-        }
-
-        if (!Role.DRIVER.equals(driver.getRole())) {
-            throw new UserException(UserException.UserExceptionProfile.NOT_DRIVER);
-        }
-        return driver;
-    }
-
-    private Driver findDriverByEmailAndIdAndCheckByAdmin(String email, Long driverId) throws UserException {
-        var driver = driverRepository.findById(driverId).orElseThrow(
-                () -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
-
-        if (!driver.getEmail().equals(email)) {
-            var admin = adminRepository.findByEmailIgnoreCase(email).orElseThrow(
-                    () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
-
-            if (!Role.ADMIN.equals(admin.getRole())) {
-                throw new UserException(UserException.UserExceptionProfile.NOT_ADMIN);
-            }
-        }
-
-        return driver;
-    }
-
-    private Driver findDriverByEmailAndIdAndCheckByManager(String email, Long driverId) throws UserException {
-        var driver = driverRepository.findById(driverId).orElseThrow(
-                () -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
-
-        if (!driver.getEmail().equals(email)) {
-            var manager = managerRepository.findByEmailIgnoreCase(email).orElseThrow(
-                    () -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
-
-            if (!Role.MANAGER.equals(manager.getRole())) {
-                throw new UserException(UserException.UserExceptionProfile.NOT_MANAGER);
-            }
-
-            if (!manager.getDrivers().contains(driver)) {
-                throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
-            }
-        }
-        return driver;
     }
 }

@@ -2,6 +2,7 @@ package com.VigiDrive.service.impl;
 
 import com.VigiDrive.exceptions.HealthException;
 import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.entity.HealthInfo;
 import com.VigiDrive.model.request.HealthInfoRequest;
 import com.VigiDrive.model.response.HealthInfoDTO;
@@ -9,10 +10,11 @@ import com.VigiDrive.model.response.HealthStatistics;
 import com.VigiDrive.model.response.StatisticElement;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.HealthInfoRepository;
+import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.service.HealthInfoService;
+import com.VigiDrive.util.AuthUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -30,13 +32,14 @@ public class HealthInfoServiceImpl implements HealthInfoService {
 
     private HealthInfoRepository healthInfoRepository;
     private DriverRepository driverRepository;
+    private ManagerRepository managerRepository;
 
     @Override
-    public HealthInfoDTO addHealthInfo(Authentication auth, Long driverId, HealthInfoRequest healthInfoRequest)
+    public HealthInfoDTO addHealthInfo(String email, Long driverId, HealthInfoRequest healthInfoRequest)
             throws UserException {
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
-        log.error(healthInfoRequest.toString());
+        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
+                managerRepository);
+
         if (healthInfoRequest.getSleepinessLevel() < 0 && healthInfoRequest.getConcentrationLevel() < 0
                 && healthInfoRequest.getStressLevel() < 0) {
             throw new UserException(UserException.UserExceptionProfile.INVALID_HEALTH_DATA);
@@ -54,9 +57,9 @@ public class HealthInfoServiceImpl implements HealthInfoService {
     }
 
     @Override
-    public HealthInfoDTO getCurrentHealthInfo(Authentication auth, Long driverId) throws UserException {
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+    public HealthInfoDTO getCurrentHealthInfo(String email, Long driverId) throws UserException {
+        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
+                managerRepository);
 
         var healthInfo = healthInfoRepository.findFirstByDriverOrderByTimeDesc(driver).orElse(null);
 
@@ -65,17 +68,42 @@ public class HealthInfoServiceImpl implements HealthInfoService {
         }
 
         return new HealthInfoDTO(healthInfo);
-
     }
 
     @Override
-    public HealthStatistics getWeekHealthStatistics(Authentication auth, Long driverId)
+    public List<HealthInfoDTO> getWeekHealthInfo(Driver driver) {
+        var today = LocalDate.now().atTime(0, 0, 0);
+        var startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1L);
+
+        List<HealthInfo> info = healthInfoRepository.findAllByDriverAndTimeAfter(driver, startOfWeek);
+
+        return info.stream()
+                .map(HealthInfoDTO::new)
+                .sorted(Comparator.comparing(HealthInfoDTO::getTime))
+                .toList();
+    }
+
+    @Override
+    public List<HealthInfoDTO> getMonthHealthInfo(Driver driver) {
+        var today = LocalDate.now().atTime(0, 0, 0);
+        var startOfMonth = today.minusDays(today.getDayOfMonth() - 1L);
+
+        List<HealthInfo> info = healthInfoRepository.findAllByDriverAndTimeAfter(driver, startOfMonth);
+
+        return info.stream()
+                .map(HealthInfoDTO::new)
+                .sorted(Comparator.comparing(HealthInfoDTO::getTime))
+                .toList();
+    }
+
+    @Override
+    public HealthStatistics getWeekHealthStatistics(String email, Long driverId)
             throws UserException, HealthException {
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
+                managerRepository);
 
         var today = LocalDate.now().atTime(0, 0, 0);
-        var startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1);
+        var startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1L);
 
         List<HealthInfoDTO> healthInfo = healthInfoRepository.findAllByDriverAndTimeAfter(driver, startOfWeek)
                 .stream()
@@ -91,13 +119,13 @@ public class HealthInfoServiceImpl implements HealthInfoService {
     }
 
     @Override
-    public HealthStatistics getMonthHealthStatistics(Authentication auth, Long driverId)
+    public HealthStatistics getMonthHealthStatistics(String email, Long driverId)
             throws UserException, HealthException {
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
+                managerRepository);
 
         var today = LocalDate.now().atTime(0, 0, 0);
-        var startOfMonth = today.minusDays(today.getDayOfMonth() - 1);
+        var startOfMonth = today.minusDays(today.getDayOfMonth() - 1L);
 
         List<HealthInfoDTO> healthInfo = healthInfoRepository.findAllByDriverAndTimeAfter(driver, startOfMonth)
                 .stream()
@@ -114,13 +142,13 @@ public class HealthInfoServiceImpl implements HealthInfoService {
 
 
     @Override
-    public HealthStatistics getYearHealthStatistics(Authentication auth, Long driverId)
+    public HealthStatistics getYearHealthStatistics(String email, Long driverId)
             throws UserException, HealthException {
-        var driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
+        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
+                managerRepository);
 
         var today = LocalDate.now().atTime(0, 0, 0);
-        var startOfYear = today.minusMonths(today.getMonthValue() - 1).minusDays(today.getDayOfMonth() - 1);
+        var startOfYear = today.minusMonths(today.getMonthValue() - 1L).minusDays(today.getDayOfMonth() - 1L);
 
         List<HealthInfoDTO> healthInfo = healthInfoRepository.findAllByDriverAndTimeAfter(driver, startOfYear)
                 .stream()

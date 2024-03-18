@@ -33,7 +33,7 @@ public class HealthInfo {
     @Column(name = "sleepiness_level")
     private Double sleepinessLevel;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "driver_id")
     private Driver driver;

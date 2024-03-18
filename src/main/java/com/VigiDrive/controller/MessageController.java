@@ -1,10 +1,14 @@
 package com.VigiDrive.controller;
 
 import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.request.MessageRequest;
 import com.VigiDrive.model.response.MessagesResponse;
 import com.VigiDrive.model.response.UserResponse;
 import com.VigiDrive.service.MessageService;
 import lombok.AllArgsConstructor;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,5 +35,14 @@ public class MessageController {
     public List<UserResponse> getChats(Authentication auth,
                                        @PathVariable("user-id") Long userId) throws UserException {
         return messageService.getChats(auth.getName(), userId);
+    }
+
+    @MessageMapping("/users/{user-id}/chats/{receiver-id}/message")
+    @SendTo("/broker")
+    public MessagesResponse sendMessage(MessageRequest message,
+                                        @DestinationVariable("user-id") Long userId,
+                                        @DestinationVariable("receiver-id") Long receiverId)
+            throws UserException {
+        return messageService.sendMessage(userId, receiverId, message);
     }
 }

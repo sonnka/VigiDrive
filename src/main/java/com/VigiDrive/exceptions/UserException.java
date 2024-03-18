@@ -60,7 +60,11 @@ public class UserException extends Exception {
                 "Access is not expiring, so you can not extend it.", HttpStatus.BAD_REQUEST),
 
         INVALID_HEALTH_DATA("invalid_health_data",
-                "Health data is invalid.", HttpStatus.BAD_REQUEST);
+                "Health data is invalid.", HttpStatus.BAD_REQUEST),
+
+        SOMETHING_WRONG("something_wrong",
+                "Something went wrong.", HttpStatus.BAD_REQUEST),
+        ;
 
         private final String exceptionName;
         private final String exceptionMessage;

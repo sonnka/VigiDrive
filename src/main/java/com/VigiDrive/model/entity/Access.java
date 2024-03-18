@@ -23,12 +23,12 @@ public class Access {
     @Column(name = "access_id")
     private Long id;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "driver_id")
     private Driver driver;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "manager_id")
     private Manager manager;
@@ -44,13 +44,13 @@ public class Access {
     private TimeDuration accessDuration;
 
     @Column(name = "is_new")
-    private Boolean isNew;
+    private boolean isNew;
 
     @Column(name = "is_active")
-    private Boolean isActive;
+    private boolean isActive;
 
     @Column(name = "is_expiring")
-    private Boolean isExpiring;
+    private boolean isExpiring;
 
     public Access() {
         this.isActive = false;
