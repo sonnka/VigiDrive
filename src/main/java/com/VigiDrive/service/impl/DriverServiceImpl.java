@@ -8,9 +8,7 @@ import com.VigiDrive.model.enums.Role;
 import com.VigiDrive.model.request.RegisterRequest;
 import com.VigiDrive.model.request.UpdateDriverRequest;
 import com.VigiDrive.model.response.*;
-import com.VigiDrive.repository.AdminRepository;
 import com.VigiDrive.repository.DriverRepository;
-import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.repository.UserRepository;
 import com.VigiDrive.service.DriverService;
 import com.VigiDrive.util.AuthUtil;
@@ -29,10 +27,9 @@ public class DriverServiceImpl implements DriverService {
 
     private final UserRepository userRepository;
     private DriverRepository driverRepository;
-    private ManagerRepository managerRepository;
-    private AdminRepository adminRepository;
     private PasswordEncoder passwordEncoder;
     private AmazonClient amazonClient;
+    private AuthUtil authUtil;
 
     @Override
     public DriverDTO registerDriver(RegisterRequest newDriver) throws SecurityException {
@@ -58,7 +55,7 @@ public class DriverServiceImpl implements DriverService {
     @Transactional
     public DriverDTO updateDriver(String email, Long driverId, UpdateDriverRequest newDriver)
             throws UserException {
-        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        var driver = authUtil.findDriverByEmailAndId(email, driverId);
 
         if (newDriver.getAvatar() != null && !newDriver.getAvatar().isEmpty()) {
             driver.setAvatar(newDriver.getAvatar());
@@ -76,7 +73,7 @@ public class DriverServiceImpl implements DriverService {
     @Transactional
     public DriverDTO uploadAvatar(String email, Long driverId, MultipartFile avatar)
             throws UserException, AmazonException {
-        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        var driver = authUtil.findDriverByEmailAndId(email, driverId);
 
         if (driver.getAvatar() != null && !driver.getAvatar().isEmpty()) {
             amazonClient.deleteFileFromS3Bucket(driver.getAvatar());
@@ -92,7 +89,7 @@ public class DriverServiceImpl implements DriverService {
     @Override
     @Transactional
     public void delete(String email, Long driverId) throws UserException, SecurityException {
-        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByAdmin(email, driverId, driverRepository, adminRepository);
+        var driver = authUtil.findDriverByEmailAndIdAndCheckByAdmin(email, driverId);
 
         if (driver.getAvatar() != null && !driver.getAvatar().isEmpty()) {
             try {
@@ -110,15 +107,14 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     public FullDriverDTO getFullDriver(String email, Long driverId) throws UserException {
-        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
-                managerRepository);
+        var driver = authUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId);
 
         return toFullDriverDTO(driver);
     }
 
     @Override
     public ManagerDTO getDriverManager(String email, Long driverId) throws UserException {
-        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        var driver = authUtil.findDriverByEmailAndId(email, driverId);
 
         if (driver.getManager() == null) {
             return null;
@@ -129,7 +125,7 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     public void updateCurrentLocation(String email, Long driverId, String currentLocation) throws UserException {
-        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        var driver = authUtil.findDriverByEmailAndId(email, driverId);
 
         driver.setCurrentLocation(currentLocation);
 
@@ -138,7 +134,7 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     public void addEmergencyNumber(String email, Long driverId, String emergencyNumber) throws UserException {
-        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        var driver = authUtil.findDriverByEmailAndId(email, driverId);
 
         driver.setEmergencyContact(emergencyNumber);
 
@@ -147,7 +143,7 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     public List<ShortDriverDTO> getAllDriversByManager(String email, Long managerId) throws UserException {
-        AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, managerId, driverRepository, managerRepository);
+        authUtil.findDriverByEmailAndIdAndCheckByManager(email, managerId);
 
         return driverRepository.findAllByManagerId(managerId).stream().map(ShortDriverDTO::new).toList();
     }

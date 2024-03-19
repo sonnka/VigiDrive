@@ -10,7 +10,6 @@ import com.VigiDrive.model.request.ExtendAccessRequest;
 import com.VigiDrive.model.response.AccessDTO;
 import com.VigiDrive.repository.AccessRepository;
 import com.VigiDrive.repository.DriverRepository;
-import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.service.AccessService;
 import com.VigiDrive.service.MessageService;
 import com.VigiDrive.util.AuthUtil;
@@ -28,13 +27,13 @@ public class AccessServiceImpl implements AccessService {
 
     private AccessRepository accessRepository;
     private DriverRepository driverRepository;
-    private ManagerRepository managerRepository;
     private MessageService messageService;
+    private AuthUtil authUtil;
 
 
     @Override
     public AccessDTO getAccessInfo(String email, Long driverId, Long accessId) throws UserException, AccessException {
-        AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        authUtil.findDriverByEmailAndId(email, driverId);
         var access = accessRepository.findById(accessId).orElseThrow(
                 () -> new AccessException(AccessException.AccessExceptionProfile.INVALID_ACCESS));
 
@@ -43,7 +42,7 @@ public class AccessServiceImpl implements AccessService {
 
     @Override
     public AccessDTO requestAccess(String email, Long managerId, AccessRequest access) throws UserException {
-        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
+        var manager = authUtil.findManagerByEmailAndId(email, managerId);
 
         var driver = driverRepository.findByEmailIgnoreCase(access.getDriverEmail().trim())
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
@@ -66,7 +65,7 @@ public class AccessServiceImpl implements AccessService {
 
     @Override
     public AccessDTO giveAccess(String email, Long driverId, Long accessId) throws UserException {
-        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        var driver = authUtil.findDriverByEmailAndId(email, driverId);
 
         var access = accessRepository.findById(accessId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ACCESS_NOT_FOUND));
@@ -100,7 +99,7 @@ public class AccessServiceImpl implements AccessService {
 
     @Override
     public AccessDTO stopAccess(String email, Long driverId, Long accessId) throws UserException {
-        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        var driver = authUtil.findDriverByEmailAndId(email, driverId);
         return toAccessDTO(deactivateAccess(driver, accessId));
     }
 
@@ -130,7 +129,7 @@ public class AccessServiceImpl implements AccessService {
     @Override
     public AccessDTO extendAccess(String email, Long managerId, Long accessId, ExtendAccessRequest timeDuration)
             throws UserException {
-        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
+        var manager = authUtil.findManagerByEmailAndId(email, managerId);
 
         var access = accessRepository.findById(accessId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.ACCESS_NOT_FOUND));
@@ -161,7 +160,7 @@ public class AccessServiceImpl implements AccessService {
 
     @Override
     public List<AccessDTO> getAllAccessRequestsByDriver(String email, Long driverId) throws UserException {
-        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        var driver = authUtil.findDriverByEmailAndId(email, driverId);
 
         return driver.getAccesses().stream().map(this::checkActive)
                 .filter(Access::isNew)
@@ -171,7 +170,7 @@ public class AccessServiceImpl implements AccessService {
 
     @Override
     public List<AccessDTO> getAllInactiveAccessesByDriver(String email, Long driverId) throws UserException {
-        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        var driver = authUtil.findDriverByEmailAndId(email, driverId);
 
         return driver.getAccesses().stream().map(this::checkActive)
                 .filter(access -> !access.isActive() && !access.isNew())
@@ -181,7 +180,7 @@ public class AccessServiceImpl implements AccessService {
 
     @Override
     public List<AccessDTO> getAllActiveAccessesByDriver(String email, Long driverId) throws UserException {
-        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        var driver = authUtil.findDriverByEmailAndId(email, driverId);
 
         return driver.getAccesses().stream().map(this::checkActive)
                 .filter(Access::isActive)
@@ -191,7 +190,7 @@ public class AccessServiceImpl implements AccessService {
 
     @Override
     public List<AccessDTO> getAllSentAccessesByManager(String email, Long managerId) throws UserException {
-        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
+        var manager = authUtil.findManagerByEmailAndId(email, managerId);
 
         return manager.getAccesses().stream().map(this::checkActive)
                 .filter(Access::isNew)
@@ -201,7 +200,7 @@ public class AccessServiceImpl implements AccessService {
 
     @Override
     public List<AccessDTO> getAllInactiveAccessesByManager(String email, Long managerId) throws UserException {
-        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
+        var manager = authUtil.findManagerByEmailAndId(email, managerId);
 
         return manager.getAccesses().stream().map(this::checkActive)
                 .filter(access -> !access.isActive())
@@ -211,7 +210,7 @@ public class AccessServiceImpl implements AccessService {
 
     @Override
     public List<AccessDTO> getAllActiveAccessesByManager(String email, Long managerId) throws UserException {
-        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
+        var manager = authUtil.findManagerByEmailAndId(email, managerId);
 
         return manager.getAccesses().stream().map(this::checkActive)
                 .filter(Access::isActive)
@@ -221,7 +220,7 @@ public class AccessServiceImpl implements AccessService {
 
     @Override
     public List<AccessDTO> getAllExpiringAccessesByManager(String email, Long managerId) throws UserException {
-        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
+        var manager = authUtil.findManagerByEmailAndId(email, managerId);
 
         return manager.getAccesses().stream().map(this::checkActive)
                 .filter(Access::isExpiring)

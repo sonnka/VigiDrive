@@ -2,7 +2,7 @@ package com.VigiDrive.controller;
 
 import com.VigiDrive.exceptions.SituationException;
 import com.VigiDrive.exceptions.UserException;
-import com.VigiDrive.service.PDFService;
+import com.VigiDrive.service.FileService;
 import com.itextpdf.text.DocumentException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -19,7 +19,7 @@ import java.io.IOException;
 @CrossOrigin("http://localhost:4200")
 public class ReportController {
 
-    private PDFService pdfService;
+    private FileService fileService;
 
     @GetMapping("/managers/{manager-id}/drivers/{driver-id}/general-report")
     public void exportGeneralReport(Authentication auth,
@@ -27,7 +27,7 @@ public class ReportController {
                                     @PathVariable("manager-id") Long managerId,
                                     @PathVariable("driver-id") Long driverId)
             throws DocumentException, IOException, UserException, SituationException {
-        pdfService.generateGeneralReport(auth.getName(), managerId, driverId, response);
+        fileService.generateGeneralReport(auth.getName(), managerId, driverId, response);
     }
 
     @GetMapping("/managers/{manager-id}/drivers/{driver-id}/health-report")
@@ -36,7 +36,7 @@ public class ReportController {
                                    @PathVariable("manager-id") Long managerId,
                                    @PathVariable("driver-id") Long driverId)
             throws DocumentException, IOException, UserException {
-        pdfService.generateHealthReport(auth.getName(), managerId, driverId, response);
+        fileService.generateHealthReport(auth.getName(), managerId, driverId, response);
     }
 
     @GetMapping("/managers/{manager-id}/drivers/{driver-id}/situation-report")
@@ -45,22 +45,22 @@ public class ReportController {
                                       @PathVariable("manager-id") Long managerId,
                                       @PathVariable("driver-id") Long driverId)
             throws DocumentException, IOException, UserException {
-        pdfService.generateSituationReport(auth.getName(), managerId, driverId, response);
+        fileService.generateSituationReport(auth.getName(), managerId, driverId, response);
     }
 
-    @GetMapping("/admins/{admin-id}/db-report/week")
+    @GetMapping("/admins/{admin-id}/db/week-report")
     public void exportWeekDatabaseReport(Authentication auth,
                                          HttpServletResponse response,
                                          @PathVariable("admin-id") Long adminId)
             throws DocumentException, IOException, UserException {
-        pdfService.generateWeekDatabaseReport(auth.getName(), adminId, response);
+        fileService.generateWeekDatabaseReport(auth.getName(), adminId, response);
     }
 
-    @GetMapping("/admins/{admin-id}/db-report/month")
+    @GetMapping("/admins/{admin-id}/db/month-report")
     public void exportMonthDatabaseReport(Authentication auth,
                                           HttpServletResponse response,
                                           @PathVariable("admin-id") Long adminId)
             throws DocumentException, IOException, UserException {
-        pdfService.generateMonthDatabaseReport(auth.getName(), adminId, response);
+        fileService.generateMonthDatabaseReport(auth.getName(), adminId, response);
     }
 }

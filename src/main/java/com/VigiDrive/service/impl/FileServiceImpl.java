@@ -12,20 +12,26 @@ import com.VigiDrive.model.response.SituationDTO;
 import com.VigiDrive.repository.AdminRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
-import com.VigiDrive.service.AdminService;
+import com.VigiDrive.service.DatabaseHistoryService;
+import com.VigiDrive.service.FileService;
 import com.VigiDrive.service.HealthInfoService;
-import com.VigiDrive.service.PDFService;
 import com.VigiDrive.service.SituationService;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.smattme.MysqlExportService;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -33,35 +39,46 @@ import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
-public class PDFServiceImpl implements PDFService {
+public class FileServiceImpl implements FileService {
 
     private final Font font12 = FontFactory.getFont(FontFactory.TIMES_ROMAN, 12, BaseColor.BLACK);
     private final Font font14 = FontFactory.getFont(FontFactory.TIMES_ROMAN, 14, BaseColor.BLACK);
     private final Font boldFont = FontFactory.getFont(FontFactory.TIMES_ROMAN, 14, Font.FontStyle.BOLD.ordinal(),
             BaseColor.BLACK);
+    private final LocalDateTime today = LocalDate.now().atTime(0, 0, 0);
+    private final LocalDateTime startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1L);
+    private final LocalDateTime startOfMonth = today.minusDays(today.getDayOfMonth() - 1L);
+
     private final HealthInfoService healthInfoService;
     private final SituationService situationService;
     private final DriverRepository driverRepository;
     private final ManagerRepository managerRepository;
-    private final AdminService adminService;
     private final AdminRepository adminRepository;
-    private final LocalDateTime today = LocalDate.now().atTime(0, 0, 0);
-    private final LocalDateTime startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1L);
-    private final LocalDateTime startOfMonth = today.minusDays(today.getDayOfMonth() - 1L);
+    private final DatabaseHistoryService databaseHistoryService;
+
+    @Value("${database.name}")
+    private String dbName;
+    @Value("${spring.datasource.username}")
+    private String dbUsername;
+    @Value("${spring.datasource.password}")
+    private String dbPassword;
+    @Value("${spring.datasource.url}")
+    private String dbUrl;
     private Driver driver;
 
-    public PDFServiceImpl(HealthInfoService healthInfoService, SituationService situationService,
-                          DriverRepository driverRepository, ManagerRepository managerRepository,
-                          AdminService adminService,
-                          AdminRepository adminRepository) {
+    public FileServiceImpl(HealthInfoService healthInfoService, SituationService situationService,
+                           DriverRepository driverRepository, ManagerRepository managerRepository,
+                           AdminRepository adminRepository, DatabaseHistoryService databaseHistoryService) {
         this.healthInfoService = healthInfoService;
         this.situationService = situationService;
         this.driverRepository = driverRepository;
         this.managerRepository = managerRepository;
-        this.adminService = adminService;
         this.adminRepository = adminRepository;
+        this.databaseHistoryService = databaseHistoryService;
     }
 
     @Override
@@ -133,7 +150,7 @@ public class PDFServiceImpl implements PDFService {
 
         configureDocument(document, email, adminId, "Week database report", startOfWeek);
 
-        List<DatabaseHistoryDTO> history = adminService.getWeekDatabaseHistory();
+        List<DatabaseHistoryDTO> history = databaseHistoryService.getWeekDatabaseHistory();
 
         fillDatabaseData(document, history);
 
@@ -152,11 +169,52 @@ public class PDFServiceImpl implements PDFService {
 
         configureDocument(document, email, adminId, "Month database report", startOfMonth);
 
-        List<DatabaseHistoryDTO> history = adminService.getMonthDatabaseHistory();
+        List<DatabaseHistoryDTO> history = databaseHistoryService.getMonthDatabaseHistory();
 
         fillDatabaseData(document, history);
 
         document.close();
+    }
+
+    @Override
+    public void generateDatabaseZipDump(HttpServletResponse response) throws SQLException, IOException,
+            ClassNotFoundException {
+        MysqlExportService mysqlExportService = getMysqlExportService();
+
+        File file = mysqlExportService.getGeneratedZipFile();
+
+        response.setContentType("application/zip");
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=" + file.getName();
+        response.setHeader(headerKey, headerValue);
+
+        ZipOutputStream zipOutputStream = new ZipOutputStream(response.getOutputStream());
+        zipOutputStream.putNextEntry(new ZipEntry(file.getName()));
+        FileInputStream fileInputStream = new FileInputStream(file);
+
+        IOUtils.copy(fileInputStream, zipOutputStream);
+
+        fileInputStream.close();
+        zipOutputStream.closeEntry();
+
+        zipOutputStream.close();
+
+        mysqlExportService.clearTempFiles();
+    }
+
+    private MysqlExportService getMysqlExportService() throws IOException, SQLException, ClassNotFoundException {
+        Properties properties = new Properties();
+        properties.setProperty(MysqlExportService.DB_NAME, dbName);
+        properties.setProperty(MysqlExportService.DB_USERNAME, dbUsername);
+        properties.setProperty(MysqlExportService.DB_PASSWORD, dbPassword);
+        properties.setProperty(MysqlExportService.TEMP_DIR, new File("external").getPath());
+        properties.setProperty(MysqlExportService.JDBC_CONNECTION_STRING, dbUrl);
+        properties.setProperty(MysqlExportService.PRESERVE_GENERATED_ZIP, "true");
+
+        MysqlExportService mysqlExportService = new MysqlExportService(properties);
+
+        mysqlExportService.export();
+        return mysqlExportService;
     }
 
     private void configureDocument(Document document, String email, Long driverId, Long managerId, String reportType,

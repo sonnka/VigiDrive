@@ -6,8 +6,9 @@ import com.itextpdf.text.DocumentException;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
-public interface PDFService {
+public interface FileService {
 
     void generateGeneralReport(String email, Long managerId, Long driverId, HttpServletResponse response)
             throws DocumentException, IOException, UserException, SituationException;
@@ -18,7 +19,12 @@ public interface PDFService {
     void generateSituationReport(String email, Long managerId, Long driverId, HttpServletResponse response)
             throws DocumentException, IOException, UserException;
 
-    void generateWeekDatabaseReport(String email, Long adminId, HttpServletResponse response) throws IOException, DocumentException, UserException;
+    void generateWeekDatabaseReport(String email, Long adminId, HttpServletResponse response)
+            throws IOException, DocumentException, UserException;
 
-    void generateMonthDatabaseReport(String email, Long adminId, HttpServletResponse response) throws IOException, DocumentException, UserException;
+    void generateMonthDatabaseReport(String email, Long adminId, HttpServletResponse response)
+            throws IOException, DocumentException, UserException;
+
+    void generateDatabaseZipDump(HttpServletResponse response)
+            throws SQLException, IOException, ClassNotFoundException;
 }

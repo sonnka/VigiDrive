@@ -12,6 +12,7 @@ import com.VigiDrive.model.response.UserResponse;
 import com.VigiDrive.repository.MessageRepository;
 import com.VigiDrive.repository.UserRepository;
 import com.VigiDrive.service.MessageService;
+import com.VigiDrive.util.AuthUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,17 +28,11 @@ public class MessageServiceImpl implements MessageService {
 
     private UserRepository userRepository;
     private MessageRepository messageRepository;
-
+    private AuthUtil authUtil;
 
     @Override
     public MessagesResponse getChatHistory(String email, Long userId, Long receiverId) throws UserException {
-        var user = userRepository.findByEmailIgnoreCase(email).orElseThrow(
-                () -> new UserException(UserException.UserExceptionProfile.USER_NOT_FOUND)
-        );
-
-        if (!Objects.equals(user.getId(), userId)) {
-            throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
-        }
+        var user = authUtil.findUserByEmailAndId(email, userId);
 
         var receiver = userRepository.findById(receiverId).orElseThrow(
                 () -> new UserException(UserException.UserExceptionProfile.RECEIVER_NOT_FOUND)
@@ -85,13 +80,7 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public List<UserResponse> getChats(String email, Long userId) throws UserException {
-        var user = userRepository.findByEmailIgnoreCase(email).orElseThrow(
-                () -> new UserException(UserException.UserExceptionProfile.USER_NOT_FOUND)
-        );
-
-        if (!Objects.equals(user.getId(), userId)) {
-            throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
-        }
+        var user = authUtil.findUserByEmailAndId(email, userId);
 
         var messages = messageRepository.findAllByReceiverOrSender(user, user);
 

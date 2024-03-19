@@ -8,9 +8,7 @@ import com.VigiDrive.model.request.HealthInfoRequest;
 import com.VigiDrive.model.response.HealthInfoDTO;
 import com.VigiDrive.model.response.HealthStatistics;
 import com.VigiDrive.model.response.StatisticElement;
-import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.HealthInfoRepository;
-import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.service.HealthInfoService;
 import com.VigiDrive.util.AuthUtil;
 import lombok.AllArgsConstructor;
@@ -31,14 +29,12 @@ import java.util.stream.Collectors;
 public class HealthInfoServiceImpl implements HealthInfoService {
 
     private HealthInfoRepository healthInfoRepository;
-    private DriverRepository driverRepository;
-    private ManagerRepository managerRepository;
+    private AuthUtil authUtil;
 
     @Override
     public HealthInfoDTO addHealthInfo(String email, Long driverId, HealthInfoRequest healthInfoRequest)
             throws UserException {
-        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
-                managerRepository);
+        var driver = authUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId);
 
         if (healthInfoRequest.getSleepinessLevel() < 0 && healthInfoRequest.getConcentrationLevel() < 0
                 && healthInfoRequest.getStressLevel() < 0) {
@@ -58,8 +54,7 @@ public class HealthInfoServiceImpl implements HealthInfoService {
 
     @Override
     public HealthInfoDTO getCurrentHealthInfo(String email, Long driverId) throws UserException {
-        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
-                managerRepository);
+        var driver = authUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId);
 
         var healthInfo = healthInfoRepository.findFirstByDriverOrderByTimeDesc(driver).orElse(null);
 
@@ -99,8 +94,7 @@ public class HealthInfoServiceImpl implements HealthInfoService {
     @Override
     public HealthStatistics getWeekHealthStatistics(String email, Long driverId)
             throws UserException, HealthException {
-        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
-                managerRepository);
+        var driver = authUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId);
 
         var today = LocalDate.now().atTime(0, 0, 0);
         var startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1L);
@@ -121,8 +115,7 @@ public class HealthInfoServiceImpl implements HealthInfoService {
     @Override
     public HealthStatistics getMonthHealthStatistics(String email, Long driverId)
             throws UserException, HealthException {
-        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
-                managerRepository);
+        var driver = authUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId);
 
         var today = LocalDate.now().atTime(0, 0, 0);
         var startOfMonth = today.minusDays(today.getDayOfMonth() - 1L);
@@ -144,8 +137,7 @@ public class HealthInfoServiceImpl implements HealthInfoService {
     @Override
     public HealthStatistics getYearHealthStatistics(String email, Long driverId)
             throws UserException, HealthException {
-        var driver = AuthUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId, driverRepository,
-                managerRepository);
+        var driver = authUtil.findDriverByEmailAndIdAndCheckByManager(email, driverId);
 
         var today = LocalDate.now().atTime(0, 0, 0);
         var startOfYear = today.minusMonths(today.getMonthValue() - 1L).minusDays(today.getDayOfMonth() - 1L);

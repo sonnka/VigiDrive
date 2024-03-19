@@ -8,7 +8,10 @@ import com.VigiDrive.model.response.AdminDTO;
 import com.VigiDrive.model.response.DatabaseHistoryDTO;
 import com.VigiDrive.model.response.ManagerDTO;
 import com.VigiDrive.model.response.ShortDriverDTO;
+import jakarta.servlet.http.HttpServletResponse;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 
 public interface AdminService {
@@ -26,16 +29,6 @@ public interface AdminService {
 
     void updateAdmin(String email, Long adminId, UpdateAdminRequest updatedAdmin) throws UserException;
 
-    void exportDatabase(String email, Long adminId);
-
-    void importDatabase(String email, Long adminId);
-
-    List<DatabaseHistoryDTO> getWeekDatabaseHistory(String email, Long adminId) throws UserException;
-
-    List<DatabaseHistoryDTO> getWeekDatabaseHistory();
-
-    List<DatabaseHistoryDTO> getMonthDatabaseHistory();
-
     void deleteDriver(String email, Long adminId, Long driverId) throws UserException, SecurityException;
 
     void deleteManager(String email, Long adminId, Long managerId) throws UserException, SecurityException;
@@ -43,4 +36,11 @@ public interface AdminService {
     List<ShortDriverDTO> getDrivers(String email, Long adminId) throws UserException;
 
     List<ManagerDTO> getManagers(String email, Long adminId) throws UserException;
+
+    List<DatabaseHistoryDTO> getWeekDatabaseHistory(String email, Long adminId) throws UserException;
+
+    void exportDatabase(String email, Long adminId, HttpServletResponse response)
+            throws SQLException, IOException, ClassNotFoundException, UserException;
+
+    void importDatabase(String email, Long adminId);
 }

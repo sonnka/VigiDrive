@@ -9,10 +9,13 @@ import com.VigiDrive.model.response.DatabaseHistoryDTO;
 import com.VigiDrive.model.response.ManagerDTO;
 import com.VigiDrive.model.response.ShortDriverDTO;
 import com.VigiDrive.service.AdminService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 
 @RestController
@@ -86,10 +89,18 @@ public class AdminController {
         adminService.updateAdmin(auth.getName(), adminId, updatedAdmin);
     }
 
-    @GetMapping("/admins/{admin-id}/db-history")
+    @GetMapping("/admins/{admin-id}/db/history")
     public List<DatabaseHistoryDTO> getWeekDatabaseHistory(Authentication auth,
                                                            @PathVariable("admin-id") Long adminId)
             throws UserException {
         return adminService.getWeekDatabaseHistory(auth.getName(), adminId);
+    }
+
+    @GetMapping(value = "/admins/{admin-id}/db/export", produces = "application/zip")
+    public void exportDatabase(Authentication auth,
+                               @PathVariable("admin-id") Long adminId,
+                               HttpServletResponse response)
+            throws SQLException, IOException, ClassNotFoundException, UserException {
+        adminService.exportDatabase(auth.getName(), adminId, response);
     }
 }

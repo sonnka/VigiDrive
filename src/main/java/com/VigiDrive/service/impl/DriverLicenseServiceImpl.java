@@ -6,7 +6,6 @@ import com.VigiDrive.model.entity.DriverLicense;
 import com.VigiDrive.model.request.DriverLicenseRequest;
 import com.VigiDrive.model.response.DriverLicenseDTO;
 import com.VigiDrive.repository.DriverLicenseRepository;
-import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.service.DriverLicenseService;
 import com.VigiDrive.util.AuthUtil;
 import jakarta.transaction.Transactional;
@@ -23,12 +22,12 @@ import java.time.format.DateTimeFormatter;
 public class DriverLicenseServiceImpl implements DriverLicenseService {
 
     private DriverLicenseRepository driverLicenseRepository;
-    private DriverRepository driverRepository;
+    private AuthUtil authUtil;
 
     @Override
     public DriverLicenseDTO getDriverLicense(String email, Long driverId)
             throws UserException, DriverLicenseException {
-        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        var driver = authUtil.findDriverByEmailAndId(email, driverId);
 
         var driverLicense = driverLicenseRepository.findDriverLicenseByDriver(driver)
                 .orElseThrow(() -> new DriverLicenseException(
@@ -41,7 +40,7 @@ public class DriverLicenseServiceImpl implements DriverLicenseService {
     @Transactional
     public DriverLicenseDTO addDriverLicense(String email, Long driverId, DriverLicenseRequest driverLicense)
             throws UserException, DriverLicenseException {
-        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        var driver = authUtil.findDriverByEmailAndId(email, driverId);
 
         driverLicenseRepository.deleteAllByDriver(driver);
 
