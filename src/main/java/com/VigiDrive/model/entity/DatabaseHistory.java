@@ -20,8 +20,8 @@ public class DatabaseHistory {
     @Column(name = "history_id")
     private Long id;
 
-    @Column(name = "admin_id", nullable = false)
-    private Long adminId;
+    @Column(name = "admin_email", nullable = false)
+    private String adminEmail;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "time")

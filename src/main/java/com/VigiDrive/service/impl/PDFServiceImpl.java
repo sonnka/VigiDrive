@@ -2,13 +2,17 @@ package com.VigiDrive.service.impl;
 
 import com.VigiDrive.exceptions.SituationException;
 import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.entity.Admin;
 import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.entity.Manager;
+import com.VigiDrive.model.response.DatabaseHistoryDTO;
 import com.VigiDrive.model.response.GeneralReportTemplate;
 import com.VigiDrive.model.response.HealthInfoDTO;
 import com.VigiDrive.model.response.SituationDTO;
+import com.VigiDrive.repository.AdminRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
+import com.VigiDrive.service.AdminService;
 import com.VigiDrive.service.HealthInfoService;
 import com.VigiDrive.service.PDFService;
 import com.VigiDrive.service.SituationService;
@@ -41,14 +45,23 @@ public class PDFServiceImpl implements PDFService {
     private final SituationService situationService;
     private final DriverRepository driverRepository;
     private final ManagerRepository managerRepository;
+    private final AdminService adminService;
+    private final AdminRepository adminRepository;
+    private final LocalDateTime today = LocalDate.now().atTime(0, 0, 0);
+    private final LocalDateTime startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1L);
+    private final LocalDateTime startOfMonth = today.minusDays(today.getDayOfMonth() - 1L);
     private Driver driver;
 
     public PDFServiceImpl(HealthInfoService healthInfoService, SituationService situationService,
-                          DriverRepository driverRepository, ManagerRepository managerRepository) {
+                          DriverRepository driverRepository, ManagerRepository managerRepository,
+                          AdminService adminService,
+                          AdminRepository adminRepository) {
         this.healthInfoService = healthInfoService;
         this.situationService = situationService;
         this.driverRepository = driverRepository;
         this.managerRepository = managerRepository;
+        this.adminService = adminService;
+        this.adminRepository = adminRepository;
     }
 
     @Override
@@ -61,7 +74,7 @@ public class PDFServiceImpl implements PDFService {
 
         document.open();
 
-        configureDocument(document, email, driverId, managerId, "General report");
+        configureDocument(document, email, driverId, managerId, "General report", startOfMonth);
         List<HealthInfoDTO> healthInfo = healthInfoService.getMonthHealthInfo(driver);
         List<SituationDTO> situations = situationService.getMonthSituations(driver);
 
@@ -80,7 +93,7 @@ public class PDFServiceImpl implements PDFService {
 
         document.open();
 
-        configureDocument(document, email, driverId, managerId, "Health report");
+        configureDocument(document, email, driverId, managerId, "Health report", startOfWeek);
 
         List<HealthInfoDTO> healthInfo = healthInfoService.getWeekHealthInfo(driver);
 
@@ -99,7 +112,7 @@ public class PDFServiceImpl implements PDFService {
 
         document.open();
 
-        configureDocument(document, email, driverId, managerId, "Situation report");
+        configureDocument(document, email, driverId, managerId, "Situation report", startOfWeek);
 
         List<SituationDTO> situations = situationService.getWeekSituations(email, driverId);
 
@@ -108,12 +121,49 @@ public class PDFServiceImpl implements PDFService {
         document.close();
     }
 
-    private void configureDocument(Document document, String email, Long driverId, Long managerId, String reportType)
-            throws DocumentException, UserException {
-        var today = LocalDate.now().atTime(0, 0, 0);
-        var startOfWeek = today.minusDays(today.getDayOfWeek().getValue() - 1L);
+    @Override
+    public void generateWeekReportDatabaseHistory(String email, Long adminId, HttpServletResponse response)
+            throws IOException, DocumentException, UserException {
+        configureResponse(response, "_week_database_report");
 
-        var reportName = reportType + "\n" + startOfWeek.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) +
+        Document document = new Document(PageSize.A4);
+        PdfWriter.getInstance(document, response.getOutputStream());
+
+        document.open();
+
+        configureDocument(document, email, adminId, "Week database report", startOfWeek);
+
+        List<DatabaseHistoryDTO> history = adminService.getWeekDatabaseHistory();
+
+        fillDatabaseData(document, history);
+
+        document.close();
+    }
+
+    @Override
+    public void generateMonthReportDatabaseHistory(String email, Long adminId, HttpServletResponse response)
+            throws IOException, DocumentException, UserException {
+        configureResponse(response, "_month_database_report");
+
+        Document document = new Document(PageSize.A4);
+        PdfWriter.getInstance(document, response.getOutputStream());
+
+        document.open();
+
+        configureDocument(document, email, adminId, "Month database report", startOfMonth);
+
+        List<DatabaseHistoryDTO> history = adminService.getMonthDatabaseHistory();
+
+        fillDatabaseData(document, history);
+
+        document.close();
+    }
+
+    private void configureDocument(Document document, String email, Long driverId, Long managerId, String reportType,
+                                   LocalDateTime startOfPeriod)
+            throws DocumentException, UserException {
+
+        var reportName = reportType + "\n" + startOfPeriod.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) +
                 " - " + today.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
         var manager = managerRepository.findByEmailIgnoreCase(email).orElseThrow(
@@ -131,6 +181,22 @@ public class PDFServiceImpl implements PDFService {
         setTitleOfDocument(document, reportName, driver, manager);
     }
 
+    private void configureDocument(Document document, String email, Long adminId, String reportType,
+                                   LocalDateTime startOfPeriod) throws UserException, DocumentException {
+        var reportName = reportType + "\n" + startOfPeriod.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) +
+                " - " + today.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+
+        var admin = adminRepository.findByEmailIgnoreCase(email).orElseThrow(
+                () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND)
+        );
+
+        if (!Objects.equals(admin.getId(), adminId)) {
+            throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
+        }
+
+        setTitleOfDocument(document, reportName, admin);
+    }
+
     private void configureResponse(HttpServletResponse response, String reportType) {
         response.setContentType("application/pdf");
         var fileName = LocalDateTime.now()
@@ -142,7 +208,7 @@ public class PDFServiceImpl implements PDFService {
 
     private void setTitleOfDocument(Document document, String reportName, Driver driver, Manager manager)
             throws DocumentException {
-        var todayDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
+        var todayDate = today.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
         Paragraph time = new Paragraph(todayDate, font12);
 
         Paragraph driverText = new Paragraph("Driver:", font12);
@@ -169,6 +235,31 @@ public class PDFServiceImpl implements PDFService {
         document.add(managerText);
         document.add(managerFullName);
         document.add(managerEmail);
+        document.add(new Paragraph("\n"));
+        document.add(title);
+        document.add(new Paragraph("\n\n"));
+    }
+
+    private void setTitleOfDocument(Document document, String reportName, Admin admin)
+            throws DocumentException {
+        var todayDate = today.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
+        Paragraph time = new Paragraph(todayDate, font12);
+
+        Paragraph adminText = new Paragraph("Admin:", font12);
+        Paragraph adminFullName = new Paragraph(admin.getFirstName() + " " + admin.getLastName(), font12);
+        Paragraph adminEmail = new Paragraph(admin.getEmail(), font12);
+
+        Paragraph title = new Paragraph(reportName, boldFont);
+
+        title.setAlignment(Element.ALIGN_CENTER);
+        time.setAlignment(Element.ALIGN_RIGHT);
+        adminFullName.setIndentationLeft(30f);
+        adminEmail.setIndentationLeft(30f);
+
+        document.add(time);
+        document.add(adminText);
+        document.add(adminFullName);
+        document.add(adminEmail);
         document.add(new Paragraph("\n"));
         document.add(title);
         document.add(new Paragraph("\n\n"));
@@ -300,6 +391,44 @@ public class PDFServiceImpl implements PDFService {
             var videoCell = table.addCell(new PdfPCell(new Phrase(situation.getVideo(), font12)));
 
             for (PdfPCell cell : List.of(startCell, endCell, typeCell, descCell, videoCell)) {
+                cell.setHorizontalAlignment(1);
+                cell.setVerticalAlignment(1);
+                cell.setMinimumHeight(50f);
+            }
+        }
+        table.setWidthPercentage(100f);
+        document.add(table);
+    }
+
+    private void fillDatabaseData(Document document, List<DatabaseHistoryDTO> history) throws DocumentException {
+        PdfPTable table = new PdfPTable(4);
+
+        Stream.of("Date", "Time", "Admin email", "Operation")
+                .forEach(columnTitle -> {
+                    PdfPCell header = new PdfPCell();
+                    header.setBackgroundColor(new BaseColor(153, 192, 192));
+                    header.setBorderWidth(0.5f);
+                    header.setPhrase(new Phrase(columnTitle, font14));
+                    var headerCell = table.addCell(header);
+                    headerCell.setHorizontalAlignment(1);
+                    headerCell.setVerticalAlignment(1);
+                    headerCell.setFixedHeight(40f);
+                });
+
+        for (DatabaseHistoryDTO historyRecord : history) {
+            var dateCell = table.addCell(new PdfPCell(new Phrase(historyRecord.getTime()
+                    .format(DateTimeFormatter.ofPattern("dd.MM.yy")), font12)));
+
+            var timeCell = table.addCell(new PdfPCell(new Phrase(historyRecord.getTime()
+                    .format(DateTimeFormatter.ofPattern("HH:mm:ss")), font12)));
+
+            var emailCell = table.addCell(new PdfPCell(new Phrase(historyRecord.getAdminEmail(), font12)));
+
+            var operationCell = table.addCell(new PdfPCell(new Phrase(
+                    historyRecord.getOperation().toString().toLowerCase(),
+                    font12)));
+
+            for (PdfPCell cell : List.of(dateCell, timeCell, emailCell, operationCell)) {
                 cell.setHorizontalAlignment(1);
                 cell.setVerticalAlignment(1);
                 cell.setMinimumHeight(50f);

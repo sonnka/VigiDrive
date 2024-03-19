@@ -5,6 +5,7 @@ import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.UpdateAdminRequest;
 import com.VigiDrive.model.response.AdminDTO;
+import com.VigiDrive.model.response.DatabaseHistoryDTO;
 import com.VigiDrive.model.response.ManagerDTO;
 import com.VigiDrive.model.response.ShortDriverDTO;
 
@@ -24,9 +25,15 @@ public interface AdminService {
 
     void updateAdmin(String email, Long adminId, UpdateAdminRequest updatedAdmin) throws UserException;
 
-    void exportDatabase(String email);
+    void exportDatabase(String email, Long adminId);
 
-    void importDatabase(String email);
+    void importDatabase(String email, Long adminId);
+
+    List<DatabaseHistoryDTO> getWeekDatabaseHistory(String email, Long adminId) throws UserException;
+
+    List<DatabaseHistoryDTO> getWeekDatabaseHistory();
+
+    List<DatabaseHistoryDTO> getMonthDatabaseHistory();
 
     void deleteDriver(String email, Long adminId, Long driverId) throws UserException, SecurityException;
 

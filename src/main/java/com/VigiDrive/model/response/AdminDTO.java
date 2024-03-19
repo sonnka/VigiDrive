@@ -22,6 +22,8 @@ public class AdminDTO {
 
     private LocalDateTime dateOfApproving;
 
+    private boolean chiefAdmin;
+
     private boolean approved;
 
     public AdminDTO(Admin admin) {
@@ -31,6 +33,7 @@ public class AdminDTO {
         this.email = admin.getEmail();
         this.avatar = admin.getAvatar();
         this.dateOfApproving = admin.getDateOfApproving();
+        this.chiefAdmin = admin.isChiefAdmin();
         this.approved = admin.isApproved();
     }
 }

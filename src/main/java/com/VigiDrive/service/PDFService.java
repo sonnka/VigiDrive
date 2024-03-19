@@ -17,4 +17,8 @@ public interface PDFService {
 
     void generateSituationReport(String email, Long managerId, Long driverId, HttpServletResponse response)
             throws DocumentException, IOException, UserException;
+
+    void generateWeekReportDatabaseHistory(String email, Long adminId, HttpServletResponse response) throws IOException, DocumentException, UserException;
+
+    void generateMonthReportDatabaseHistory(String email, Long adminId, HttpServletResponse response) throws IOException, DocumentException, UserException;
 }
