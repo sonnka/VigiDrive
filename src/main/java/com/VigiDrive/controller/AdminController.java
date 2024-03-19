@@ -5,6 +5,7 @@ import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.request.UpdateAdminRequest;
 import com.VigiDrive.model.response.AdminDTO;
+import com.VigiDrive.model.response.DatabaseHistoryDTO;
 import com.VigiDrive.model.response.ManagerDTO;
 import com.VigiDrive.model.response.ShortDriverDTO;
 import com.VigiDrive.service.AdminService;
@@ -78,7 +79,14 @@ public class AdminController {
     @PatchMapping("/admins/{admin-id}")
     public void updateAdmin(Authentication auth,
                             @PathVariable("admin-id") Long adminId,
-                            @RequestBody UpdateAdminRequest updatedAdmin) throws UserException, MailException {
+                            @RequestBody UpdateAdminRequest updatedAdmin) throws UserException {
         adminService.updateAdmin(auth.getName(), adminId, updatedAdmin);
+    }
+
+    @GetMapping("/admins/{admin-id}/db-history")
+    public List<DatabaseHistoryDTO> getWeekDatabaseHistory(Authentication auth,
+                                                           @PathVariable("admin-id") Long adminId)
+            throws UserException {
+        return adminService.getWeekDatabaseHistory(auth.getName(), adminId);
     }
 }

@@ -47,4 +47,20 @@ public class ReportController {
             throws DocumentException, IOException, UserException {
         pdfService.generateSituationReport(auth.getName(), managerId, driverId, response);
     }
+
+    @GetMapping("/admins/{admin-id}/db-report/week")
+    public void exportWeekDatabaseReport(Authentication auth,
+                                         HttpServletResponse response,
+                                         @PathVariable("admin-id") Long adminId)
+            throws DocumentException, IOException, UserException {
+        pdfService.generateWeekDatabaseReport(auth.getName(), adminId, response);
+    }
+
+    @GetMapping("/admins/{admin-id}/db-report/month")
+    public void exportMonthDatabaseReport(Authentication auth,
+                                          HttpServletResponse response,
+                                          @PathVariable("admin-id") Long adminId)
+            throws DocumentException, IOException, UserException {
+        pdfService.generateMonthDatabaseReport(auth.getName(), adminId, response);
+    }
 }

@@ -122,7 +122,7 @@ public class PDFServiceImpl implements PDFService {
     }
 
     @Override
-    public void generateWeekReportDatabaseHistory(String email, Long adminId, HttpServletResponse response)
+    public void generateWeekDatabaseReport(String email, Long adminId, HttpServletResponse response)
             throws IOException, DocumentException, UserException {
         configureResponse(response, "_week_database_report");
 
@@ -141,7 +141,7 @@ public class PDFServiceImpl implements PDFService {
     }
 
     @Override
-    public void generateMonthReportDatabaseHistory(String email, Long adminId, HttpServletResponse response)
+    public void generateMonthDatabaseReport(String email, Long adminId, HttpServletResponse response)
             throws IOException, DocumentException, UserException {
         configureResponse(response, "_month_database_report");
 
@@ -208,7 +208,7 @@ public class PDFServiceImpl implements PDFService {
 
     private void setTitleOfDocument(Document document, String reportName, Driver driver, Manager manager)
             throws DocumentException {
-        var todayDate = today.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
+        var todayDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
         Paragraph time = new Paragraph(todayDate, font12);
 
         Paragraph driverText = new Paragraph("Driver:", font12);
@@ -242,7 +242,7 @@ public class PDFServiceImpl implements PDFService {
 
     private void setTitleOfDocument(Document document, String reportName, Admin admin)
             throws DocumentException {
-        var todayDate = today.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
+        var todayDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
         Paragraph time = new Paragraph(todayDate, font12);
 
         Paragraph adminText = new Paragraph("Admin:", font12);

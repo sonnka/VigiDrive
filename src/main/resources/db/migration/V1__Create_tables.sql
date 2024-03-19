@@ -11,10 +11,10 @@ DROP TABLE IF EXISTS users;
 
 CREATE TABLE histories
 (
-    history_id BIGINT AUTO_INCREMENT NOT NULL,
-    admin_id   BIGINT                NOT NULL,
-    time       datetime              NULL,
-    operation  VARCHAR(255)          NULL,
+    history_id  BIGINT AUTO_INCREMENT NOT NULL,
+    admin_email VARCHAR(255)          NOT NULL,
+    time        datetime              NULL,
+    operation   VARCHAR(255)          NULL,
     CONSTRAINT pk_histories PRIMARY KEY (history_id)
 );
 
