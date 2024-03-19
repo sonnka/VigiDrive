@@ -58,22 +58,25 @@ public class AdminController {
         return adminService.getNotApprovedAdmins(auth.getName());
     }
 
-    @PostMapping("/admins/{email}")
+    @PostMapping("/admins/{admin-id}/add/{email}")
     public void addAdmin(Authentication auth,
+                         @PathVariable("admin-id") Long adminId,
                          @PathVariable("email") String email) throws UserException, SecurityException, MailException {
-        adminService.addAdmin(auth.getName(), email);
+        adminService.addAdmin(auth.getName(), adminId, email);
     }
 
-    @PostMapping("/admins/{admin-id}/approve")
+    @PostMapping("/admins/{admin-id}/approve/{new-admin-id}")
     public void approveAdmin(Authentication auth,
-                             @PathVariable("admin-id") Long adminId) throws UserException, MailException {
-        adminService.approveAdmin(auth.getName(), adminId);
+                             @PathVariable("admin-id") Long adminId,
+                             @PathVariable("new-admin-id") Long newAdminId) throws UserException, MailException {
+        adminService.approveAdmin(auth.getName(), adminId, newAdminId);
     }
 
-    @PostMapping("/admins/{admin-id}/decline")
+    @PostMapping("/admins/{admin-id}/decline/{new-admin-id}")
     public void declineAdmin(Authentication auth,
-                             @PathVariable("admin-id") Long adminId) throws UserException, MailException {
-        adminService.declineAdmin(auth.getName(), adminId);
+                             @PathVariable("admin-id") Long adminId,
+                             @PathVariable("new-admin-id") Long newAdminId) throws UserException, MailException {
+        adminService.declineAdmin(auth.getName(), adminId, newAdminId);
     }
 
     @PatchMapping("/admins/{admin-id}")

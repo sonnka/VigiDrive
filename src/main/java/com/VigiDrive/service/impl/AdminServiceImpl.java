@@ -37,9 +37,9 @@ public class AdminServiceImpl implements AdminService {
 
 
     @Override
-    public void addAdmin(String email, String newAdminEmail) throws UserException, SecurityException, MailException {
-        adminRepository.findByEmailIgnoreCase(email).orElseThrow(
-                () -> new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED));
+    public void addAdmin(String email, Long adminId, String newAdminEmail)
+            throws UserException, SecurityException, MailException {
+        checkAdminByEmailAndId(email, adminId);
 
         var user = userRepository.findByEmailIgnoreCase(newAdminEmail).orElse(null);
 
@@ -59,8 +59,8 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public void approveAdmin(String email, Long newAdminId) throws UserException, MailException {
-        checkAdminByEmailAndChief(email);
+    public void approveAdmin(String email, Long adminId, Long newAdminId) throws UserException, MailException {
+        checkAdminByEmailAndChief(email, adminId);
 
         var newAdmin = adminRepository.findById(newAdminId).orElseThrow(
                 () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
@@ -77,8 +77,8 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public void declineAdmin(String email, Long newAdminId) throws UserException, MailException {
-        checkAdminByEmailAndChief(email);
+    public void declineAdmin(String email, Long adminId, Long newAdminId) throws UserException, MailException {
+        checkAdminByEmailAndChief(email, adminId);
 
         var newAdmin = adminRepository.findById(newAdminId).orElseThrow(
                 () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));

@@ -13,15 +13,16 @@ import java.util.List;
 
 public interface AdminService {
 
-    void addAdmin(String email, String newAdminEmail) throws UserException, SecurityException, MailException;
+    void addAdmin(String email, Long adminId, String newAdminEmail)
+            throws UserException, SecurityException, MailException;
 
     List<AdminDTO> getApprovedAdmins(String email) throws UserException;
 
     List<AdminDTO> getNotApprovedAdmins(String email) throws UserException;
 
-    void approveAdmin(String email, Long adminId) throws UserException, MailException;
+    void approveAdmin(String email, Long adminId, Long newAdminId) throws UserException, MailException;
 
-    void declineAdmin(String email, Long adminId) throws UserException, MailException;
+    void declineAdmin(String email, Long adminId, Long newAdminId) throws UserException, MailException;
 
     void updateAdmin(String email, Long adminId, UpdateAdminRequest updatedAdmin) throws UserException;
 
