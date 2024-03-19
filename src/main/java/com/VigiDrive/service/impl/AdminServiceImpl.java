@@ -24,6 +24,7 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -206,7 +207,12 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public void importDatabase(String email, Long adminId) {
+    public void importDatabase(String email, Long adminId, MultipartFile file)
+            throws SQLException, ClassNotFoundException, IOException, UserException {
+        authUtil.checkAdminByEmailAndId(email, adminId);
 
+        String sql = new String(file.getBytes());
+
+        fileService.importDatabase(sql);
     }
 }

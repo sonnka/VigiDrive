@@ -9,6 +9,7 @@ import com.VigiDrive.model.response.DatabaseHistoryDTO;
 import com.VigiDrive.model.response.ManagerDTO;
 import com.VigiDrive.model.response.ShortDriverDTO;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -42,5 +43,6 @@ public interface AdminService {
     void exportDatabase(String email, Long adminId, HttpServletResponse response)
             throws SQLException, IOException, ClassNotFoundException, UserException;
 
-    void importDatabase(String email, Long adminId);
+    void importDatabase(String email, Long adminId, MultipartFile file)
+            throws SQLException, ClassNotFoundException, IOException, UserException;
 }

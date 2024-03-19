@@ -27,4 +27,6 @@ public interface FileService {
 
     void generateDatabaseZipDump(HttpServletResponse response)
             throws SQLException, IOException, ClassNotFoundException;
+
+    boolean importDatabase(String sql) throws SQLException, ClassNotFoundException;
 }

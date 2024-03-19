@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -102,5 +103,13 @@ public class AdminController {
                                HttpServletResponse response)
             throws SQLException, IOException, ClassNotFoundException, UserException {
         adminService.exportDatabase(auth.getName(), adminId, response);
+    }
+
+    @PostMapping("/admins/{admin-id}/db/import")
+    public void importDatabase(Authentication auth,
+                               @PathVariable("admin-id") Long adminId,
+                               @RequestParam("file") MultipartFile file)
+            throws SQLException, IOException, ClassNotFoundException, UserException {
+        adminService.importDatabase(auth.getName(), adminId, file);
     }
 }

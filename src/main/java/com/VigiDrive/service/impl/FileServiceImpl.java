@@ -21,7 +21,9 @@ import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.smattme.MysqlExportService;
+import com.smattme.MysqlImportService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -200,6 +202,20 @@ public class FileServiceImpl implements FileService {
         zipOutputStream.close();
 
         mysqlExportService.clearTempFiles();
+    }
+
+    @Override
+    @Transactional
+    public boolean importDatabase(String sql) throws SQLException, ClassNotFoundException {
+        return MysqlImportService.builder()
+                .setDatabase(dbName)
+                .setSqlString(sql)
+                .setUsername(dbUsername)
+                .setPassword(dbPassword)
+                .setDeleteExisting(true)
+                .setDropExisting(true)
+                .setJdbcConnString(dbUrl)
+                .importDatabase();
     }
 
     private MysqlExportService getMysqlExportService() throws IOException, SQLException, ClassNotFoundException {
