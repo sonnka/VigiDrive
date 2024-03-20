@@ -139,10 +139,6 @@ public class AdminServiceImpl implements AdminService {
         var admin = adminRepository.findByEmailIgnoreCase(email).orElseThrow(
                 () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
 
-        if (!Role.CHIEF_ADMIN.equals(admin.getRole())) {
-            throw new UserException(UserException.UserExceptionProfile.NOT_CHIEF_ADMIN);
-        }
-
         return adminRepository.findAllByApprovedTrueOrderByDateOfApproving().stream()
                 .filter(a -> a.getRole().equals(Role.ADMIN) && !a.getEmail().equals(admin.getEmail()))
                 .map(AdminDTO::new)
@@ -153,10 +149,6 @@ public class AdminServiceImpl implements AdminService {
     public List<AdminDTO> getNotApprovedAdmins(String email) throws UserException {
         var admin = adminRepository.findByEmailIgnoreCase(email).orElseThrow(
                 () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
-
-        if (!Role.CHIEF_ADMIN.equals(admin.getRole())) {
-            throw new UserException(UserException.UserExceptionProfile.NOT_CHIEF_ADMIN);
-        }
 
         return adminRepository.findAllByApprovedFalseOrderByDateOfAdding().stream()
                 .filter(a -> a.getRole().equals(Role.ADMIN) && !a.getEmail().equals(admin.getEmail()))

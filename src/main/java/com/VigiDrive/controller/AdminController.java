@@ -10,6 +10,7 @@ import com.VigiDrive.model.response.ManagerDTO;
 import com.VigiDrive.model.response.ShortDriverDTO;
 import com.VigiDrive.service.AdminService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -92,7 +93,7 @@ public class AdminController {
     @PatchMapping("/admins/{admin-id}")
     public void updateAdmin(Authentication auth,
                             @PathVariable("admin-id") Long adminId,
-                            @RequestBody UpdateAdminRequest updatedAdmin) throws UserException {
+                            @Valid @RequestBody UpdateAdminRequest updatedAdmin) throws UserException {
         adminService.updateAdmin(auth.getName(), adminId, updatedAdmin);
     }
 
