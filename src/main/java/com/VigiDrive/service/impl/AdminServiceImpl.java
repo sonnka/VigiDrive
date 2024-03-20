@@ -50,9 +50,14 @@ public class AdminServiceImpl implements AdminService {
 
 
     @Override
+    public AdminDTO getAdmin(String email, Long adminId) throws UserException {
+        return new AdminDTO(authUtil.checkAdminByEmailAndId(email, adminId));
+    }
+
+    @Override
     public void addAdmin(String email, Long adminId, String newAdminEmail)
             throws UserException, SecurityException, MailException {
-        authUtil.checkAdminByEmailAndId(email, adminId);
+        var admin = authUtil.checkAdminByEmailAndId(email, adminId);
 
         var user = userRepository.findByEmailIgnoreCase(newAdminEmail).orElse(null);
 
@@ -63,7 +68,10 @@ public class AdminServiceImpl implements AdminService {
         Admin newAdmin = Admin.builder()
                 .email(newAdminEmail)
                 .role(Role.ADMIN)
+                .addedBy(admin.getEmail())
+                .dateOfAdding(LocalDateTime.now())
                 .approved(false)
+                .newAccount(true)
                 .build();
 
         adminRepository.save(newAdmin);
@@ -77,6 +85,10 @@ public class AdminServiceImpl implements AdminService {
 
         var newAdmin = adminRepository.findById(newAdminId).orElseThrow(
                 () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
+
+        if (Role.CHIEF_ADMIN.equals(newAdmin.getRole())) {
+            throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
+        }
 
         var password = RandomStringUtils.random(7, true, true);
 
@@ -96,6 +108,10 @@ public class AdminServiceImpl implements AdminService {
         var newAdmin = adminRepository.findById(newAdminId).orElseThrow(
                 () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
 
+        if (Role.CHIEF_ADMIN.equals(newAdmin.getRole())) {
+            throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
+        }
+
         adminRepository.delete(newAdmin);
 
         mailService.sendNotApprovedAdminMessage(newAdmin.getEmail());
@@ -113,6 +129,7 @@ public class AdminServiceImpl implements AdminService {
         admin.setFirstName(updatedAdmin.getFirstName());
         admin.setLastName(updatedAdmin.getLastName());
         admin.setPassword(passwordEncoder.encode(updatedAdmin.getPassword()));
+        admin.setNewAccount(false);
 
         adminRepository.save(admin);
     }
@@ -122,11 +139,12 @@ public class AdminServiceImpl implements AdminService {
         var admin = adminRepository.findByEmailIgnoreCase(email).orElseThrow(
                 () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
 
-        if (!admin.isChiefAdmin()) {
+        if (!Role.CHIEF_ADMIN.equals(admin.getRole())) {
             throw new UserException(UserException.UserExceptionProfile.NOT_CHIEF_ADMIN);
         }
 
-        return adminRepository.findAllByApproved(true).stream()
+        return adminRepository.findAllByApprovedTrueOrderByDateOfApproving().stream()
+                .filter(a -> a.getRole().equals(Role.ADMIN) && !a.getEmail().equals(admin.getEmail()))
                 .map(AdminDTO::new)
                 .toList();
     }
@@ -136,11 +154,12 @@ public class AdminServiceImpl implements AdminService {
         var admin = adminRepository.findByEmailIgnoreCase(email).orElseThrow(
                 () -> new UserException(UserException.UserExceptionProfile.ADMIN_NOT_FOUND));
 
-        if (!admin.isChiefAdmin()) {
+        if (!Role.CHIEF_ADMIN.equals(admin.getRole())) {
             throw new UserException(UserException.UserExceptionProfile.NOT_CHIEF_ADMIN);
         }
 
-        return adminRepository.findAllByApproved(false).stream()
+        return adminRepository.findAllByApprovedFalseOrderByDateOfAdding().stream()
+                .filter(a -> a.getRole().equals(Role.ADMIN) && !a.getEmail().equals(admin.getEmail()))
                 .map(AdminDTO::new)
                 .toList();
     }

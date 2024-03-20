@@ -5,6 +5,7 @@ import com.VigiDrive.model.entity.Admin;
 import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.entity.Manager;
 import com.VigiDrive.model.entity.User;
+import com.VigiDrive.model.enums.Role;
 import com.VigiDrive.repository.AdminRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
@@ -110,7 +111,7 @@ public class AuthUtil {
             throw new UserException(UserException.UserExceptionProfile.PERMISSION_DENIED);
         }
 
-        if (!admin.isChiefAdmin()) {
+        if (!Role.CHIEF_ADMIN.equals(admin.getRole())) {
             throw new UserException(UserException.UserExceptionProfile.NOT_CHIEF_ADMIN);
         }
     }

@@ -1,5 +1,5 @@
 package com.VigiDrive.model.enums;
 
 public enum Role {
-    DRIVER, MANAGER, ADMIN
+    DRIVER, MANAGER, CHIEF_ADMIN, ADMIN
 }

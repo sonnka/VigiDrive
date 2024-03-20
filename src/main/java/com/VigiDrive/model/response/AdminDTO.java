@@ -22,9 +22,13 @@ public class AdminDTO {
 
     private LocalDateTime dateOfApproving;
 
-    private boolean chiefAdmin;
+    private LocalDateTime dateOfAdding;
+
+    private String addedBy;
 
     private boolean approved;
+
+    private boolean newAccount;
 
     public AdminDTO(Admin admin) {
         this.id = admin.getId();
@@ -33,7 +37,9 @@ public class AdminDTO {
         this.email = admin.getEmail();
         this.avatar = admin.getAvatar();
         this.dateOfApproving = admin.getDateOfApproving();
-        this.chiefAdmin = admin.isChiefAdmin();
+        this.dateOfAdding = admin.getDateOfAdding();
+        this.addedBy = admin.getAddedBy();
         this.approved = admin.isApproved();
+        this.newAccount = admin.isNewAccount();
     }
 }

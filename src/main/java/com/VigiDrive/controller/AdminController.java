@@ -26,6 +26,12 @@ public class AdminController {
 
     private AdminService adminService;
 
+    @GetMapping("/admins/{admin-id}")
+    public AdminDTO getAdmin(Authentication auth,
+                             @PathVariable("admin-id") Long adminId) throws UserException {
+        return adminService.getAdmin(auth.getName(), adminId);
+    }
+
     @GetMapping("/admins/{admin-id}/drivers")
     public List<ShortDriverDTO> getDrivers(Authentication auth,
                                            @PathVariable("admin-id") Long adminId) throws UserException {

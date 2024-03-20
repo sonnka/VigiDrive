@@ -17,6 +17,8 @@ import java.util.List;
 
 public interface AdminService {
 
+    AdminDTO getAdmin(String email, Long adminId) throws UserException;
+
     void addAdmin(String email, Long adminId, String newAdminEmail)
             throws UserException, SecurityException, MailException;
 

@@ -42,10 +42,12 @@ ALTER TABLE managers
 
 CREATE TABLE admins
 (
-    user_id           BIGINT   NOT NULL,
-    date_of_approving datetime NULL,
-    is_approved       BIT(1)   NULL,
-    is_chief_admin    BIT(1)   NULL,
+    user_id           BIGINT       NOT NULL,
+    date_of_approving datetime     NULL,
+    date_of_adding    datetime     NULL,
+    added_by          VARCHAR(255) NULL,
+    is_approved       BIT(1)       NULL,
+    is_new_account    BIT(1)       NULL,
     CONSTRAINT pk_admins PRIMARY KEY (user_id)
 );
 

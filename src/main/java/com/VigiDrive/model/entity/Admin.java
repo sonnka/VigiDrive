@@ -22,15 +22,21 @@ public class Admin extends User {
     @Column(name = "date_of_approving")
     private LocalDateTime dateOfApproving;
 
+    @Column(name = "date_of_adding")
+    private LocalDateTime dateOfAdding;
+
+    @Column(name = "added_by")
+    private String addedBy;
+
     @Column(name = "is_approved")
     private boolean approved;
 
-    @Column(name = "is_chief_admin")
-    private boolean chiefAdmin;
+    @Column(name = "is_new_account")
+    private boolean newAccount;
 
     public Admin() {
         this.setRole(Role.ADMIN);
         this.setApproved(false);
-        this.setChiefAdmin(false);
+        this.setNewAccount(true);
     }
 }
