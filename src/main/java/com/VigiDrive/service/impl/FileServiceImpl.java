@@ -213,7 +213,7 @@ public class FileServiceImpl implements FileService {
                 .setUsername(dbUsername)
                 .setPassword(dbPassword)
                 .setDeleteExisting(true)
-                .setDropExisting(true)
+                .setDropExisting(false)
                 .setJdbcConnString(dbUrl)
                 .importDatabase();
     }
@@ -226,6 +226,7 @@ public class FileServiceImpl implements FileService {
         properties.setProperty(MysqlExportService.TEMP_DIR, new File("external").getPath());
         properties.setProperty(MysqlExportService.JDBC_CONNECTION_STRING, dbUrl);
         properties.setProperty(MysqlExportService.PRESERVE_GENERATED_ZIP, "true");
+        properties.setProperty(MysqlExportService.ADD_IF_NOT_EXISTS, "true");
 
         MysqlExportService mysqlExportService = new MysqlExportService(properties);
 
