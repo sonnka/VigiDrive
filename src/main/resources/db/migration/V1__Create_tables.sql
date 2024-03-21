@@ -1,12 +1,22 @@
+DROP TABLE IF EXISTS histories;
 DROP TABLE IF EXISTS accesses;
+DROP TABLE IF EXISTS health;
+DROP TABLE IF EXISTS situations;
 DROP TABLE IF EXISTS licenses;
-DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS drivers;
 DROP TABLE IF EXISTS managers;
 DROP TABLE IF EXISTS admins;
-DROP TABLE IF EXISTS drivers;
-DROP TABLE IF EXISTS health;
-DROP TABLE IF EXISTS recommendations;
-DROP TABLE IF EXISTS situations;
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE histories
+(
+    history_id  BIGINT AUTO_INCREMENT NOT NULL,
+    admin_email VARCHAR(255)          NOT NULL,
+    time        datetime              NULL,
+    operation   VARCHAR(255)          NULL,
+    CONSTRAINT pk_histories PRIMARY KEY (history_id)
+);
 
 CREATE TABLE users
 (
@@ -32,8 +42,12 @@ ALTER TABLE managers
 
 CREATE TABLE admins
 (
-    user_id     BIGINT NOT NULL,
-    is_approved BIT(1) NULL,
+    user_id           BIGINT       NOT NULL,
+    date_of_approving datetime     NULL,
+    date_of_adding    datetime     NULL,
+    added_by          VARCHAR(255) NULL,
+    is_approved       BIT(1)       NULL,
+    is_new_account    BIT(1)       NULL,
     CONSTRAINT pk_admins PRIMARY KEY (user_id)
 );
 
@@ -92,7 +106,6 @@ CREATE TABLE licenses
 
 ALTER TABLE licenses
     ADD CONSTRAINT FK_LICENSES_ON_DRIVER FOREIGN KEY (driver_id) REFERENCES drivers (user_id);
-
 
 
 CREATE TABLE health

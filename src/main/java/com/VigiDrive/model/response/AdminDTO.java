@@ -4,6 +4,8 @@ import com.VigiDrive.model.entity.Admin;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 public class AdminDTO {
@@ -18,7 +20,15 @@ public class AdminDTO {
 
     private String avatar;
 
-    private Boolean isApproved;
+    private LocalDateTime dateOfApproving;
+
+    private LocalDateTime dateOfAdding;
+
+    private String addedBy;
+
+    private boolean approved;
+
+    private boolean newAccount;
 
     public AdminDTO(Admin admin) {
         this.id = admin.getId();
@@ -26,6 +36,10 @@ public class AdminDTO {
         this.lastName = admin.getLastName();
         this.email = admin.getEmail();
         this.avatar = admin.getAvatar();
-        this.isApproved = admin.isApproved();
+        this.dateOfApproving = admin.getDateOfApproving();
+        this.dateOfAdding = admin.getDateOfAdding();
+        this.addedBy = admin.getAddedBy();
+        this.approved = admin.isApproved();
+        this.newAccount = admin.isNewAccount();
     }
 }

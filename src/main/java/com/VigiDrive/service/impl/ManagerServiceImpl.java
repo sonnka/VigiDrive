@@ -12,7 +12,6 @@ import com.VigiDrive.model.response.FullDriverDTO;
 import com.VigiDrive.model.response.FullManagerDTO;
 import com.VigiDrive.model.response.ManagerDTO;
 import com.VigiDrive.model.response.ShortDriverDTO;
-import com.VigiDrive.repository.AdminRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.repository.UserRepository;
@@ -36,9 +35,9 @@ public class ManagerServiceImpl implements ManagerService {
     private ManagerRepository managerRepository;
     private DriverService driverService;
     private DriverRepository driverRepository;
-    private AdminRepository adminRepository;
     private PasswordEncoder passwordEncoder;
     private AmazonClient amazonClient;
+    private AuthUtil authUtil;
 
     @Override
     public ManagerDTO registerManager(RegisterRequest newManager) throws SecurityException {
@@ -62,14 +61,14 @@ public class ManagerServiceImpl implements ManagerService {
 
     @Override
     public List<ShortDriverDTO> getDrivers(String email, Long managerId) throws UserException {
-        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
+        var manager = authUtil.findManagerByEmailAndId(email, managerId);
 
         return driverService.getAllDriversByManager(email, manager.getId());
     }
 
     @Override
     public FullDriverDTO getDriver(String email, Long managerId, Long driverId) throws UserException {
-        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
+        var manager = authUtil.findManagerByEmailAndId(email, managerId);
 
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
@@ -84,7 +83,7 @@ public class ManagerServiceImpl implements ManagerService {
     @Override
     public ManagerDTO updateManager(String email, Long managerId, UpdateManagerRequest newManager)
             throws UserException {
-        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
+        var manager = authUtil.findManagerByEmailAndId(email, managerId);
 
         manager.setFirstName(newManager.getFirstName());
         manager.setLastName(newManager.getLastName());
@@ -100,7 +99,7 @@ public class ManagerServiceImpl implements ManagerService {
     @Transactional
     public ManagerDTO uploadAvatar(String email, Long managerId, MultipartFile avatar)
             throws UserException, AmazonException {
-        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
+        var manager = authUtil.findManagerByEmailAndId(email, managerId);
 
         if (manager.getAvatar() != null && !manager.getAvatar().isEmpty()) {
             amazonClient.deleteFileFromS3Bucket(manager.getAvatar());
@@ -115,7 +114,7 @@ public class ManagerServiceImpl implements ManagerService {
 
     @Override
     public FullManagerDTO getManager(String email, Long managerId) throws UserException {
-        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
+        var manager = authUtil.findManagerByEmailAndId(email, managerId);
 
         return new FullManagerDTO(manager);
     }
@@ -123,7 +122,7 @@ public class ManagerServiceImpl implements ManagerService {
     @Override
     public void setDestinationForDriver(String email, Long managerId, Long driverId, String destination)
             throws UserException {
-        var manager = AuthUtil.findManagerByEmailAndId(email, managerId, managerRepository);
+        var manager = authUtil.findManagerByEmailAndId(email, managerId);
 
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
@@ -140,15 +139,16 @@ public class ManagerServiceImpl implements ManagerService {
     @Override
     @Transactional
     public void delete(String email, Long managerId) throws UserException {
-        var manager = AuthUtil.findManagerByEmailAndIdAndCheckByAdmin(email, managerId, managerRepository,
-                adminRepository);
+        var manager = authUtil.findManagerByEmailAndIdAndCheckByAdmin(email, managerId);
 
+        delete(manager);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Manager manager) {
         if (manager.getAvatar() != null && !manager.getAvatar().isEmpty()) {
-            try {
-                amazonClient.deleteFileFromS3Bucket(manager.getAvatar());
-            } catch (Exception exception) {
-                System.err.println(exception);
-            }
+            //amazonClient.deleteFileFromS3Bucket(manager.getAvatar());
         }
 
         for (Driver driver : manager.getDrivers()) {

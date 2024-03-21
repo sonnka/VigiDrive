@@ -24,11 +24,12 @@ public class DriverLicenseServiceImpl implements DriverLicenseService {
 
     private DriverLicenseRepository driverLicenseRepository;
     private DriverRepository driverRepository;
+    private AuthUtil authUtil;
 
     @Override
     public DriverLicenseDTO getDriverLicense(String email, Long driverId)
             throws UserException, DriverLicenseException {
-        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        var driver = authUtil.findDriverByEmailAndId(email, driverId);
 
         var driverLicense = driverLicenseRepository.findDriverLicenseByDriver(driver)
                 .orElseThrow(() -> new DriverLicenseException(
@@ -41,9 +42,14 @@ public class DriverLicenseServiceImpl implements DriverLicenseService {
     @Transactional
     public DriverLicenseDTO addDriverLicense(String email, Long driverId, DriverLicenseRequest driverLicense)
             throws UserException, DriverLicenseException {
-        var driver = AuthUtil.findDriverByEmailAndId(email, driverId, driverRepository);
+        var driver = authUtil.findDriverByEmailAndId(email, driverId);
 
-        driverLicenseRepository.deleteAllByDriver(driver);
+        if (driver.getLicense() != null) {
+            var licenseId = driver.getLicense().getId();
+            driver.setLicense(null);
+            driverRepository.save(driver);
+            driverLicenseRepository.deleteById(licenseId);
+        }
 
         LocalDate date;
 

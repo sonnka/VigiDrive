@@ -41,6 +41,9 @@ public class UserException extends Exception {
         NOT_ADMIN("not_admin",
                 "You are not admin.", HttpStatus.FORBIDDEN),
 
+        NOT_CHIEF_ADMIN("not_chief_admin",
+                "You are not chief admin.", HttpStatus.FORBIDDEN),
+
         NOT_MANAGER("not_manager",
                 "You are not manager.", HttpStatus.FORBIDDEN),
 
@@ -64,7 +67,9 @@ public class UserException extends Exception {
 
         SOMETHING_WRONG("something_wrong",
                 "Something went wrong.", HttpStatus.BAD_REQUEST),
-        ;
+
+        FORBIDDEN("forbidden",
+                "Driver has already have manager.", HttpStatus.BAD_REQUEST);
 
         private final String exceptionName;
         private final String exceptionMessage;
