@@ -25,10 +25,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResponse login(Authentication authentication) {
         return getLoginResponse(authentication.getName());
-
     }
 
     private LoginResponse getLoginResponse(String email) {
+        System.out.println("-----> 2");
         var user = userRepository.findByEmailIgnoreCase(email).get();
         var now = Instant.now();
         var claims = JwtClaimsSet.builder()

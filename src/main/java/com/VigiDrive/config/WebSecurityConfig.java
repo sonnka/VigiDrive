@@ -4,6 +4,7 @@ import com.VigiDrive.repository.UserRepository;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,12 +40,20 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @EnableWebSecurity
 public class WebSecurityConfig {
 
+    @Autowired
+    private CustomOAuth2UserService oauthUserService;
+
+    @Autowired
+    private UserService userService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/").permitAll()
+                        .requestMatchers("/login/redirect").permitAll()
+                        .requestMatchers("/oauth/**").permitAll()
+                        .requestMatchers("/login").permitAll()
                         .requestMatchers("/websocket/**").permitAll()
                         .requestMatchers("/websocket").permitAll()
                         .requestMatchers("/register/**").permitAll()
@@ -66,6 +75,17 @@ public class WebSecurityConfig {
                         .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
                 );
 
+        http.oauth2Login(l -> l.loginPage("/login")
+                .userInfoEndpoint(a -> a.userService(oauthUserService))
+                .successHandler((request, response, authentication) -> {
+                    CustomOAuth2User oauthUser = (CustomOAuth2User) authentication.getPrincipal();
+
+                    userService.processOAuthPostLogin(oauthUser.getEmail());
+
+                    response.sendRedirect("/login/redirect");
+                })
+        );
+
         http.cors(withDefaults());
 
         return http.build();
@@ -77,9 +97,7 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(
-            UserRepository userRepository
-    ) {
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
         return email -> {
             Optional<com.VigiDrive.model.entity.User> user = userRepository.findByEmailIgnoreCase(email);
             if (user.isPresent()) {

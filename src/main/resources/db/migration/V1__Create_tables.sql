@@ -27,6 +27,7 @@ CREATE TABLE users
     password   VARCHAR(255)          NULL,
     avatar     VARCHAR(255)          NULL,
     `role`     VARCHAR(255)          NULL,
+    provider   VARCHAR(255)          NULL,
     CONSTRAINT pk_users PRIMARY KEY (user_id)
 );
 

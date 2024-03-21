@@ -1,5 +1,6 @@
 package com.VigiDrive.model.entity;
 
+import com.VigiDrive.model.enums.Provider;
 import com.VigiDrive.model.enums.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -45,6 +46,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private Role role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "provider")
+    private Provider provider;
 
     @OneToMany(cascade = {CascadeType.ALL},
             mappedBy = "sender", orphanRemoval = true)
