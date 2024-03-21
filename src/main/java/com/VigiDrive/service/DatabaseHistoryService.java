@@ -12,4 +12,6 @@ public interface DatabaseHistoryService {
     List<DatabaseHistoryDTO> getMonthDatabaseHistory();
 
     void saveExportOperation(Admin admin);
+
+    void saveImportOperation(Admin admin);
 }

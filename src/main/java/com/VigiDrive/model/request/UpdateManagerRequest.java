@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @Builder
 public class UpdateManagerRequest {
-    
+
     private String avatar;
 
     @Size(min = 2, max = 24)
@@ -23,9 +23,4 @@ public class UpdateManagerRequest {
     @NotEmpty
     @NotNull
     private String lastName;
-
-    @NotEmpty
-    @NotNull
-    @Size(min = 5, max = 24)
-    private String password;
 }

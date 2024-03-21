@@ -25,7 +25,7 @@ public class ValidationExceptionHandler extends ResponseEntityExceptionHandler {
                                                                   @NotNull HttpStatusCode status,
                                                                   @NotNull WebRequest webRequest) {
         List<String> errors = exception.getBindingResult().getFieldErrors().stream()
-                .map(FieldError -> "Field " + FieldError.getField() + ": " + FieldError.getDefaultMessage())
+                .map(FieldError -> FieldError.getField() + ": " + FieldError.getDefaultMessage())
                 .toList();
 
         var exceptionBody = new ExceptionResponse("validation_exceptions", errors.toString());

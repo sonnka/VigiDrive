@@ -1,6 +1,6 @@
 package com.VigiDrive.exceptions.handlers;
 
-import com.VigiDrive.exceptions.SecurityException;
+import com.VigiDrive.exceptions.DatabaseException;
 import com.VigiDrive.exceptions.dto.ExceptionResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -10,10 +10,10 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @ControllerAdvice
-public class SecurityExceptionHandler extends ResponseEntityExceptionHandler {
+public class DatabaseExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(value = SecurityException.class)
-    public ResponseEntity<Object> handleCustomerException(SecurityException exception,
+    @ExceptionHandler(value = DatabaseException.class)
+    public ResponseEntity<Object> handleCustomerException(DatabaseException exception,
                                                           WebRequest webRequest) {
         var exceptionBody = new ExceptionResponse(exception.getName(), exception.getMessage());
 

@@ -1,7 +1,6 @@
 package com.VigiDrive.model.response;
 
 import com.VigiDrive.model.entity.DatabaseHistory;
-import com.VigiDrive.model.enums.DatabaseOperation;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -15,12 +14,12 @@ public class DatabaseHistoryDTO {
 
     private LocalDateTime time;
 
-    private DatabaseOperation operation;
+    private String operation;
 
     public DatabaseHistoryDTO(DatabaseHistory history) {
         this.id = history.getId();
         this.adminEmail = history.getAdminEmail();
         this.time = history.getTime();
-        this.operation = history.getOperation();
+        this.operation = history.getOperation().name();
     }
 }

@@ -1,5 +1,6 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.exceptions.DatabaseException;
 import com.VigiDrive.exceptions.MailException;
 import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
@@ -14,13 +15,11 @@ import com.VigiDrive.repository.AdminRepository;
 import com.VigiDrive.repository.DriverRepository;
 import com.VigiDrive.repository.ManagerRepository;
 import com.VigiDrive.repository.UserRepository;
-import com.VigiDrive.service.AdminService;
-import com.VigiDrive.service.DatabaseHistoryService;
-import com.VigiDrive.service.FileService;
-import com.VigiDrive.service.MailService;
+import com.VigiDrive.service.*;
 import com.VigiDrive.util.AuthUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -41,11 +40,12 @@ public class AdminServiceImpl implements AdminService {
     private ManagerRepository managerRepository;
 
     private PasswordEncoder passwordEncoder;
-    private AmazonClient amazonClient;
-
     private AuthUtil authUtil;
+
     private MailService mailService;
     private FileService fileService;
+    private DriverService driverService;
+    private ManagerService managerService;
     private DatabaseHistoryService databaseHistoryService;
 
 
@@ -164,11 +164,7 @@ public class AdminServiceImpl implements AdminService {
         var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
-        if (driver.getAvatar() != null && !driver.getAvatar().isEmpty()) {
-            amazonClient.deleteFileFromS3Bucket(driver.getAvatar());
-        }
-
-        driverRepository.delete(driver);
+        driverService.delete(driver);
     }
 
     @Override
@@ -179,11 +175,7 @@ public class AdminServiceImpl implements AdminService {
         var manager = managerRepository.findById(managerId)
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.MANAGER_NOT_FOUND));
 
-        if (manager.getAvatar() != null && !manager.getAvatar().isEmpty()) {
-            amazonClient.deleteFileFromS3Bucket(manager.getAvatar());
-        }
-
-        managerRepository.delete(manager);
+        managerService.delete(manager);
     }
 
     @Override
@@ -212,18 +204,33 @@ public class AdminServiceImpl implements AdminService {
             throws SQLException, IOException, ClassNotFoundException, UserException {
         var admin = authUtil.checkAdminByEmailAndId(email, adminId);
 
-        fileService.generateDatabaseZipDump(response);
-
         databaseHistoryService.saveExportOperation(admin);
+
+        fileService.generateDatabaseZipDump(response);
     }
 
     @Override
     public void importDatabase(String email, Long adminId, MultipartFile file)
-            throws SQLException, ClassNotFoundException, IOException, UserException {
-        authUtil.checkAdminByEmailAndId(email, adminId);
+            throws IOException, UserException, DatabaseException {
+        var admin = authUtil.checkAdminByEmailAndId(email, adminId);
+        if (file == null || file.isEmpty()) {
+            throw new DatabaseException(DatabaseException.DatabaseExceptionProfile.INVALID_FILE);
+        }
+
+        String extension = FilenameUtils.getExtension(file.getOriginalFilename());
+
+        if (!"sql".equals(extension)) {
+            throw new DatabaseException(DatabaseException.DatabaseExceptionProfile.INVALID_FILE_EXTENSION);
+        }
 
         String sql = new String(file.getBytes());
 
-        fileService.importDatabase(sql);
+        databaseHistoryService.saveImportOperation(admin);
+
+        try {
+            fileService.importDatabase(sql);
+        } catch (Exception exception) {
+            throw new DatabaseException(DatabaseException.DatabaseExceptionProfile.DATABASE_EXCEPTION);
+        }
     }
 }

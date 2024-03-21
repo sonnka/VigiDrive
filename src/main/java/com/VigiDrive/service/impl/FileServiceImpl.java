@@ -487,7 +487,7 @@ public class FileServiceImpl implements FileService {
                     var headerCell = table.addCell(header);
                     headerCell.setHorizontalAlignment(1);
                     headerCell.setVerticalAlignment(1);
-                    headerCell.setFixedHeight(40f);
+                    headerCell.setFixedHeight(35f);
                 });
 
         for (DatabaseHistoryDTO historyRecord : history) {
@@ -506,7 +506,7 @@ public class FileServiceImpl implements FileService {
             for (PdfPCell cell : List.of(dateCell, timeCell, emailCell, operationCell)) {
                 cell.setHorizontalAlignment(1);
                 cell.setVerticalAlignment(1);
-                cell.setMinimumHeight(50f);
+                cell.setMinimumHeight(35f);
             }
         }
         table.setWidthPercentage(100f);

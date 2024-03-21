@@ -49,4 +49,13 @@ public class DatabaseHistoryServiceImpl implements DatabaseHistoryService {
                 .operation(DatabaseOperation.EXPORT)
                 .build());
     }
+
+    @Override
+    public void saveImportOperation(Admin admin) {
+        databaseHistoryRepository.save(DatabaseHistory.builder()
+                .adminEmail(admin.getEmail())
+                .time(LocalDateTime.now())
+                .operation(DatabaseOperation.IMPORT)
+                .build());
+    }
 }

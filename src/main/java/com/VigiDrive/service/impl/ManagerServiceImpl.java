@@ -141,12 +141,14 @@ public class ManagerServiceImpl implements ManagerService {
     public void delete(String email, Long managerId) throws UserException {
         var manager = authUtil.findManagerByEmailAndIdAndCheckByAdmin(email, managerId);
 
+        delete(manager);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Manager manager) {
         if (manager.getAvatar() != null && !manager.getAvatar().isEmpty()) {
-            try {
-                amazonClient.deleteFileFromS3Bucket(manager.getAvatar());
-            } catch (Exception exception) {
-                System.err.println(exception);
-            }
+            //amazonClient.deleteFileFromS3Bucket(manager.getAvatar());
         }
 
         for (Driver driver : manager.getDrivers()) {

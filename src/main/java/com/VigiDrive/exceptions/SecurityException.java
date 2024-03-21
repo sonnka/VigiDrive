@@ -24,7 +24,7 @@ public class SecurityException extends Exception {
     public enum SecurityExceptionProfile {
 
         EMAIL_OCCUPIED("email_occupied",
-                "User with such email is already existed.", HttpStatus.UNAUTHORIZED),
+                "User with such email already exists.", HttpStatus.UNAUTHORIZED),
 
         REGISTRATION_FAILED("registration_failed",
                 "Registration is failed. Try again later.", HttpStatus.UNAUTHORIZED),

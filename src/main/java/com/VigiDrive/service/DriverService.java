@@ -3,6 +3,7 @@ package com.VigiDrive.service;
 import com.VigiDrive.exceptions.AmazonException;
 import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.request.RegisterRequest;
 import com.VigiDrive.model.request.UpdateDriverRequest;
 import com.VigiDrive.model.response.DriverDTO;
@@ -22,6 +23,8 @@ public interface DriverService {
     DriverDTO uploadAvatar(String email, Long driverId, MultipartFile avatar) throws UserException, AmazonException;
 
     void delete(String email, Long driverId) throws UserException, SecurityException;
+
+    void delete(Driver driver);
 
     FullDriverDTO getFullDriver(String email, Long driverId) throws UserException;
 

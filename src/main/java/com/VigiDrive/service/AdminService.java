@@ -1,5 +1,6 @@
 package com.VigiDrive.service;
 
+import com.VigiDrive.exceptions.DatabaseException;
 import com.VigiDrive.exceptions.MailException;
 import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
@@ -46,5 +47,5 @@ public interface AdminService {
             throws SQLException, IOException, ClassNotFoundException, UserException;
 
     void importDatabase(String email, Long adminId, MultipartFile file)
-            throws SQLException, ClassNotFoundException, IOException, UserException;
+            throws SQLException, ClassNotFoundException, IOException, UserException, DatabaseException;
 }

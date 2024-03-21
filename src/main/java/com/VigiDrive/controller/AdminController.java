@@ -1,5 +1,6 @@
 package com.VigiDrive.controller;
 
+import com.VigiDrive.exceptions.DatabaseException;
 import com.VigiDrive.exceptions.MailException;
 import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
@@ -116,7 +117,7 @@ public class AdminController {
     public void importDatabase(Authentication auth,
                                @PathVariable("admin-id") Long adminId,
                                @RequestParam("file") MultipartFile file)
-            throws SQLException, IOException, ClassNotFoundException, UserException {
+            throws SQLException, IOException, ClassNotFoundException, UserException, DatabaseException {
         adminService.importDatabase(auth.getName(), adminId, file);
     }
 }

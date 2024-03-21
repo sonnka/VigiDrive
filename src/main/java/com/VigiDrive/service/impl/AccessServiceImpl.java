@@ -47,6 +47,10 @@ public class AccessServiceImpl implements AccessService {
         var driver = driverRepository.findByEmailIgnoreCase(access.getDriverEmail().trim())
                 .orElseThrow(() -> new UserException(UserException.UserExceptionProfile.DRIVER_NOT_FOUND));
 
+        if (driver.getManager() != null) {
+            throw new UserException(UserException.UserExceptionProfile.FORBIDDEN);
+        }
+
         TimeDuration duration = TimeDuration.valueOf(access.getAccessDuration().toUpperCase());
 
         return toAccessDTO(accessRepository.save(
