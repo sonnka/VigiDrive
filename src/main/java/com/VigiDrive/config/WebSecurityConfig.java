@@ -1,89 +1,79 @@
 package com.VigiDrive.config;
 
-import com.VigiDrive.repository.UserRepository;
-import com.VigiDrive.service.UserService;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
 import lombok.AllArgsConstructor;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
-import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.util.Optional;
-
-import static org.springframework.security.config.Customizer.withDefaults;
-import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+import java.util.UUID;
 
 @Configuration
 @EnableWebSecurity
 @AllArgsConstructor
 public class WebSecurityConfig {
-
-    private CustomOAuth2UserService oauthUserService;
-    private UserService userService;
+    private static KeyPair generateRsaKey() {
+        KeyPair keyPair;
+        try {
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            keyPairGenerator.initialize(2048);
+            keyPair = keyPairGenerator.generateKeyPair();
+        } catch (Exception ex) {
+            throw new IllegalStateException(ex);
+        }
+        return keyPair;
+    }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
+            throws Exception {
+        http.csrf(AbstractHttpConfigurer::disable);
+        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
+                .oidc(Customizer.withDefaults());
         http
-                .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/").permitAll()
-                        .requestMatchers("/login").permitAll()
-                        .requestMatchers("/login/google").permitAll()
-                        .requestMatchers("/oauth/**").permitAll()
-                        .requestMatchers("/websocket/**").permitAll()
-                        .requestMatchers("/websocket").permitAll()
-                        .requestMatchers("/register/**").permitAll()
-                        .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers("/swagger-ui-custom.html").permitAll()
-                        .requestMatchers("/api-docs/**").permitAll()
-                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                        .anyRequest().authenticated()
-                );
+                .oauth2ResourceServer((resourceServer) -> resourceServer
+                        .jwt(Customizer.withDefaults()));
 
-        http.httpBasic(withDefaults())
-                .sessionManagement(c -> c
-                        .sessionCreationPolicy(STATELESS))
-                .csrf(AbstractHttpConfigurer::disable)
-                .headers(c -> c.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
-        http.oauth2ResourceServer(o -> o.jwt(withDefaults()))
-                .exceptionHandling(c -> c
-                        .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
-                        .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
-                );
+        return http.build();
+    }
 
-        http.oauth2Login(l -> l.loginPage("/login")
-                .userInfoEndpoint(a -> a.userService(oauthUserService))
-                .successHandler((request, response, authentication) -> {
-                    CustomOAuth2User oauthUser = (CustomOAuth2User) authentication.getPrincipal();
-                    userService.processGoogleOAuthPostLogin(oauthUser);
-                    response.sendRedirect("/login/google?email=" + oauthUser.getEmail());
-                })
-        );
-
-        http.cors(withDefaults());
+    @Bean
+    @Order(2)
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
+            throws Exception {
+        http.csrf(AbstractHttpConfigurer::disable);
+        http
+                .authorizeHttpRequests((authorize) -> authorize
+                        .anyRequest().permitAll()
+                )
+                .formLogin(Customizer.withDefaults());
 
         return http.build();
     }
@@ -93,47 +83,42 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+
     @Bean
-    public UserDetailsService userDetailsService(UserRepository userRepository) {
-        return email -> {
-            Optional<com.VigiDrive.model.entity.User> user = userRepository.findByEmailIgnoreCase(email);
-            if (user.isPresent()) {
-                return User.builder()
-                        .username(user.get().getEmail())
-                        .password(user.get().getPassword())
-                        .roles(user.get().getRole().name())
-                        .disabled(false)
-                        .build();
-            }
-            throw new UsernameNotFoundException("User not found with email: " + email);
-        };
+    public UserDetailsService userDetailsService() {
+        UserDetails userDetails = User.withUsername("user")
+                .password(passwordEncoder().encode("password"))
+                .roles("USER")
+                .build();
+
+        return new InMemoryUserDetailsManager(userDetails);
     }
 
     @Bean
-    public KeyPair keyPair() throws NoSuchAlgorithmException {
-        var keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(2048);
-        return keyPairGenerator.generateKeyPair();
+    public JWKSource<SecurityContext> jwkSource() {
+        KeyPair keyPair = generateRsaKey();
+        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+        RSAKey rsaKey = new RSAKey.Builder(publicKey)
+                .privateKey(privateKey)
+                .keyID(UUID.randomUUID().toString())
+                .build();
+        JWKSet jwkSet = new JWKSet(rsaKey);
+        return new ImmutableJWKSet<>(jwkSet);
     }
 
     @Bean
-    JwtDecoder jwtDecoder(KeyPair keyPair) {
-        return NimbusJwtDecoder.withPublicKey((RSAPublicKey) keyPair.getPublic()).build();
+    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
 
     @Bean
-    JwtEncoder jwtEncoder(KeyPair keyPair) {
-        var jwk = new RSAKey.Builder((RSAPublicKey) keyPair.getPublic()).privateKey(keyPair.getPrivate()).build();
-        var jwkSet = new ImmutableJWKSet<>(new JWKSet(jwk));
-        return new NimbusJwtEncoder(jwkSet);
+    public JwtEncoder jwtEncoder() {
+        return new NimbusJwtEncoder(jwkSource());
     }
 
     @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        grantedAuthoritiesConverter.setAuthorityPrefix("");
-        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
-        return jwtAuthenticationConverter;
+    public AuthorizationServerSettings authorizationServerSettings() {
+        return AuthorizationServerSettings.builder().build();
     }
 }
