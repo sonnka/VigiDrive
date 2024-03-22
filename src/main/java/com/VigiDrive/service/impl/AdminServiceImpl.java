@@ -5,6 +5,7 @@ import com.VigiDrive.exceptions.MailException;
 import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Admin;
+import com.VigiDrive.model.enums.Provider;
 import com.VigiDrive.model.enums.Role;
 import com.VigiDrive.model.request.UpdateAdminRequest;
 import com.VigiDrive.model.response.AdminDTO;
@@ -72,6 +73,7 @@ public class AdminServiceImpl implements AdminService {
                 .dateOfAdding(LocalDateTime.now())
                 .approved(false)
                 .newAccount(true)
+                .provider(Provider.LOCAL)
                 .build();
 
         adminRepository.save(newAdmin);

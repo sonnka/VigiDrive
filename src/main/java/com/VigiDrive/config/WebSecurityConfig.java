@@ -1,10 +1,11 @@
 package com.VigiDrive.config;
 
 import com.VigiDrive.repository.UserRepository;
+import com.VigiDrive.service.UserService;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,12 +39,10 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 
 @Configuration
 @EnableWebSecurity
+@AllArgsConstructor
 public class WebSecurityConfig {
 
-    @Autowired
     private CustomOAuth2UserService oauthUserService;
-
-    @Autowired
     private UserService userService;
 
     @Bean
@@ -51,9 +50,9 @@ public class WebSecurityConfig {
         http
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/").permitAll()
-                        .requestMatchers("/login/redirect").permitAll()
-                        .requestMatchers("/oauth/**").permitAll()
                         .requestMatchers("/login").permitAll()
+                        .requestMatchers("/login/google").permitAll()
+                        .requestMatchers("/oauth/**").permitAll()
                         .requestMatchers("/websocket/**").permitAll()
                         .requestMatchers("/websocket").permitAll()
                         .requestMatchers("/register/**").permitAll()
@@ -79,10 +78,8 @@ public class WebSecurityConfig {
                 .userInfoEndpoint(a -> a.userService(oauthUserService))
                 .successHandler((request, response, authentication) -> {
                     CustomOAuth2User oauthUser = (CustomOAuth2User) authentication.getPrincipal();
-
-                    userService.processOAuthPostLogin(oauthUser.getEmail());
-
-                    response.sendRedirect("/login/redirect");
+                    userService.processGoogleOAuthPostLogin(oauthUser);
+                    response.sendRedirect("/login/google?email=" + oauthUser.getEmail());
                 })
         );
 

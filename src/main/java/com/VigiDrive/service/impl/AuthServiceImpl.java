@@ -27,8 +27,12 @@ public class AuthServiceImpl implements AuthService {
         return getLoginResponse(authentication.getName());
     }
 
+    @Override
+    public LoginResponse login(String email) {
+        return getLoginResponse(email);
+    }
+
     private LoginResponse getLoginResponse(String email) {
-        System.out.println("-----> 2");
         var user = userRepository.findByEmailIgnoreCase(email).get();
         var now = Instant.now();
         var claims = JwtClaimsSet.builder()

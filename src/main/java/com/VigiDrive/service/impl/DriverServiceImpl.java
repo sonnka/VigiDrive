@@ -4,6 +4,7 @@ import com.VigiDrive.exceptions.AmazonException;
 import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Driver;
+import com.VigiDrive.model.enums.Provider;
 import com.VigiDrive.model.enums.Role;
 import com.VigiDrive.model.request.RegisterRequest;
 import com.VigiDrive.model.request.UpdateDriverRequest;
@@ -46,6 +47,7 @@ public class DriverServiceImpl implements DriverService {
                 .lastName(newDriver.getLastName())
                 .password(passwordEncoder.encode(newDriver.getPassword()))
                 .role(Role.DRIVER)
+                .provider(Provider.LOCAL)
                 .build();
 
         return new DriverDTO(driverRepository.save(driver));

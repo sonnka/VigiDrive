@@ -6,4 +6,6 @@ import org.springframework.security.core.Authentication;
 public interface AuthService {
 
     LoginResponse login(Authentication auth);
+
+    LoginResponse login(String email);
 }

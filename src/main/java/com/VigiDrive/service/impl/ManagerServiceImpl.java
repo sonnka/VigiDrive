@@ -5,6 +5,7 @@ import com.VigiDrive.exceptions.SecurityException;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.entity.Driver;
 import com.VigiDrive.model.entity.Manager;
+import com.VigiDrive.model.enums.Provider;
 import com.VigiDrive.model.enums.Role;
 import com.VigiDrive.model.request.RegisterRequest;
 import com.VigiDrive.model.request.UpdateManagerRequest;
@@ -54,6 +55,7 @@ public class ManagerServiceImpl implements ManagerService {
                 .lastName(newManager.getLastName())
                 .password(passwordEncoder.encode(newManager.getPassword()))
                 .role(Role.MANAGER)
+                .provider(Provider.LOCAL)
                 .build();
 
         return new ManagerDTO(managerRepository.save(manager));
