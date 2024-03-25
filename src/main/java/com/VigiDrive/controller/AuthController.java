@@ -20,6 +20,14 @@ public class AuthController {
 //        return authService.login(authentication);
 //    }
 
+    @GetMapping("/")
+    public String test(Object object,
+                       @RequestParam("code") String code) {
+        System.out.println("-------------> " + (object == null));
+        System.out.println("-------------> " + code);
+        return object.getClass().toString() + " | " + code;
+    }
+
     @GetMapping("/login/google")
     public LoginResponse loginGoogle(@RequestParam String email) {
         return authService.login(email);
