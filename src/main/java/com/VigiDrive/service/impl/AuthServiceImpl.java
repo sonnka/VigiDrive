@@ -7,8 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -20,7 +18,7 @@ import java.time.temporal.ChronoUnit;
 public class AuthServiceImpl implements AuthService {
 
     private UserRepository userRepository;
-    private JwtEncoder jwtEncoder;
+    //  private JwtEncoder jwtEncoder;
 
     @Override
     public LoginResponse login(Authentication authentication) {
@@ -48,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
 
         return LoginResponse.builder()
                 .id(user.getId())
-                .token(jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue())
+                //    .token(jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue())
                 .name(user.getFirstName())
                 .surname(user.getLastName())
                 .role(user.getRole().name().toLowerCase())
