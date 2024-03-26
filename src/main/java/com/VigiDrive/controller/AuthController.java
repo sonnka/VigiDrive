@@ -1,8 +1,8 @@
 package com.VigiDrive.controller;
 
-import com.VigiDrive.model.response.LoginResponse;
 import com.VigiDrive.service.AuthService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,21 +15,15 @@ public class AuthController {
 
     private AuthService authService;
 
-//    @PostMapping("/login")
-//    public LoginResponse login(Authentication authentication) {
-//        return authService.login(authentication);
-//    }
-
     @GetMapping("/")
-    public String test(Object object,
-                       @RequestParam("code") String code) {
-        System.out.println("-------------> " + (object == null));
-        System.out.println("-------------> " + code);
-        return object.getClass().toString() + " | " + code;
+    public OAuth2AccessToken test(@RequestParam("code") String code) {
+        return authService.getToken(code);
     }
 
-    @GetMapping("/login/google")
-    public LoginResponse loginGoogle(@RequestParam String email) {
-        return authService.login(email);
-    }
+//    @GetMapping("/")
+//    public String test(OAuth2AccessTokenResponse object) {
+//        System.out.println("-----------> " + (object == null));
+//
+//        return object.getAccessToken().getTokenValue();
+//    }
 }

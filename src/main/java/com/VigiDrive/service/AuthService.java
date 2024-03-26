@@ -1,11 +1,8 @@
 package com.VigiDrive.service;
 
-import com.VigiDrive.model.response.LoginResponse;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 
 public interface AuthService {
 
-    LoginResponse login(Authentication auth);
-
-    LoginResponse login(String email);
+    OAuth2AccessToken getToken(String code);
 }

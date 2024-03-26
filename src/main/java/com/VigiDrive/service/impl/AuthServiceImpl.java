@@ -1,57 +1,57 @@
 package com.VigiDrive.service.impl;
 
-import com.VigiDrive.model.response.LoginResponse;
-import com.VigiDrive.repository.UserRepository;
 import com.VigiDrive.service.AuthService;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.apache.commons.codec.binary.Base64;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import org.springframework.web.client.RestTemplate;
 
 @Service
-@AllArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    private UserRepository userRepository;
-    //  private JwtEncoder jwtEncoder;
+    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
+    private String clientId;
+
+    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-secret}")
+    private String clientSecret;
+
+    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.redirect-uris}")
+    private String redirectUri;
+
+    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.authorization-grant-types}")
+    private String grantType;
 
     @Override
-    public LoginResponse login(Authentication authentication) {
-        return getLoginResponse(authentication.getName());
+    public OAuth2AccessToken getToken(String code) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+
+        String plainCreds = clientId + ":" + clientSecret;
+        byte[] plainCredsBytes = plainCreds.getBytes();
+        byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
+        String base64Creds = new String(base64CredsBytes);
+
+        headers.add("Authorization", "Basic " + base64Creds);
+
+        String uri = "http://127.0.0.1:8080/oauth2/token?code=" + code +
+                "&grant_type=" + grantType +
+                "&redirect_uri=" + redirectUri;
+
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<OAuth2AccessTokenResponse> response = restTemplate.postForEntity(uri, entity,
+                OAuth2AccessTokenResponse.class);
+        System.out.println("------------> token=" + response.getBody().getAccessToken());
+
+        return response.getBody().getAccessToken();
     }
-
-    @Override
-    public LoginResponse login(String email) {
-        return getLoginResponse(email);
-    }
-
-    private LoginResponse getLoginResponse(String email) {
-        var user = userRepository.findByEmailIgnoreCase(email).get();
-        var now = Instant.now();
-        var claims = JwtClaimsSet.builder()
-                .issuer("self")
-                .issuedAt(now)
-                .expiresAt(now.plus(30, ChronoUnit.MINUTES))
-                .subject(email)
-                .claim("id", user.getId())
-                .claim("role", user.getRole().name().toLowerCase())
-                .build();
-
-        log.error("Logged in = {}", email);
-
-        return LoginResponse.builder()
-                .id(user.getId())
-                //    .token(jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue())
-                .name(user.getFirstName())
-                .surname(user.getLastName())
-                .role(user.getRole().name().toLowerCase())
-                .avatar(user.getAvatar())
-                .build();
-    }
-
 }
