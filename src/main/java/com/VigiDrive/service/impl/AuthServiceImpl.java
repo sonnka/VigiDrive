@@ -1,5 +1,6 @@
 package com.VigiDrive.service.impl;
 
+import com.VigiDrive.config.CustomAuthenticationToken;
 import com.VigiDrive.service.AuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -7,8 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -29,7 +28,7 @@ public class AuthServiceImpl implements AuthService {
     private String grantType;
 
     @Override
-    public OAuth2AccessToken getToken(String code) {
+    public CustomAuthenticationToken getToken(String code) {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -48,10 +47,13 @@ public class AuthServiceImpl implements AuthService {
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        ResponseEntity<OAuth2AccessTokenResponse> response = restTemplate.postForEntity(uri, entity,
-                OAuth2AccessTokenResponse.class);
+
+        ResponseEntity<CustomAuthenticationToken> response = restTemplate.postForEntity(uri, entity,
+                CustomAuthenticationToken.class);
+
         System.out.println("------------> token=" + response.getBody().getAccessToken());
 
-        return response.getBody().getAccessToken();
+        return response.getBody();
     }
+
 }
