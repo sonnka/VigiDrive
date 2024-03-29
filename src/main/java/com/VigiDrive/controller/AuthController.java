@@ -15,7 +15,7 @@ public class AuthController {
 
     private AuthService authService;
 
-
+//
 //    @GetMapping("/auth")
 //    public String getCode(@RequestParam("code") String code) {
 //        return code;
@@ -23,6 +23,7 @@ public class AuthController {
 
     @GetMapping("/auth")
     public CustomAuthenticationToken getAuthToken(@RequestParam("code") String code) {
+        System.out.println("-------------> code=" + code);
         return authService.getToken(code);
     }
 }

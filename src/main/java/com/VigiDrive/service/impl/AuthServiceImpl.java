@@ -9,6 +9,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -28,6 +29,7 @@ public class AuthServiceImpl implements AuthService {
     private String grantType;
 
     @Override
+    @CrossOrigin
     public CustomAuthenticationToken getToken(String code) {
         RestTemplate restTemplate = new RestTemplate();
 
