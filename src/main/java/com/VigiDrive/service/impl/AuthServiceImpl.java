@@ -42,7 +42,7 @@ public class AuthServiceImpl implements AuthService {
 
         headers.add("Authorization", "Basic " + base64Creds);
 
-        String uri = "http://127.0.0.1:8080/oauth2/token?code=" + code +
+        String uri = "http://localhost:8080/oauth2/token?code=" + code +
                 "&grant_type=" + grantType +
                 "&redirect_uri=" + redirectUri;
 
@@ -52,8 +52,6 @@ public class AuthServiceImpl implements AuthService {
 
         ResponseEntity<CustomAuthenticationToken> response = restTemplate.postForEntity(uri, entity,
                 CustomAuthenticationToken.class);
-
-        System.out.println("------------> token=" + response.getBody().getAccessToken());
 
         return response.getBody();
     }

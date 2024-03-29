@@ -18,6 +18,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -82,6 +83,7 @@ public class WebSecurityConfig {
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
             throws Exception {
         http
+                .anonymous(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()));
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
@@ -105,10 +107,10 @@ public class WebSecurityConfig {
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
             throws Exception {
         http
-                //.addFilterBefore(new CorsFilter(), ChannelProcessingFilter.class)
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()));
         http
+                .sessionManagement(p -> p.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
