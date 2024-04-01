@@ -1,6 +1,7 @@
 package com.VigiDrive.service.impl;
 
 import com.VigiDrive.config.CustomAuthenticationToken;
+import com.VigiDrive.config.CustomGoogleAuthenticationToken;
 import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.model.response.LoginResponse;
 import com.VigiDrive.repository.UserRepository;
@@ -74,6 +75,35 @@ public class AuthServiceImpl implements AuthService {
                 .token(response.getBody())
                 .role(user.getRole().name())
                 .build();
+    }
+
+    @Override
+    public CustomGoogleAuthenticationToken getGoogleToken(String code) throws UserException {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+
+
+        String uri = "https://oauth2.googleapis.com/token?" +
+                "client_id=108088983721-94ri8tnmtprcj88c1cpd7gng1okh4mfk.apps.googleusercontent.com&" +
+                "client_secret=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&" +
+                "grant_type=authorization_code&" +
+                "code=" + code +
+                "&redirect_uri=http://localhost:8080/auth/google";
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<CustomGoogleAuthenticationToken> response = restTemplate.postForEntity(uri, entity,
+                CustomGoogleAuthenticationToken.class);
+
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        String currentPrincipalName = authentication.getName();
+//
+//        var user = userRepository.findByEmailIgnoreCase(currentPrincipalName).orElseThrow(
+//                () -> new UserException(UserException.UserExceptionProfile.USER_NOT_FOUND)
+//        );
+
+        return response.getBody();
     }
 
 }

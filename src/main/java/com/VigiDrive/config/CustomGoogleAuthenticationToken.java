@@ -1,16 +1,14 @@
 package com.VigiDrive.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Builder
-@AllArgsConstructor
-public class CustomAuthenticationToken {
+@RequiredArgsConstructor
+public class CustomGoogleAuthenticationToken {
 
     @JsonProperty("access_token")
     private String accessToken;
@@ -20,4 +18,10 @@ public class CustomAuthenticationToken {
 
     @JsonProperty("expires_in")
     private long expiresIn;
+
+    @JsonProperty("scope")
+    private String scope;
+
+    @JsonProperty("id_token")
+    private String idToken;
 }

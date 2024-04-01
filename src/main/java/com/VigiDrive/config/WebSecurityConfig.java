@@ -25,6 +25,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
@@ -60,17 +63,19 @@ import java.util.UUID;
 @EnableWebSecurity
 public class WebSecurityConfig {
 
+    private final CustomOAuth2UserService oauthUserService;
     @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
     private String clientId;
-
     @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-secret}")
     private String clientSecret;
-
     @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.redirect-uris}")
     private String redirectUri;
-
     @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.post-logout-redirect-uris}")
     private String logoutRedirectUri;
+
+    public WebSecurityConfig(CustomOAuth2UserService oauthUserService) {
+        this.oauthUserService = oauthUserService;
+    }
 
     private static KeyPair generateRsaKey() {
         KeyPair keyPair;
@@ -121,7 +126,9 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/google").permitAll()
                         .requestMatchers("/login").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/websocket/**").permitAll()
                         .requestMatchers("/websocket").permitAll()
                         .requestMatchers("/register/**").permitAll()
@@ -131,8 +138,13 @@ public class WebSecurityConfig {
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .anyRequest().authenticated()
                 )
+                .oauth2Login(p -> p
+                        .clientRegistrationRepository(googleClientRepository())
+                        .userInfoEndpoint(a -> a.userService(oauthUserService))
+                )
                 .formLogin(form -> form.successHandler((request, response, authentication) -> {
                 }));
+
         return http.build();
     }
 
@@ -188,6 +200,22 @@ public class WebSecurityConfig {
                 .build();
 
         return new InMemoryRegisteredClientRepository(oidcClient);
+    }
+
+    @Bean
+    public ClientRegistrationRepository googleClientRepository() {
+        ClientRegistration repo = ClientRegistration.withRegistrationId("google")
+                .clientId("108088983721-94ri8tnmtprcj88c1cpd7gng1okh4mfk.apps.googleusercontent.com")
+                .clientSecret("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")
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .redirectUri("http://localhost:8080/login/oauth2/code/google")
+                .authorizationUri("https://accounts.google.com/o/oauth2/v2/auth")
+                .jwkSetUri("https://www.googleapis.com/oauth2/v3/certs")
+                .tokenUri("https://oauth2.googleapis.com/token")
+                .scope(List.of("openid", "email", "profile"))
+                .build();
+
+        return new InMemoryClientRegistrationRepository(repo);
     }
 
     @Bean
