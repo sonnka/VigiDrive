@@ -1,6 +1,7 @@
 package com.VigiDrive.controller;
 
-import com.VigiDrive.config.CustomAuthenticationToken;
+import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.response.LoginResponse;
 import com.VigiDrive.service.AuthService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -16,7 +17,7 @@ public class AuthController {
     private AuthService authService;
 
     @GetMapping("/auth")
-    public CustomAuthenticationToken getAuthToken(@RequestParam("code") String code) {
+    public LoginResponse getAuthToken(@RequestParam("code") String code) throws UserException {
         return authService.getToken(code);
     }
 }

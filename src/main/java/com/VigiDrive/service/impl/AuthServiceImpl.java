@@ -1,6 +1,9 @@
 package com.VigiDrive.service.impl;
 
 import com.VigiDrive.config.CustomAuthenticationToken;
+import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.response.LoginResponse;
+import com.VigiDrive.repository.UserRepository;
 import com.VigiDrive.service.AuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -8,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.client.RestTemplate;
@@ -28,9 +33,15 @@ public class AuthServiceImpl implements AuthService {
     @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.authorization-grant-types}")
     private String grantType;
 
+    private UserRepository userRepository;
+
+    private AuthServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     @Override
     @CrossOrigin
-    public CustomAuthenticationToken getToken(String code) {
+    public LoginResponse getToken(String code) throws UserException {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -46,14 +57,23 @@ public class AuthServiceImpl implements AuthService {
                 "&grant_type=" + grantType +
                 "&redirect_uri=" + redirectUri;
 
-
         HttpEntity<String> entity = new HttpEntity<>(headers);
-
 
         ResponseEntity<CustomAuthenticationToken> response = restTemplate.postForEntity(uri, entity,
                 CustomAuthenticationToken.class);
 
-        return response.getBody();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentPrincipalName = authentication.getName();
+
+        var user = userRepository.findByEmailIgnoreCase(currentPrincipalName).orElseThrow(
+                () -> new UserException(UserException.UserExceptionProfile.USER_NOT_FOUND)
+        );
+
+        return LoginResponse.builder()
+                .id(user.getId())
+                .token(response.getBody())
+                .role(user.getRole().name())
+                .build();
     }
 
 }

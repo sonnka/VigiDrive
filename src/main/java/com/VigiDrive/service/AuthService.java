@@ -1,8 +1,9 @@
 package com.VigiDrive.service;
 
-import com.VigiDrive.config.CustomAuthenticationToken;
+import com.VigiDrive.exceptions.UserException;
+import com.VigiDrive.model.response.LoginResponse;
 
 public interface AuthService {
 
-    CustomAuthenticationToken getToken(String code);
+    LoginResponse getToken(String code) throws UserException;
 }

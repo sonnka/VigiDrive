@@ -1,5 +1,6 @@
 package com.VigiDrive.model.response;
 
+import com.VigiDrive.config.CustomAuthenticationToken;
 import lombok.Builder;
 
 @Builder
@@ -7,14 +8,8 @@ public record LoginResponse(
 
         Long id,
 
-        String token,
+        CustomAuthenticationToken token,
 
-        String name,
-
-        String surname,
-
-        String role,
-
-        String avatar
+        String role
 ) {
 }

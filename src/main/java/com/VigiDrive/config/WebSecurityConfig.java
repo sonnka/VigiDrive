@@ -1,5 +1,6 @@
 package com.VigiDrive.config;
 
+import com.VigiDrive.exceptions.UserException;
 import com.VigiDrive.repository.UserRepository;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -28,12 +29,16 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
@@ -45,6 +50,8 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -64,7 +71,6 @@ public class WebSecurityConfig {
 
     @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.post-logout-redirect-uris}")
     private String logoutRedirectUri;
-
 
     private static KeyPair generateRsaKey() {
         KeyPair keyPair;
@@ -107,6 +113,7 @@ public class WebSecurityConfig {
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
             throws Exception {
         http
+                .anonymous(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()));
         http
@@ -174,9 +181,33 @@ public class WebSecurityConfig {
                 .postLogoutRedirectUri(logoutRedirectUri)
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
+                .tokenSettings(TokenSettings.builder()
+                        .authorizationCodeTimeToLive(Duration.of(5, ChronoUnit.MINUTES))
+                        .accessTokenTimeToLive(Duration.of(1, ChronoUnit.HOURS))
+                        .build())
                 .build();
 
         return new InMemoryRegisteredClientRepository(oidcClient);
+    }
+
+    @Bean
+    public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer(UserRepository userRepository) {
+        return (context) -> {
+            if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
+                context.getClaims().claims(claims -> {
+                    try {
+                        var user = userRepository.findByEmailIgnoreCase(context.getAuthorization()
+                                        .getPrincipalName())
+                                .orElseThrow(
+                                        () -> new UserException(UserException.UserExceptionProfile.USER_NOT_FOUND)
+                                );
+                        claims.put("role", user.getRole().name());
+                    } catch (UserException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+        };
     }
 
     @Bean
@@ -196,7 +227,6 @@ public class WebSecurityConfig {
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
         return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
-
 
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
