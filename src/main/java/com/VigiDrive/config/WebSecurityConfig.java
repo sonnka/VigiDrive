@@ -141,6 +141,13 @@ public class WebSecurityConfig {
                 .oauth2Login(p -> p
                         .clientRegistrationRepository(googleClientRepository())
                         .userInfoEndpoint(a -> a.userService(oauthUserService))
+                        .successHandler(((request, response, authentication) -> {
+                            CustomOAuth2User user = (CustomOAuth2User) authentication.getPrincipal();
+                            String token = user.getToken().getTokenValue();
+                            String expiresAt = user.getToken().getExpiresAt().toString();
+                            response.sendRedirect("http://localhost:4200/login?token="
+                                    + token + "?expireAt=" + expiresAt);
+                        }))
                 )
                 .formLogin(form -> form.successHandler((request, response, authentication) -> {
                 }));
@@ -212,7 +219,9 @@ public class WebSecurityConfig {
                 .authorizationUri("https://accounts.google.com/o/oauth2/v2/auth")
                 .jwkSetUri("https://www.googleapis.com/oauth2/v3/certs")
                 .tokenUri("https://oauth2.googleapis.com/token")
-                .scope(List.of("openid", "email", "profile"))
+                .userInfoUri("https://www.googleapis.com/oauth2/v3/userinfo")
+                .scope(List.of("email", "profile"))
+                .userNameAttributeName("email")
                 .build();
 
         return new InMemoryClientRegistrationRepository(repo);
